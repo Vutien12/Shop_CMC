@@ -1,0 +1,255 @@
+/* Account Wrapper */
+.account-wrapper {
+  background-color: white;
+}
+
+/* Account Page */
+.account-page {
+  display: flex;
+  min-height: calc(100vh - 200px);
+  font-family: 'Poppins', sans-serif;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Sidebar */
+.account-sidebar {
+  width: 280px;
+  background-color: white;
+  padding: 30px 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 30px;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.3s;
+  font-size: 15px;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background-color: #f8f9fa;
+  color: #0066FF;
+}
+
+.nav-item.active,
+.nav-item.router-link-active {
+  background-color: #f0f7ff;
+  color: #0066FF;
+  border-left-color: #0066FF;
+  font-weight: 500;
+}
+
+.nav-item i {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+}
+
+/* Main Content */
+.account-main {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.view-all,
+.edit-link {
+  color: #0066FF;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.view-all:hover,
+.edit-link:hover {
+  color: #0052CC;
+}
+
+/* Orders Section */
+.orders-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.orders-table-wrapper {
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table thead {
+  background-color: #f8f9fa;
+}
+
+.orders-table th {
+  padding: 15px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.orders-table td {
+  padding: 18px 15px;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.orders-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-pending-payment {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.action-btn {
+  background-color: #f0f0f0;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #666;
+}
+
+.action-btn:hover {
+  background-color: #0066FF;
+  color: white;
+}
+
+/* Account Information Section */
+.account-info-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.info-card {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.info-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 15px;
+}
+
+.info-item {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.info-item strong {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .account-sidebar {
+    width: 240px;
+  }
+
+  .account-main {
+    padding: 20px 25px;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-page {
+    flex-direction: column;
+  }
+
+  .account-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 20px 0;
+  }
+
+  .nav-item {
+    padding: 12px 20px;
+  }
+
+  .account-main {
+    padding: 20px;
+  }
+
+  .orders-section,
+  .account-info-section {
+    padding: 20px;
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
