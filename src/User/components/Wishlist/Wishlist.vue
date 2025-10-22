@@ -108,10 +108,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, defineOptions } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+
+defineOptions({
+  name: 'WishlistPage'
+});
 
 const router = useRouter();
 const wishlistItems = ref([]);

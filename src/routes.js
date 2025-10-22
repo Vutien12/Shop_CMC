@@ -12,6 +12,10 @@ import Forgotpass from "./User/screens/ForgotPassword/Forgotpass.vue";
 import Account from "./User/screens/Account/Account.vue";
 import Wishlist from "./User/components/Wishlist/Wishlist.vue";
 import CartPage from "./User/screens/Cart/CartPage.vue";
+import Address from "./User/screens/Address/Address.vue";
+import Profile from "./User/screens/Profile/Profile.vue";
+import NewAddress from "./User/components/NewAddress/NewAddress.vue";
+import Checkout from "./User/screens/Checkout/Checkout.vue";
 
 
 const routes = [
@@ -79,6 +83,26 @@ const routes = [
         name: 'CartPage',
         component: CartPage,
         path: '/cart',
+    },
+    {
+        name: 'Address',
+        component: Address,
+        path: '/addresses',
+    },
+    {
+        name: 'Profile',
+        component: Profile,
+        path: '/profile',
+    },
+    {
+        name: 'NewAddress',
+        component: NewAddress,
+        path: '/new-address',
+    },
+    {
+        name: 'Checkout',
+        component: Checkout,
+        path: '/checkout',
     },
 ];
 const router = createRouter ({

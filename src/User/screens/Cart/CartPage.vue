@@ -47,21 +47,21 @@
               </thead>
               <tbody>
                 <tr v-for="item in cartItems" :key="item.id">
-                  <td>
+                  <td data-label="Image">
                     <div class="product-image">
                       <img :src="item.image" :alt="item.name" />
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Product">
                     <div class="product-name">
                       <h3>{{ item.name }}</h3>
                       <p class="product-color">Color: White</p>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Unit Price">
                     <div class="unit-price">${{ item.price }}</div>
                   </td>
-                  <td>
+                  <td data-label="Quantity">
                     <div class="quantity-controls">
                       <button @click="decreaseQuantity(item.id)" class="qty-btn">
                         <i class="fa-solid fa-minus"></i>
@@ -72,7 +72,7 @@
                       </button>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Line Total">
                     <div class="line-total">
                       ${{ (parseFloat(item.price) * item.quantity).toFixed(2) }}
                     </div>
@@ -94,7 +94,7 @@
               <span>Total</span>
               <span class="total-amount">${{ total.toFixed(2) }}</span>
             </div>
-            <button class="btn-checkout">
+            <button class="btn-checkout" @click="proceedToCheckout">
               Proceed to Checkout
             </button>
           </div>
@@ -108,8 +108,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+
+const router = useRouter();
 
 const cartItems = ref([]);
 
@@ -157,6 +160,15 @@ const decreaseQuantity = (id) => {
 const removeItem = (id) => {
   cartItems.value = cartItems.value.filter(item => item.id !== id);
   saveCart();
+};
+
+// Proceed to checkout
+const proceedToCheckout = () => {
+  if (cartItems.value.length === 0) {
+    alert('Your cart is empty!');
+    return;
+  }
+  router.push('/checkout');
 };
 
 onMounted(() => {

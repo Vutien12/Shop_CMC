@@ -351,7 +351,7 @@ import Header1 from "../Header/Header1.vue";
 import Footer from "../Footer/Footer.vue";
 
 export default {
-  name: "Product",
+  name: "ProductPage",
   components: { Header1, Footer },
   mounted() {
     // Initialize liked state from localStorage

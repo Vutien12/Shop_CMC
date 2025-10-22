@@ -332,30 +332,181 @@
 }
 
 /* Responsive */
-@media (max-width: 968px) {
+@media (max-width: 1000px) {
+  .checkout-steps {
+    display: none;
+  }
+
   .cart-content {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .cart-summary {
     position: static;
+    order: 2;
+  }
+
+  .cart-table-section {
+    order: 1;
+  }
+
+  /* Hide table on mobile */
+  .cart-table thead {
+    display: none;
+  }
+
+  .cart-table,
+  .cart-table tbody,
+  .cart-table tr,
+  .cart-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .cart-table tbody tr {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .cart-table tbody td {
+    border: none;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cart-table tbody td:first-child {
+    padding-left: 0;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .cart-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 13px;
+    flex: 0 0 100px;
+  }
+
+  .cart-table tbody td:first-child::before {
+    display: none;
+  }
+
+  .product-image {
+    width: 100%;
+    max-width: 200px;
+    height: 200px;
+  }
+
+  .product-name {
+    flex: 1;
+    text-align: left;
+  }
+
+  .product-name h3 {
+    font-size: 16px;
+  }
+
+  .unit-price,
+  .line-total {
+    font-size: 15px;
+  }
+
+  .quantity-controls {
+    margin-left: auto;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+  }
+
+  .cart-summary {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .cart-table {
-    display: block;
-    overflow-x: auto;
+  .cart-page {
+    padding: 20px 0;
   }
 
-  .cart-actions {
+  .container {
+    padding: 0 15px;
+  }
+
+  .checkout-steps {
+    gap: 6px;
+  }
+
+  .step {
+    padding: 10px 8px;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
   }
 
-  .btn-continue-shopping,
-  .btn-clear-cart {
-    width: 100%;
-    justify-content: center;
+  .step-number {
+    font-size: 14px;
+  }
+
+  .step-title {
+    font-size: 11px;
+  }
+
+  .empty-cart-state {
+    padding: 60px 20px;
+  }
+
+  .empty-icon i {
+    font-size: 60px;
+  }
+
+  .empty-cart-state h2 {
+    font-size: 20px;
+  }
+
+  .empty-cart-state p {
+    font-size: 14px;
+  }
+
+  .cart-summary {
+    padding: 20px;
+  }
+
+  .cart-summary h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image {
+    max-width: 150px;
+    height: 150px;
+  }
+
+  .product-name h3 {
+    font-size: 14px;
+  }
+
+  .product-color {
+    font-size: 12px;
+  }
+
+  .cart-table tbody td {
+    font-size: 14px;
+  }
+
+  .cart-table tbody td::before {
+    flex: 0 0 80px;
+    font-size: 12px;
   }
 }

@@ -84,16 +84,12 @@
         <button class="btn-clear-cart" @click="clearCart">
           Clear Cart
         </button>
-        <router-link
-          to="/cart"
-          class="btn-view-cart"
-          @click="closeCart"
-        >
+        <router-link to="/cart" class="btn-view-cart" @click="closeCart">
           View Cart
         </router-link>
-        <button class="btn-checkout">
+        <router-link to="/checkout" class="btn-checkout" @click="closeCart">
           Checkout
-        </button>
+        </router-link>
       </div>
     </div>
     </div>
@@ -102,6 +98,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+
+defineOptions({
+  name: 'UserCart'
+});
 
 const isOpen = ref(false);
 const cartItems = ref([]);
