@@ -1,6 +1,5 @@
 import { createWebHistory, createRouter } from "vue-router";
 import Home from "./User/screens/Home.vue";
-import detailproduct from "./User/components/detailproduct.vue";
 import Header1 from "./User/components/Header/Header1.vue";
 import Footer from "./User/components/Footer/Footer.vue";
 import product from "./User/components/Product/Product.vue";
@@ -16,6 +15,8 @@ import Address from "./User/screens/Address/Address.vue";
 import Profile from "./User/screens/Profile/Profile.vue";
 import NewAddress from "./User/components/NewAddress/NewAddress.vue";
 import Checkout from "./User/screens/Checkout/Checkout.vue";
+import MyOrder from "./User/components/MyOrder/MyOrder.vue";
+import Review from "./User/components/Review/Review.vue";
 
 
 const routes = [
@@ -23,11 +24,6 @@ const routes = [
         name: 'Home',
         component: Home,
         path: '/',
-    },
-    {
-        name: 'detailproduct',
-        component: detailproduct,
-        path: '/detail/:id'
     },
     {
         name: 'Header1',
@@ -104,6 +100,16 @@ const routes = [
         component: Checkout,
         path: '/checkout',
     },
+    {
+        name: 'MyOrder',
+        component: MyOrder,
+        path: '/orders',
+    },
+    {
+        name: 'Review',
+        component: Review,
+        path: '/review',
+    }
 ];
 const router = createRouter ({
     history:createWebHistory(),

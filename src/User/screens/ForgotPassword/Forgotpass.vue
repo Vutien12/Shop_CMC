@@ -1,5 +1,8 @@
 <template>
   <div class="forgot-container">
+    <Loading v-if="isLoading" />
+
+    <template v-else>
     <!-- Left Side - Illustration -->
     <div class="forgot-left">
       <button class="back-button" @click="goBack">
@@ -41,14 +44,17 @@
         </form>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
+const isLoading = ref(true);
 const email = ref('');
 
 const goBack = () => {
@@ -60,6 +66,12 @@ const handleResetPassword = () => {
   // Add your reset password logic here
   alert('Password reset link has been sent to your email!');
 };
+
+onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
+});
 </script>
 
 <style scoped>

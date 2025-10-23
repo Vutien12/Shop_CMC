@@ -2,7 +2,9 @@
   <div class="account-wrapper">
     <Header1 />
 
-    <div class="account-page">
+    <Loading v-if="isLoading" />
+
+    <div v-else class="account-page">
       <!-- Sidebar -->
       <aside class="account-sidebar">
         <nav class="sidebar-nav">
@@ -111,13 +113,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
 
+const isLoading = ref(true);
 const recentOrders = ref([
   {
     id: '2184',
@@ -174,6 +178,12 @@ const handleLogout = () => {
   window.dispatchEvent(new Event('loginStatusChanged'));
   router.push('/login');
 };
+
+onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
+});
 </script>
 
 <style src="./Account.css" scoped></style>

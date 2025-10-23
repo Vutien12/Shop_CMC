@@ -4,6 +4,15 @@
   min-height: 100vh;
 }
 
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  font-size: 18px;
+  color: #666;
+}
+
 .product-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -388,6 +397,70 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+/* Reviews List */
+.reviews-list {
+  margin-top: 2rem;
+}
+
+.review-item {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1.5rem 0;
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.reviewer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviewer-info strong {
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.review-stars .star {
+  color: #ffc107;
+  font-size: 16px;
+}
+
+.review-stars .star:not(.filled) {
+  color: #dee2e6;
+}
+
+.review-date {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.review-comment {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.no-reviews {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+  font-style: italic;
 }
 
 /* --- Media Queries CẬP NHẬT RESPONSIVE --- */

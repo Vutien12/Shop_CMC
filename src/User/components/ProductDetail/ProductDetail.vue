@@ -1,7 +1,10 @@
 <template>
   <div class="product-detail-container">
     <Header1/>
-    <div class="product-container">
+
+    <Loading v-if="isLoading" text="Loading product..." />
+
+    <div v-else-if="product" class="product-container">
       <div class="product-content">
         <div class="product-images">
           <div class="main-image">
@@ -104,7 +107,7 @@
             class="tab-btn"
             :class="{ active: activeTab === 'reviews' }"
             @click="setActiveTab('reviews')">
-            Reviews ({{ product.reviews }})
+            Reviews ({{ productReviews.length }})
           </button>
         </div>
 
@@ -160,15 +163,35 @@
 
           <div v-if="activeTab === 'reviews'" class="tab-panel">
             <h3>Customer Reviews</h3>
-            <div class="review-summary">
-              <div class="rating-overview">
-                <div class="stars">
-                  <span v-for="(star, index) in getStars(product.rating)" :key="index" class="star filled">★</span>
+
+            <div v-if="productReviews.length > 0">
+              <div class="review-summary">
+                <div class="rating-overview">
+                  <div class="stars">
+                    <span v-for="(star, index) in getStars(averageRating)" :key="index" class="star filled">★</span>
+                  </div>
+                  <span>{{ averageRating.toFixed(1) }}/5 based on {{ productReviews.length }} review{{ productReviews.length > 1 ? 's' : '' }}</span>
                 </div>
-                <span>{{ product.rating }}/5 based on {{ product.reviews }} reviews</span>
+              </div>
+
+              <div class="reviews-list">
+                <div v-for="review in productReviews" :key="review.date" class="review-item">
+                  <div class="review-header">
+                    <div class="reviewer-info">
+                      <strong>{{ review.userName }}</strong>
+                      <div class="review-stars">
+                        <span v-for="star in review.userRating" :key="star" class="star filled">★</span>
+                        <span v-for="star in (5 - review.userRating)" :key="'empty-' + star" class="star">☆</span>
+                      </div>
+                    </div>
+                    <span class="review-date">{{ formatDate(review.date) }}</span>
+                  </div>
+                  <p class="review-comment">{{ review.userComment }}</p>
+                </div>
               </div>
             </div>
-            <p>No reviews yet. Be the first to review this product!</p>
+
+            <p v-else class="no-reviews">No reviews yet. Be the first to review this product!</p>
           </div>
         </div>
       </div>
@@ -187,52 +210,42 @@
         </div>
       </div>
     </div>
-    <Footer />
+    <Footer v-if="product" />
   </div>
 </template>
 
 <script>
 import Header1 from '../Header/Header1.vue';
 import Footer from '../Footer/Footer.vue';
+import Loading from '../Loading/Loading.vue';
 
 export default {
   name: 'ProductDetail',
   components: {
     Header1,
-    Footer
+    Footer,
+    Loading
   },
   data() {
     return {
-      product: {
-        id: 'VKGWT1MG',
-        name: 'Men Embroidery Polo Giraffe Shirt',
-        price: 8.66,
-        rating: 5,
-        reviews: 5,
-        inStock: true,
-        description: 'Brand Name: GuaGuanTa Sleeve Length (cm): Short Shirt Type: Slim Style. Casual Decoration: Embroidery',
-        warranty: 'Warranty Compare',
-        category: "Men's Fashion",
-        tags: ['Fashion', 'New Arrivals', 'Casual', 'Outfit', 'Lifestyle'],
-        images: [
-          'assets/images/ao1.jpeg',
-          'assets/images/ao2.webp',
-          'assets/images/polo-white.jpg',
-          'assets/images/polo-black.jpg',
-          'assets/images/polo-navy.jpg',
-          'assets/images/polo-green.jpg'
-        ],
-        features: [
-          '24/7 SUPPORT - Support every time',
-          'ACCEPT PAYMENT - Visa, Paypal, Master',
-          'SECURED PAYMENT - 100% Secured',
-          'FREE SHIPPING - Order over $100',
-          '30 DAYS RETURN - 30 days guarantee'
-        ] // Vẫn giữ data này phòng khi cần dùng lại cho phần khác
-      },
+      isLoading: true,
+      product: null,
+      allProducts: [
+        { id: 1, name: "Sennheiser Momentum 4", price: 255, originalPrice: 299, badge: "15%", badgeColor: "green", reviews: 0, image: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop", inStock: true, description: "Premium wireless headphones with exceptional sound quality and active noise cancellation.", category: "Electronics", tags: ['Audio', 'Wireless', 'Premium'], images: ["https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop"] },
+        { id: 2, name: "Bose QuietComfort", price: 349, badge: "Out of Stock", badgeColor: "red", reviews: 0, image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop", inStock: false, description: "Industry-leading noise cancellation with premium comfort.", category: "Electronics", tags: ['Audio', 'Wireless', 'Noise Cancelling'], images: ["https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop"] },
+        { id: 3, name: "Beats Studio Buds +", price: 170, reviews: 0, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&h=400&fit=crop", inStock: true, description: "True wireless earbuds with powerful sound and active noise cancellation.", category: "Electronics", tags: ['Audio', 'Wireless', 'Earbuds'], images: ["https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&h=400&fit=crop"] },
+        { id: 4, name: "Beats Fit Pro", price: 155, reviews: 0, image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop", inStock: true, description: "Secure-fit wireless earbuds designed for workouts and active lifestyle.", category: "Electronics", tags: ['Audio', 'Wireless', 'Sports'], images: ["https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop"] },
+        { id: 5, name: "Apple AirPods Pro", price: 299, reviews: 0, image: "https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=400&fit=crop", inStock: true, description: "Active noise cancellation with adaptive transparency mode.", category: "Electronics", tags: ['Audio', 'Wireless', 'Apple'], images: ["https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=400&fit=crop"] },
+        { id: 6, name: "OnePlus 11 5G", price: 759.99, reviews: 0, image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop", inStock: true, description: "Flagship smartphone with powerful performance and stunning display.", category: "Smartphones", tags: ['Mobile', '5G', 'Android'], images: ["https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop"] },
+        { id: 7, name: "Samsung Galaxy S24 Ultra", price: 799, reviews: 0, image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop", inStock: true, description: "Premium smartphone with advanced camera system and S Pen.", category: "Smartphones", tags: ['Mobile', '5G', 'Samsung'], images: ["https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop"] },
+        { id: 8, name: "Apple iMac 2023", price: 1349, reviews: 0, image: "https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=400&h=400&fit=crop", inStock: true, description: "All-in-one desktop with stunning 24-inch 4.5K Retina display.", category: "Computers", tags: ['Desktop', 'Apple', 'All-in-One'], images: ["https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=400&h=400&fit=crop"] },
+        { id: 9, name: "MacBook Pro 2023", price: 1499, reviews: 0, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", inStock: true, description: "Professional laptop with M3 chip and exceptional performance.", category: "Computers", tags: ['Laptop', 'Apple', 'Professional'], images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop"] },
+        { id: 10, name: "JYX Jeans for Men", price: 68, reviews: 0, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", inStock: true, description: "Comfortable and stylish jeans for everyday wear.", category: "Fashion", tags: ['Clothing', 'Men', 'Casual'], images: ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop"] },
+      ],
       selectedImage: 0,
       quantity: 1,
       activeTab: 'description',
+      productReviews: [],
       relatedProducts: [
         {
           name: 'DUDUALISS Men Long Sleeve Shirt Men...',
@@ -275,6 +288,43 @@ export default {
       showSizeChart: false
     };
   },
+  mounted() {
+    // Simulate loading
+    setTimeout(() => {
+      // Get product ID from query parameter
+      const productId = parseInt(this.$route.query.id);
+
+      console.log('Product ID from query:', productId);
+      console.log('All products:', this.allProducts);
+
+      if (productId) {
+        // Find product by ID
+        const foundProduct = this.allProducts.find(p => p.id === productId);
+
+        console.log('Found product:', foundProduct);
+
+        if (foundProduct) {
+          this.product = foundProduct;
+          console.log('Product set:', this.product);
+
+          // Load reviews for this product
+          this.loadProductReviews(productId);
+        } else {
+          // Product not found, redirect to product page or show error
+          console.error('Product not found with ID:', productId);
+          alert('Product not found! Redirecting to shop...');
+          this.$router.push('/product');
+        }
+      } else {
+        // No ID provided, redirect to product page
+        console.error('No product ID provided');
+        alert('No product ID provided! Redirecting to shop...');
+        this.$router.push('/product');
+      }
+
+      this.isLoading = false;
+    }, 1000);
+  },
   methods: {
     selectImage(index) {
       this.selectedImage = index;
@@ -301,6 +351,30 @@ export default {
     },
     getStars(rating) {
       return Array(5).fill('').map((_, i) => i < rating ? 'star' : 'star_border');
+    },
+    loadProductReviews(productId) {
+      // Load reviews from localStorage
+      const allReviews = JSON.parse(localStorage.getItem('productReviews') || '[]');
+
+      // Filter reviews for this specific product
+      this.productReviews = allReviews.filter(review => review.productId === productId);
+
+      console.log('Loaded reviews for product', productId, ':', this.productReviews);
+    },
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  },
+  computed: {
+    averageRating() {
+      if (this.productReviews.length === 0) return 0;
+      const sum = this.productReviews.reduce((acc, review) => acc + review.userRating, 0);
+      return sum / this.productReviews.length;
     }
   }
 };

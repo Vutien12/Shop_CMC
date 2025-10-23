@@ -264,8 +264,11 @@
           </div>
         </div>
 
+        <!-- Loading State -->
+        <Loading v-if="isLoading" text="Loading products..." />
+
         <!-- Products Grid -->
-        <div class="products-grid">
+        <div v-else class="products-grid">
           <div
             v-for="product in products"
             :key="product.id"
@@ -299,10 +302,10 @@
                 </button>
               </div>
 
-              <div class="product-image">
+              <div class="product-image" @click="goToProductDetail(product.id)" style="cursor: pointer;">
                 <img :src="product.image" :alt="product.name" />
               </div>
-              <h3 class="product-name">{{ product.name }}</h3>
+              <h3 class="product-name" @click="goToProductDetail(product.id)" style="cursor: pointer;">{{ product.name }}</h3>
 
               <div class="rating">
                 <span v-for="i in 5" :key="i" class="star">★</span>
@@ -349,21 +352,28 @@
 <script>
 import Header1 from "../Header/Header1.vue";
 import Footer from "../Footer/Footer.vue";
+import Loading from "../Loading/Loading.vue";
 
 export default {
   name: "ProductPage",
-  components: { Header1, Footer },
+  components: { Header1, Footer, Loading },
   mounted() {
-    // Initialize liked state from localStorage
-    const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-    const wishlistIds = wishlist.map(item => item.id);
+    // Simulate loading
+    setTimeout(() => {
+      // Initialize liked state from localStorage
+      const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
+      const wishlistIds = wishlist.map(item => item.id);
 
-    this.allProducts.forEach(product => {
-      product.isLiked = wishlistIds.includes(product.id);
-    });
+      this.allProducts.forEach(product => {
+        product.isLiked = wishlistIds.includes(product.id);
+      });
+
+      this.isLoading = false;
+    }, 1000);
   },
   data() {
     return {
+      isLoading: true,
       sidebarOpen: false,
       viewMode: "grid",
       sortBy: "latest",
@@ -443,6 +453,13 @@ export default {
     }
   },
   methods: {
+    goToProductDetail(productId) {
+      // Navigate to product detail page with only product ID
+      this.$router.push({
+        path: '/productdetail',
+        query: { id: productId }
+      });
+    },
     toggleLike(id) {
       const product = this.allProducts.find((p) => p.id === id);
       if (!product) return;

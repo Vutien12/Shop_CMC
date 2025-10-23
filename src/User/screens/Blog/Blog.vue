@@ -1,12 +1,14 @@
 <template>
   <div class="blog-page">
     <Header1 />
-    
-    <div class="blog-container">
+
+    <Loading v-if="isLoading" />
+
+    <div v-else class="blog-container">
       <div class="blog-header">
         <h1 class="blog-page-title">Blog</h1>
       </div>
-      
+
       <div class="blog-grid">
         <div v-for="post in blogPosts" :key="post.id" class="blog-card">
           <div class="blog-image">
@@ -27,7 +29,7 @@
         </div>
       </div>
     </div>
-    
+
     <Footer />
   </div>
 </template>
@@ -35,14 +37,17 @@
 <script>
 import Header1 from '../../components/Header/Header1.vue'
 import Footer from '../../components/Footer/Footer.vue'
+import Loading from '../../components/Loading/Loading.vue'
 export default {
   name: 'Blog',
   components: {
     Header1,
-    Footer
+    Footer,
+    Loading
   },
   data() {
     return {
+      isLoading: true,
       blogPosts: [
         // Row 1
         {
@@ -133,6 +138,11 @@ export default {
         }
       ]
     };
+  },
+  mounted() {
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 1000);
   }
 };
 </script>

@@ -1,5 +1,8 @@
 <template>
   <div class="login-container">
+    <Loading v-if="isLoading" />
+
+    <template v-else>
     <!-- Left Side - Illustration -->
     <div class="login-left">
       <button class="back-button" @click="goBack">
@@ -100,18 +103,21 @@
         </form>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, defineOptions } from 'vue';
+import { ref, defineOptions, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 defineOptions({
   name: 'LoginPage'
 });
 
 const router = useRouter();
+const isLoading = ref(true);
 const email = ref('');
 const password = ref('');
 const rememberMe = ref(false);
@@ -171,6 +177,12 @@ const handleLogin = () => {
     console.log('Login failed');
   }
 };
+
+onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
+});
 </script>
 
 <style src="./Login.css" scoped> </style>

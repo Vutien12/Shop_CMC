@@ -2,7 +2,9 @@
   <div class="cart-page-wrapper">
     <Header1 />
 
-    <div class="cart-page">
+    <Loading v-if="isLoading" />
+
+    <div v-else class="cart-page">
       <div class="container">
         <!-- Progress Steps -->
         <div class="checkout-steps">
@@ -111,9 +113,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
 
+const isLoading = ref(true);
 const cartItems = ref([]);
 
 // Load cart
@@ -172,6 +176,9 @@ const proceedToCheckout = () => {
 };
 
 onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
   loadCart();
   window.addEventListener('cartChanged', loadCart);
 });

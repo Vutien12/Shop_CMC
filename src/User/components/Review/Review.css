@@ -1,0 +1,173 @@
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+/* Modal Content */
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Close Button */
+.btn-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.btn-close:hover {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Modal Title */
+.modal-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+}
+
+/* Review Form */
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #e74c3c;
+}
+
+/* Star Rating */
+.star-rating {
+  display: flex;
+  gap: 8px;
+}
+
+.star-rating i {
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.star-rating i:hover {
+  transform: scale(1.1);
+}
+
+/* Form Input */
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0068e1;
+  box-shadow: 0 0 0 3px rgba(0, 104, 225, 0.1);
+}
+
+/* Form Textarea */
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #0068e1;
+  box-shadow: 0 0 0 3px rgba(0, 104, 225, 0.1);
+}
+
+/* Submit Button */
+.btn-submit {
+  padding: 14px 30px;
+  background-color: #0068e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  align-self: flex-start;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background-color: #0056c4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 104, 225, 0.3);
+}
+
+.btn-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 30px 20px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+    margin-bottom: 25px;
+  }
+}

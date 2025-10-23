@@ -2,7 +2,9 @@
   <div class="account-wrapper">
     <Header1 />
 
-    <div class="account-page">
+    <Loading v-if="isLoading" />
+
+    <div v-else class="account-page">
       <!-- Sidebar -->
       <aside class="account-sidebar">
         <nav class="sidebar-nav">
@@ -146,9 +148,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
 
+const isLoading = ref(true);
 const profileData = ref({
   email: '',
   phone: '',
@@ -250,6 +254,9 @@ const handleLogout = () => {
 
 // Load profile on mount
 onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
   loadProfile();
 });
 </script>

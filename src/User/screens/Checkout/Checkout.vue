@@ -2,7 +2,9 @@
   <div class="checkout-wrapper">
     <Header1 />
 
-    <div class="checkout-page">
+    <Loading v-if="isLoading" />
+
+    <div v-else class="checkout-page">
       <!-- Checkout Steps -->
       <div class="checkout-steps">
         <div class="step">
@@ -305,10 +307,12 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
 
 // Data
+const isLoading = ref(true);
 const cartItems = ref([]);
 const addresses = ref([]);
 const selectedAddressId = ref(null);
@@ -427,14 +431,65 @@ const processPayment = () => {
     return;
   }
 
-  // Process payment logic here
-  alert('Processing payment...');
-  // Redirect to order complete page
-  // router.push('/order-complete');
+  if (cartItems.value.length === 0) {
+    alert('Your cart is empty!');
+    return;
+  }
+
+  // Create order object
+  const order = {
+    id: generateOrderId(),
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    status: selectedPayment.value === 'paypal' ? 'Pending' : 'Pending Payment',
+    statusClass: selectedPayment.value === 'paypal' ? 'status-pending' : 'status-pending-payment',
+    total: `$${total.value.toFixed(2)}`,
+    items: cartItems.value.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.image
+    })),
+    shippingMethod: selectedShipping.value,
+    shippingCost: shippingCost.value,
+    paymentMethod: selectedPayment.value,
+    addressId: selectedAddressId.value
+  };
+
+  // Save order to localStorage
+  let orders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+  orders.unshift(order); // Add to beginning of array
+  localStorage.setItem('userOrders', JSON.stringify(orders));
+
+  // Clear cart
+  localStorage.removeItem('userCart');
+  window.dispatchEvent(new Event('cartChanged'));
+
+  // Show success message
+  alert('Payment successful! Your order has been placed.');
+
+  // Redirect to My Orders page
+  router.push('/orders');
+};
+
+// Generate unique order ID (sequential)
+const generateOrderId = () => {
+  const orders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+
+  if (orders.length === 0) {
+    return '1';
+  }
+
+  // Find the highest order ID and increment by 1
+  const maxId = Math.max(...orders.map(order => parseInt(order.id) || 0));
+  return (maxId + 1).toString();
 };
 
 // Lifecycle
 onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
   loadCart();
   loadAddresses();
 });

@@ -2,7 +2,9 @@
   <div class="account-wrapper">
     <Header1 />
 
-    <div class="account-page">
+    <Loading v-if="isLoading" />
+
+    <div v-else class="account-page">
       <!-- Sidebar -->
       <aside class="account-sidebar">
         <nav class="sidebar-nav">
@@ -112,12 +114,14 @@ import { ref, onMounted, defineOptions } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
 
 defineOptions({
   name: 'WishlistPage'
 });
 
 const router = useRouter();
+const isLoading = ref(true);
 const wishlistItems = ref([]);
 
 // Load wishlist from localStorage
@@ -130,6 +134,9 @@ const loadWishlist = () => {
 
 // Load on component mount
 onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 1000);
   loadWishlist();
 });
 
