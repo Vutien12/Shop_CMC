@@ -118,12 +118,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineOptions } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
-import Review from '@/User/components/Review/Review.vue';
+import Review from '@/User/screens/Review/Review.vue';
 
 defineOptions({
   name: 'MyOrderPage'

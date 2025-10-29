@@ -350,9 +350,9 @@
 </template>
 
 <script>
-import Header1 from "../Header/Header1.vue";
-import Footer from "../Footer/Footer.vue";
-import Loading from "../Loading/Loading.vue";
+import Header1 from "../../components/Header/Header1.vue";
+import Footer from "../../components/Footer/Footer.vue";
+import Loading from "../../components/Loading/Loading.vue";
 
 export default {
   name: "ProductPage",

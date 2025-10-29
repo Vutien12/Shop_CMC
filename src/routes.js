@@ -1,9 +1,9 @@
 import { createWebHistory, createRouter } from "vue-router";
-import Home from "./User/screens/Home.vue";
+import Home from "./User/screens/Home/Home.vue";
 import Header1 from "./User/components/Header/Header1.vue";
 import Footer from "./User/components/Footer/Footer.vue";
-import product from "./User/components/Product/Product.vue";
-import ProductDetail from "./User/components/ProductDetail/ProductDetail.vue";
+import product from "./User/screens/Product/Product.vue";
+import ProductDetail from "./User/screens/ProductDetail/ProductDetail.vue";
 import Blog from "./User/screens/Blog/Blog.vue";
 import Login from "./User/screens/Login/Login.vue";
 import SignUp from "./User/screens/SignUp/SignUp.vue";
@@ -16,7 +16,7 @@ import Profile from "./User/screens/Profile/Profile.vue";
 import NewAddress from "./User/components/NewAddress/NewAddress.vue";
 import Checkout from "./User/screens/Checkout/Checkout.vue";
 import MyOrder from "./User/components/MyOrder/MyOrder.vue";
-import Review from "./User/components/Review/Review.vue";
+import Review from "./User/screens/Review/Review.vue";
 
 
 const routes = [

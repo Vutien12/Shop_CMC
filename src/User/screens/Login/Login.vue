@@ -108,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, defineOptions, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Loading from '@/User/components/Loading/Loading.vue';
 
