@@ -231,43 +231,55 @@
   box-shadow: 0 4px 12px rgba(0, 104, 225, 0.3);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .account-page {
-    grid-template-columns: 1fr;
-  }
-
+/* Responsive - follow Account dashboard behavior: keep table scrollable on small screens */
+@media (max-width: 1024px) {
   .account-sidebar {
-    order: 2;
+    width: 240px;
   }
 
   .account-main {
-    order: 1;
+    padding: 20px 25px;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-page {
+    flex-direction: column;
+  }
+
+  .account-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 20px 0;
+  }
+
+  .nav-item {
+    padding: 12px 20px;
+  }
+
+  .account-main {
+    padding: 20px;
+  }
+
+  .orders-section {
+    padding: 20px;
+  }
+
+  .orders-table {
+    /* allow horizontal scroll via the wrapper, avoid converting rows to blocks */
+    white-space: nowrap;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 12px 10px;
+    font-size: 13px;
   }
 
   .orders-table thead {
-    display: none;
-  }
-
-  .orders-table tr {
-    display: block;
-    margin-bottom: 20px;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-  }
-
-  .orders-table td {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border: none;
-  }
-
-  .orders-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #495057;
+    /* keep header visible but compact */
+    background-color: #f8f9fa;
   }
 }
 

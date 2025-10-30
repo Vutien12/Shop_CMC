@@ -69,11 +69,16 @@
                     {{ address.city }}, {{ address.state }} {{ address.postcode }}<br />
                     {{ address.country }}
                   </p>
-                </div>
-                <div class="address-actions">
-                  <button class="action-btn delete-btn" @click="deleteAddress(address.id)" title="Delete">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
+                  <div class="address-actions">
+                    <button class="action-btn edit-btn" @click="editAddress(address.id)" title="Edit">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                      <span>Edit</span>
+                    </button>
+                    <button class="action-btn delete-btn" @click="deleteAddress(address.id)" title="Delete">
+                      <i class="fa-solid fa-trash"></i>
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -119,6 +124,12 @@ const loadAddresses = () => {
 // Go to new address page
 const goToNewAddress = () => {
   router.push('/new-address');
+};
+
+// Edit address
+const editAddress = (id) => {
+  // Navigate to edit page with address ID
+  router.push(`/edit-address/${id}`);
 };
 
 // Delete address

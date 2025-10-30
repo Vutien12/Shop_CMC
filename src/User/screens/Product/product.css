@@ -588,16 +588,21 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  padding: 8px;
-  background-color: white;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  background-color: #221733; /* dark rounded square background */
   border: none;
-  border-radius: 50%;
+  border-radius: 8px; /* rounded square */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.3s ease;
+  transform: scale(0.9);
+  transition: transform 0.18s ease, opacity 0.18s ease, background-color 0.18s ease;
   z-index: 2;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(34, 23, 51, 0.12);
 }
 
 .product-card:hover .like-btn {
@@ -611,8 +616,8 @@
 }
 
 .like-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+  background-color: #2b193f; /* slightly lighter on hover */
 }
 
 .heart-icon {
@@ -623,8 +628,30 @@
   transition: all 0.3s ease;
 }
 
+.like-btn .heart-icon {
+  /* heart is white outline when in the dark rounded square */
+  stroke: #ffffff;
+  fill: transparent;
+  transition: fill 0.18s ease, stroke 0.18s ease;
+}
+
+.like-btn.liked {
+  /* remove the rounded-square frame when liked: leave only the heart */
+  background-color: transparent;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  padding: 4px; /* small hit area but no visible frame */
+  border-radius: 0;
+}
+
+.like-btn.liked:hover {
+  background-color: transparent; /* don't reintroduce frame on hover */
+  transform: scale(1.08);
+}
+
 .like-btn.liked .heart-icon {
-  fill: #ef4444;
+  fill: #ef4444; /* filled red when liked */
   stroke: #ef4444;
 }
 
@@ -1143,12 +1170,22 @@
   .like-btn {
     opacity: 1;
     transform: scale(1);
-    padding: 6px;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
   }
 
   .heart-icon {
     width: 18px;
     height: 18px;
+  }
+}
+
+/* Hide like button on screens under 450px */
+@media (max-width: 450px) {
+  .like-btn {
+    display: none !important;
   }
 }
 

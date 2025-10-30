@@ -306,7 +306,11 @@
     font-size: 20px;
   }
 
+  /* keep action buttons horizontal on mobile like dashboard style */
   .action-buttons {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* adjust as needed: flex-end to align right */
+    gap: 8px;
   }
 }

@@ -116,8 +116,10 @@
   font-size: 0.9rem;
 }
 
+/* Make stock status a block so action buttons sit below it */
 .stock-status {
-  margin-bottom: 0.4rem;
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 .in-stock {
@@ -129,41 +131,54 @@
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 0.6rem;
+  gap: 1rem; /* reduced spacing between Wishlist and Compare */
+  align-items: center;
+  margin: 0.4rem 0 0 0; /* appear just under stock-status */
+}
+
+/* Ensure alignment with stock-status: remove any left offset and align to product-info start */
+.product-info .stock-status,
+.product-info .action-buttons {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 }
 
 .btn-wishlist,
 .btn-compare {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  gap: 0.8rem;
+  /* remove left padding so icon aligns with title left edge */
+  padding: 0.35rem 0.6rem 0.35rem 0;
+  background: transparent; /* remove filled box */
+  border: none; /* remove outer frame */
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  color: #666;
-  transition: all 0.3s;
+  color: #6e6e6e; /* primary link color */
+  font-weight: 600;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.btn-wishlist i,
+.btn-compare i {
+  font-size: 16px;
+  color: inherit;
 }
 
 .btn-wishlist:hover,
 .btn-compare:hover {
-  border-color: #0068e1;
-  color: #0068e1;
+  background: transparent; /* keep no box on hover */
+  color: #004ea3; /* only change text color on hover */
 }
 
+/* Ensure following content starts below floated buttons */
 .product-description {
   margin-bottom: 1.5rem;
   line-height: 1.6;
   font-size: 1rem;
 }
 
-.warranty {
-  color: #666;
-  font-size: 0.9rem;
-}
 
 .price-section {
   margin-bottom: 0.6rem;
@@ -292,6 +307,8 @@
   font-weight: 600;
   color: #1f2937;
   background: #f9fafb;
+  appearance: textfield;
+  -webkit-appearance: textfield;
   -moz-appearance: textfield;
 }
 

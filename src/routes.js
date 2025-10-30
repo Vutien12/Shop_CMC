@@ -96,6 +96,11 @@ const routes = [
         path: '/new-address',
     },
     {
+        name: 'EditAddress',
+        component: NewAddress,
+        path: '/edit-address/:id',
+    },
+    {
         name: 'Checkout',
         component: Checkout,
         path: '/checkout',

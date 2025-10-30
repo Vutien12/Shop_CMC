@@ -50,7 +50,7 @@
 
           <!-- New Address Form -->
           <div class="address-form-card">
-            <h3>New Address</h3>
+            <h3>{{ isEditMode ? 'Edit Address' : 'New Address' }}</h3>
 
             <form @submit.prevent="saveAddress" class="address-form">
               <div class="form-row">
@@ -169,12 +169,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 
 const router = useRouter();
+const route = useRoute();
+
+const isEditMode = ref(false);
+const editingId = ref(null);
 
 const formData = ref({
   firstName: '',
@@ -187,6 +191,23 @@ const formData = ref({
   state: ''
 });
 
+// Load address data if editing
+onMounted(() => {
+  const addressId = route.params.id;
+  if (addressId) {
+    isEditMode.value = true;
+    editingId.value = parseInt(addressId);
+
+    // Load the address from localStorage
+    const addresses = JSON.parse(localStorage.getItem('userAddresses') || '[]');
+    const addressToEdit = addresses.find(addr => addr.id === editingId.value);
+
+    if (addressToEdit) {
+      formData.value = { ...addressToEdit };
+    }
+  }
+});
+
 // Cancel form
 const cancelForm = () => {
   router.push('/addresses');
@@ -197,18 +218,28 @@ const saveAddress = () => {
   // Get existing addresses
   const addresses = JSON.parse(localStorage.getItem('userAddresses') || '[]');
 
-  // Add new address
-  const newAddress = {
-    ...formData.value,
-    id: Date.now()
-  };
-
-  addresses.push(newAddress);
+  if (isEditMode.value) {
+    // Update existing address
+    const index = addresses.findIndex(addr => addr.id === editingId.value);
+    if (index !== -1) {
+      addresses[index] = {
+        ...formData.value,
+        id: editingId.value
+      };
+    }
+    alert('Address updated successfully!');
+  } else {
+    // Add new address
+    const newAddress = {
+      ...formData.value,
+      id: Date.now()
+    };
+    addresses.push(newAddress);
+    alert('Address saved successfully!');
+  }
 
   // Save to localStorage
   localStorage.setItem('userAddresses', JSON.stringify(addresses));
-
-  alert('Address saved successfully!');
 
   // Redirect back to addresses page
   router.push('/addresses');
