@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Header1 />
+    <Header />
     <!-- Overlay -->
     <div
       v-if="sidebarOpen"
@@ -350,13 +350,13 @@
 </template>
 
 <script>
-import Header1 from "../../components/Header/Header1.vue";
+import Header from "../../components/Header1/Header.vue";
 import Footer from "../../components/Footer/Footer.vue";
 import Loading from "../../components/Loading/Loading.vue";
 
 export default {
   name: "ProductPage",
-  components: { Header1, Footer, Loading },
+  components: { Header, Footer, Loading },
   mounted() {
     // Simulate loading
     setTimeout(() => {

@@ -17,6 +17,7 @@ import NewAddress from "./User/components/NewAddress/NewAddress.vue";
 import Checkout from "./User/screens/Checkout/Checkout.vue";
 import MyOrder from "./User/components/MyOrder/MyOrder.vue";
 import Review from "./User/screens/Review/Review.vue";
+import Header from "./User/components/Header1/Header.vue";
 
 
 const routes = [
@@ -114,7 +115,13 @@ const routes = [
         name: 'Review',
         component: Review,
         path: '/review',
+    },
+    {
+        name: 'Header',
+        component: Header,
+        path: '/header',
     }
+
 ];
 const router = createRouter ({
     history:createWebHistory(),
