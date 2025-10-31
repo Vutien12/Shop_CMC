@@ -115,6 +115,9 @@
           >
             More
           </button>
+          <button class="close-menu-btn" @click="closeMenu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
         <!-- Desktop ALL CATEGORIES Button -->
