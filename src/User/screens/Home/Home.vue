@@ -4,14 +4,41 @@
     <Loading v-if="isLoading" />
     <div v-else class="home-container">
       <!-- Hero Slider -->
-      <section class="hero-slider">
-        <div class="slider-container">
-          <div class="slide active">
-            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=500&fit=crop" alt="Xiaomi Speaker">
-            <div class="slide-content">
-              <h2>XIAOMI SPEAKER</h2>
-              <p>There are a upgrade for the quality and control in the home</p>
+      <section class="hero-section">
+        <div class="hero-slider">
+          <div class="slider-container">
+            <div class="slide active">
+              <img src="https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=800&h=600&fit=crop" alt="VR Headset">
+              <div class="slide-content">
+                <h2>3D Virtual Reality</h2>
+                <p>VR 3D glasses with remote control gamepad<br>at best price</p>
+                <div class="slider-dots">
+                  <span class="dot"></span>
+                  <span class="dot active"></span>
+                  <span class="dot"></span>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+        <div class="hero-banners">
+          <div class="banner-card">
+            <div class="banner-content">
+              <span class="banner-price">Starting: <strong>$79</strong></span>
+              <h3>Unio <strong>Leather</strong><br>Bags</h3>
+              <button class="banner-btn">Shop Now</button>
+            </div>
+            <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop" alt="Leather Bags">
+            <div class="banner-circle"></div>
+          </div>
+          <div class="banner-card">
+            <div class="banner-content">
+              <span class="banner-discount">Upto 50% Off</span>
+              <h3>I Phone <strong>6+</strong><br><strong>32</strong> GB</h3>
+              <button class="banner-btn">Shop Now</button>
+            </div>
+            <img src="https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=300&fit=crop" alt="iPhone">
+            <div class="banner-circle"></div>
           </div>
         </div>
       </section>
@@ -19,35 +46,49 @@
       <!-- Features Banner -->
       <section class="features-banner">
         <div class="feature-item">
-          <span class="material-icons">support_agent</span>
+          <div class="feature-icon">
+            <span class="material-icons">support_agent</span>
+          </div>
           <div class="feature-text">
             <h4>24/7 SUPPORT</h4>
             <p>Support every time</p>
           </div>
         </div>
+        <div class="feature-divider"></div>
         <div class="feature-item">
-          <span class="material-icons">payment</span>
+          <div class="feature-icon">
+            <span class="material-icons">payment</span>
+          </div>
           <div class="feature-text">
             <h4>ACCEPT PAYMENT</h4>
             <p>Visa, Paypal, Master</p>
           </div>
         </div>
+        <div class="feature-divider"></div>
         <div class="feature-item">
-          <span class="material-icons">lock</span>
+          <div class="feature-icon">
+            <span class="material-icons">lock</span>
+          </div>
           <div class="feature-text">
             <h4>SECURED PAYMENT</h4>
             <p>100% secured</p>
           </div>
         </div>
+        <div class="feature-divider"></div>
         <div class="feature-item">
-          <span class="material-icons">local_shipping</span>
+          <div class="feature-icon">
+            <span class="material-icons">local_shipping</span>
+          </div>
           <div class="feature-text">
             <h4>FREE SHIPPING</h4>
             <p>Order over $100</p>
           </div>
         </div>
+        <div class="feature-divider"></div>
         <div class="feature-item">
-          <span class="material-icons">keyboard_return</span>
+          <div class="feature-icon">
+            <span class="material-icons">keyboard_return</span>
+          </div>
           <div class="feature-text">
             <h4>30 DAYS RETURN</h4>
             <p>30 days guarantee</p>
@@ -61,31 +102,81 @@
           <h2>Top Categories in Sales and Trending</h2>
           <p>Last Month up to 1500+ Products Sales From this category. You can choose a product from here and save money.</p>
         </div>
-        <div class="categories-grid">
-          <div class="category-card" @click="goToCategory('laptops')">
-            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&h=200&fit=crop" alt="Laptops">
+        <div class="categories-tabs">
+          <div class="category-tab" :class="{ active: activeCategory === 'laptops' }" @click="activeCategory = 'laptops'">
+            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=80&h=80&fit=crop" alt="Laptops">
             <h3>Laptops</h3>
           </div>
-          <div class="category-card" @click="goToCategory('mobiles')">
-            <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200&h=200&fit=crop" alt="Mobiles">
+          <div class="category-tab" :class="{ active: activeCategory === 'mobiles' }" @click="activeCategory = 'mobiles'">
+            <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=80&h=80&fit=crop" alt="Mobiles">
             <h3>Mobiles</h3>
           </div>
-          <div class="category-card" @click="goToCategory('tablets')">
-            <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?w=200&h=200&fit=crop" alt="Tablets">
+          <div class="category-tab" :class="{ active: activeCategory === 'tablets' }" @click="activeCategory = 'tablets'">
+            <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?w=80&h=80&fit=crop" alt="Tablets">
             <h3>Tablets</h3>
           </div>
-          <div class="category-card" @click="goToCategory('watches')">
-            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop" alt="Watches">
+          <div class="category-tab" :class="{ active: activeCategory === 'watches' }" @click="activeCategory = 'watches'">
+            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop" alt="Watches">
             <h3>Watches</h3>
           </div>
-          <div class="category-card" @click="goToCategory('fashion')">
-            <img src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=200&h=200&fit=crop" alt="Men's Fashion">
+          <div class="category-tab" :class="{ active: activeCategory === 'fashion' }" @click="activeCategory = 'fashion'">
+            <img src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=80&h=80&fit=crop" alt="Men's Fashion">
             <h3>Men's Fashion</h3>
           </div>
-          <div class="category-card" @click="goToCategory('televisions')">
-            <img src="https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=200&h=200&fit=crop" alt="Televisions">
+          <div class="category-tab" :class="{ active: activeCategory === 'televisions' }" @click="activeCategory = 'televisions'">
+            <img src="https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=80&h=80&fit=crop" alt="Televisions">
             <h3>Televisions</h3>
           </div>
+        </div>
+
+        <div class="category-products">
+          <div class="products-scroll">
+            <div class="product-card" v-for="product in categoryProducts" :key="product.id">
+              <div class="product-image">
+                <img :src="product.image" :alt="product.name">
+                <span class="badge badge-red" v-if="product.outOfStock">Out of Stock</span>
+                <span class="badge badge-green" v-if="product.discount">{{ product.discount }}</span>
+                <span class="badge badge-blue" v-if="product.isNew">New</span>
+                <div class="product-actions">
+                  <button class="action-btn" @click.stop="addToCart(product)" title="Add to cart">
+                    <span class="material-icons">shopping_cart</span>
+                  </button>
+                  <button class="action-btn" @click.stop="goToProduct(product.id)" title="Quick view">
+                    <span class="material-icons">visibility</span>
+                  </button>
+                </div>
+              </div>
+              <div class="product-info">
+                <h3>{{ product.name }}</h3>
+                <div class="rating">
+                  <span class="stars">★★★★★</span>
+                  <span class="reviews">{{ product.reviews }} Review</span>
+                </div>
+                <div class="price">
+                  <span class="original-price" v-if="product.originalPrice">${{ product.originalPrice }}</span>
+                  <span class="current-price">${{ product.price }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Promotional Banners -->
+      <section class="promo-banners">
+        <div class="promo-card">
+          <img src="https://asia.fleetcart.envaysoft.com/storage/media/SnNz5B0YIEGCw1OdLhFJbqF7hfCNc80adaLCdqOE.png" alt="Comfort Chair">
+        </div>
+        <div class="promo-card">
+          <img src="https://asia.fleetcart.envaysoft.com/storage/media/3YFgcINuEaLyLvy6QjxKwKVDMALI9qzmXEN7Vqx3.png" alt="Bedroom Products">
+        </div>
+        <div class="promo-card">
+          <img src="https://asia.fleetcart.envaysoft.com/storage/media/pmQxhyWNznFCMZvc4KTv4HNk4RfG3eBlNqR0xsCt.png" alt="Galaxy S9">
         </div>
       </section>
 
@@ -230,6 +321,67 @@ const router = useRouter()
 const isLoading = ref(true)
 const activeTab = ref('mobiles')
 const sellersTab = ref('latest')
+const activeCategory = ref('laptops')
+
+const categoryProducts = computed(() => {
+  return [
+    {
+      id: 1,
+      name: 'Apple 2023 iMac (24-Inch)',
+      price: 1349.00,
+      image: 'https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=300&h=300&fit=crop',
+      reviews: 0
+    },
+    {
+      id: 2,
+      name: 'Apple 2023 MacBook Pro (14-inch)',
+      price: 1499.00,
+      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&h=300&fit=crop',
+      reviews: 0
+    },
+    {
+      id: 3,
+      name: 'MSI Gaming Core i7 8Th Gen 15.6-Inch',
+      price: 760.00,
+      image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=300&h=300&fit=crop',
+      reviews: 0
+    },
+    {
+      id: 4,
+      name: 'New Apple Mac Mini (3.6GHz Quad-core...',
+      price: 759.00,
+      image: 'https://images.unsplash.com/photo-1625948515291-69613efd103f?w=300&h=300&fit=crop',
+      reviews: 0,
+      outOfStock: true
+    },
+    {
+      id: 5,
+      name: 'LG gram Laptop - 13.3" Full HD Display, Intel...',
+      price: 2135.54,
+      originalPrice: 2426.75,
+      discount: '-12%',
+      image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&h=300&fit=crop',
+      reviews: 0
+    },
+    {
+      id: 6,
+      name: 'Razer Blade Stealth 13.3" QHD+ Intel Quad...',
+      price: 1199.77,
+      image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=300&h=300&fit=crop',
+      reviews: 0,
+      isNew: true
+    },
+    {
+      id: 7,
+      name: 'Razer Blade - Worlds Smallest 15.6in...',
+      price: 1500.00,
+      originalPrice: 1699.99,
+      discount: '-12%',
+      image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=300&h=300&fit=crop',
+      reviews: 0
+    }
+  ]
+})
 
 const bestDeals = ref([
   {
@@ -347,8 +499,9 @@ const goToProduct = (id) => {
   router.push(`/productdetail?id=${id}`)
 }
 
-const goToCategory = (category) => {
-  router.push(`/product?category=${category}`)
+const addToCart = (product) => {
+  console.log('Added to cart:', product)
+  // Add your cart logic here
 }
 
 onMounted(() => {
@@ -358,514 +511,6 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.home-page {
-  background: #f9fafb;
-  min-height: 100vh;
-}
+<style scoped src="./Home.css"></style>
 
-.home-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
 
-/* Hero Slider */
-.hero-slider {
-  margin-bottom: 30px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.slider-container {
-  position: relative;
-  height: 450px;
-}
-
-.slide {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.slide-content {
-  position: absolute;
-  bottom: 50px;
-  left: 50px;
-  color: white;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-.slide-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-.slide-content p {
-  font-size: 1.2rem;
-}
-
-/* Features Banner */
-.features-banner {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 40px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  overflow-x: auto;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  min-width: 200px;
-}
-
-.feature-item .material-icons {
-  font-size: 3rem;
-  color: #0068e1;
-}
-
-.feature-text h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.feature-text p {
-  font-size: 0.85rem;
-  color: #666;
-  margin: 0;
-}
-
-/* Top Categories */
-.top-categories {
-  margin-bottom: 50px;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.section-header h2 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.section-header p {
-  color: #666;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.categories-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 20px;
-}
-
-.category-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.category-card img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-bottom: 15px;
-}
-
-.category-card h3 {
-  font-size: 1rem;
-  color: #333;
-}
-
-/* Best Deals */
-.best-deals {
-  margin-bottom: 50px;
-}
-
-.best-deals h2 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.products-carousel {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-/* Product Card */
-.product-card {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.product-image {
-  position: relative;
-  width: 100%;
-  height: 250px;
-  overflow: hidden;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #28a745;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.badge-discount {
-  background: #28a745;
-}
-
-.badge-red {
-  background: #dc3545;
-}
-
-.badge-new {
-  background: #ffc107;
-  color: #333;
-}
-
-.product-info {
-  padding: 15px;
-}
-
-.product-info h3 {
-  font-size: 0.95rem;
-  margin-bottom: 10px;
-  color: #333;
-  height: 40px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.stars {
-  color: #ffc107;
-  font-size: 0.9rem;
-}
-
-.reviews {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.price {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.current-price {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #0068e1;
-}
-
-.original-price {
-  font-size: 1rem;
-  color: #999;
-  text-decoration: line-through;
-}
-
-.countdown {
-  background: #f8f9fa;
-  padding: 8px;
-  border-radius: 4px;
-  text-align: center;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.stock-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  color: #666;
-}
-
-/* Tabs */
-.tab-products {
-  margin-bottom: 50px;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.tabs button {
-  padding: 12px 24px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #666;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
-}
-
-.tabs button.active {
-  color: #0068e1;
-  border-bottom-color: #0068e1;
-}
-
-.tabs button:hover {
-  color: #0068e1;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-}
-
-/* Hot Sellers */
-.hot-sellers {
-  margin-bottom: 50px;
-}
-
-.section-tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.section-tabs button {
-  padding: 12px 24px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #666;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
-}
-
-.section-tabs button.active {
-  color: #0068e1;
-  border-bottom-color: #0068e1;
-}
-
-/* Brands */
-.brands-section {
-  margin-bottom: 50px;
-  padding: 30px;
-  background: white;
-  border-radius: 8px;
-}
-
-.brands-carousel {
-  display: flex;
-  gap: 30px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.brands-carousel img {
-  height: 60px;
-  object-fit: contain;
-  opacity: 0.6;
-  transition: opacity 0.3s;
-  cursor: pointer;
-}
-
-.brands-carousel img:hover {
-  opacity: 1;
-}
-
-/* Blog Posts */
-.blog-posts {
-  margin-bottom: 50px;
-}
-
-.blog-posts .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.blog-posts .section-header h2 {
-  margin: 0;
-}
-
-.view-all {
-  color: #0068e1;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.blog-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-}
-
-.blog-card {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: all 0.3s;
-}
-
-.blog-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.blog-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-}
-
-.blog-content {
-  padding: 15px;
-}
-
-.blog-author,
-.blog-date {
-  font-size: 0.8rem;
-  color: #666;
-  margin-right: 10px;
-}
-
-.blog-content h3 {
-  font-size: 0.95rem;
-  color: #333;
-  margin: 10px 0;
-  height: 45px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.read-more {
-  color: #0068e1;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .categories-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .blog-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .categories-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .products-carousel,
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .blog-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .features-banner {
-    flex-direction: column;
-  }
-
-  .slide-content h2 {
-    font-size: 1.5rem;
-  }
-
-  .tabs,
-  .section-tabs {
-    overflow-x: auto;
-  }
-}
-
-@media (max-width: 480px) {
-  .categories-grid,
-  .products-carousel,
-  .products-grid,
-  .blog-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

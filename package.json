@@ -32,5 +32,17 @@
     "tailwindcss": "^4.1.7",
     "vite": "^6.2.4",
     "vite-plugin-vue-devtools": "^7.7.2"
-  }
+  },
+  "description": "<<<<<<< HEAD # vue-project",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vutien12/Shop_CMC.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vutien12/Shop_CMC/issues"
+  },
+  "homepage": "https://github.com/Vutien12/Shop_CMC#readme"
 }

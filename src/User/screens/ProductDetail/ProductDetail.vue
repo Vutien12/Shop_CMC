@@ -1,6 +1,6 @@
 <template>
   <div class="product-detail-container">
-    <Header1/>
+    <Header/>
 
     <Loading v-if="isLoading" text="Loading product..." />
 
@@ -237,14 +237,14 @@
 </template>
 
 <script>
-import Header1 from '../../components/Header/Header1.vue';
+import Header from '../../components/Header1/Header.vue';
 import Footer from '../../components/Footer/Footer.vue';
 import Loading from '../../components/Loading/Loading.vue';
 
 export default {
   name: 'ProductDetail',
   components: {
-    Header1,
+    Header,
     Footer,
     Loading
   },
