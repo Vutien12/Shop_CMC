@@ -46,22 +46,38 @@
           </div>
 
           <div class="price-section">
-            <span class="price">${{ product.price }}</span>
-            <span v-if="product.originalPrice" class="original-price">${{ product.originalPrice }}</span>
+            <span class="price">{{ formatPrice(product.price) }}</span>
+            <span v-if="product.originalPrice" class="original-price">{{ formatPrice(product.originalPrice) }}</span>
           </div>
 
-          <div class="color-section" v-if="product.colors">
+          <div class="color-section" v-if="product.colors && product.colors.length > 0">
             <div class="color-label">Color: <span class="selected-color">{{ selectedColor }}</span></div>
             <div class="color-options">
               <div
                 v-for="color in product.colors"
-                :key="color.name"
+                :key="color.id"
                 class="color-option"
                 :class="{ active: selectedColor === color.name }"
                 @click="changeColor(color)"
               >
-                <img :src="color.image" :alt="color.name" />
+                <div class="color-swatch" :style="{ backgroundColor: color.value }"></div>
+                <span class="color-name">{{ color.name }}</span>
               </div>
+            </div>
+          </div>
+
+          <div class="storage-section" v-if="product.storages && product.storages.length > 0">
+            <div class="storage-label">Size: <span class="selected-storage">{{ selectedStorage }}</span></div>
+            <div class="storage-options">
+              <button
+                v-for="storage in product.storages"
+                :key="storage.id"
+                class="storage-option"
+                :class="{ active: selectedStorage === storage.label }"
+                @click="changeStorage(storage)"
+              >
+                {{ storage.label }}
+              </button>
             </div>
           </div>
 
@@ -240,6 +256,7 @@
 import Header from '../../components/Header1/Header.vue';
 import Footer from '../../components/Footer/Footer.vue';
 import Loading from '../../components/Loading/Loading.vue';
+import axios from 'axios';
 
 export default {
   name: 'ProductDetail',
@@ -252,6 +269,7 @@ export default {
     return {
       isLoading: true,
       product: null,
+      productData: null, // Raw data from API
       allProducts: [
         {
           id: 1,
@@ -299,9 +317,6 @@ export default {
         { id: 10, name: "JYX Jeans for Men", price: 68, reviews: 0, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", inStock: true, description: "Comfortable and stylish jeans for everyday wear.", category: "Fashion", tags: ['Clothing', 'Men', 'Casual'], images: ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop"] },
       ],
       selectedImage: 0,
-      quantity: 1,
-      selectedColor: 'White',
-      activeTab: 'description',
       productReviews: [],
       relatedProducts: [
         {
@@ -342,60 +357,152 @@ export default {
         { size: 'XL', shoulder: 50, chest: 112, length: 71, sleeve: 22 },
         { size: 'XXL', shoulder: 52, chest: 116, length: 73, sleeve: 23 }
       ],
-      showSizeChart: false
+      showSizeChart: false,
+      selectedColor: null,
+      selectedStorage: null,
+      selectedVariant: null,
+      variations: [],
+      quantity: 1,
+      activeTab: 'description'
     };
   },
-  mounted() {
-    // Simulate loading
-    setTimeout(() => {
-      // Get product ID from query parameter
-      const productId = parseInt(this.$route.query.id);
-
-      console.log('Product ID from query:', productId);
-      console.log('All products:', this.allProducts);
-
-      if (productId) {
-        // Find product by ID
-        const foundProduct = this.allProducts.find(p => p.id === productId);
-
-        console.log('Found product:', foundProduct);
-
-        if (foundProduct) {
-          this.product = foundProduct;
-          console.log('Product set:', this.product);
-
-          // Load reviews for this product
-          this.loadProductReviews(productId);
-        } else {
-          // Product not found, redirect to product page or show error
-          console.error('Product not found with ID:', productId);
-          alert('Product not found! Redirecting to shop...');
-          this.$router.push('/product');
-        }
-      } else {
-        // No ID provided, redirect to product page
-        console.error('No product ID provided');
-        alert('No product ID provided! Redirecting to shop...');
-        this.$router.push('/product');
-      }
-
-      this.isLoading = false;
-    }, 1000);
+  async mounted() {
+    await this.fetchProductDetail();
   },
   methods: {
+    async fetchProductDetail() {
+      try {
+        this.isLoading = true;
+        const productId = parseInt(this.$route.query.id);
+
+        if (!productId) {
+          console.error('No product ID provided');
+          alert('No product ID provided! Redirecting to shop...');
+          this.$router.push('/product');
+          return;
+        }
+
+        const response = await axios.get('/elec/api/v1/products', {
+          headers: {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwaHVuZ3ZhbnZ1MEBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJpc3MiOiJlbGVjIiwibmFtZSI6IkFkbWluIEFkbWluIiwiZXhwIjoxNzYyNDE1NjgzLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYyMzk0MDgzLCJqdGkiOiI5Y2Y4NDlhYS1jMDI5LTRhZDYtODBkNS1kMDIxMjZkMjUyNDMifQ.e8a_xw0NPix2obE5x4KU8wMKQSABC7RybwYVwPtsl5U'
+          }
+        });
+
+        if (response.data.code === 200 && response.data.result) {
+          const foundProduct = response.data.result.find(p => p.id === productId);
+
+          if (foundProduct) {
+            this.productData = foundProduct;
+            this.processProductData(foundProduct);
+            this.loadProductReviews(productId);
+          } else {
+            console.error('Product not found with ID:', productId);
+            alert('Product not found! Redirecting to shop...');
+            this.$router.push('/product');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        alert('Error loading product! Redirecting to shop...');
+        this.$router.push('/product');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    processProductData(data) {
+      // Process variations
+      const colorVariation = data.variations.find(v => v.type === 'COLOR');
+      const storageVariation = data.variations.find(v => v.type === 'TEXT');
+
+      // Create color options with images
+      const colors = colorVariation ? colorVariation.variationValues.map(color => ({
+        id: color.id,
+        name: color.label,
+        value: color.value,
+        image: data.thumbnail // Use product thumbnail for color preview
+      })) : [];
+
+      // Create storage options
+      const storages = storageVariation ? storageVariation.variationValues.map(storage => ({
+        id: storage.id,
+        label: storage.label,
+        value: storage.value
+      })) : [];
+
+      // Set default selections
+      if (colors.length > 0) {
+        this.selectedColor = colors[0].name;
+      }
+      if (storages.length > 0) {
+        this.selectedStorage = storages[0].label;
+      }
+
+      // Build product object
+      this.product = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        shortDescription: data.shortDescription,
+        price: data.minPrice,
+        originalPrice: data.maxPrice !== data.minPrice ? data.maxPrice : null,
+        inStock: data.inStock,
+        qty: data.qty,
+        sku: data.sku,
+        brand: data.brand,
+        category: data.categories.join(', '),
+        tags: data.categories,
+        images: [data.thumbnail, ...data.gallery],
+        colors: colors,
+        storages: storages,
+        variants: data.variants
+      };
+
+      this.variations = data.variations;
+
+      // Select initial variant
+      this.updateSelectedVariant();
+    },
+    updateSelectedVariant() {
+      if (!this.product || !this.product.variants) return;
+
+      // Find variant matching selected color and storage
+      const selectedColorObj = this.product.colors.find(c => c.name === this.selectedColor);
+      const selectedStorageObj = this.product.storages.find(s => s.label === this.selectedStorage);
+
+      if (selectedColorObj && selectedStorageObj) {
+        // Match variant by name pattern
+        const variant = this.product.variants.find(v =>
+          v.name.includes(this.selectedColor) && v.name.includes(this.selectedStorage)
+        );
+
+        if (variant) {
+          this.selectedVariant = variant;
+          // Update price based on variant
+          this.product.price = variant.sellingPrice;
+          this.product.inStock = variant.inStock;
+          this.product.qty = variant.qty;
+        }
+      }
+    },
     selectImage(index) {
       this.selectedImage = index;
     },
     changeColor(color) {
       this.selectedColor = color.name;
-      // Update product images based on selected color
-      if (color.images) {
-        this.product.images = color.images;
-        this.selectedImage = 0; // Reset to first image
-      }
+      this.updateSelectedVariant();
+    },
+    changeStorage(storage) {
+      this.selectedStorage = storage.label;
+      this.updateSelectedVariant();
     },
     changeQuantity(change) {
       this.quantity = Math.max(1, this.quantity + change);
+    },
+    formatPrice(price) {
+      return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+      }).format(price);
     },
     addToCart() {
       console.log('Added to cart:', {

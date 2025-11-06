@@ -74,21 +74,23 @@
             <h4 class="filter-title">Price</h4>
             <div class="price-inputs">
               <input
-                type="number"
-                v-model.number="priceRange[0]"
+                type="text"
+                :value="formatPriceInput(priceRange[0])"
+                @input="updateMinPrice($event.target.value)"
                 class="price-input"
               />
               <span class="price-separator">-</span>
               <input
-                type="number"
-                v-model.number="priceRange[1]"
+                type="text"
+                :value="formatPriceInput(priceRange[1])"
+                @input="updateMaxPrice($event.target.value)"
                 class="price-input"
               />
             </div>
             <input
               type="range"
-              min="2"
-              max="7499"
+              min="0"
+              max="100000000"
               v-model.number="priceRange[1]"
               class="price-slider"
             />
@@ -183,11 +185,11 @@
                 <div class="latest-product-price">
                   <span
                     :class="['price', { 'discounted': product.originalPrice }]"
-                  >${{ product.price.toFixed(2) }}</span>
+                  >{{ formatPrice(product.price) }}</span>
                   <span
                     v-if="product.originalPrice"
                     class="original-price"
-                  >${{ product.originalPrice.toFixed(2) }}</span>
+                  >{{ formatPrice(product.originalPrice) }}</span>
                 </div>
               </div>
             </div>
@@ -277,7 +279,13 @@
             <div class="product-card-inner">
               <div class="product-badge-row">
                 <span
-                  v-if="product.badge"
+                  v-if="product.originalPrice"
+                  class="sale-badge"
+                >
+                  🔥 Sale
+                </span>
+                <span
+                  v-else-if="product.badge"
                   :class="['badge', product.badgeColor]"
                 >
                   {{ product.badge }}
@@ -316,29 +324,12 @@
                 <div class="price-group">
                   <span
                     :class="['price', { 'discounted': product.originalPrice }]"
-                  >${{ product.price.toFixed(2) }}</span>
+                  >{{ formatPrice(product.price) }}</span>
                   <span
                     v-if="product.originalPrice"
                     class="original-price"
-                  >${{ product.originalPrice.toFixed(2) }}</span>
+                  >{{ formatPrice(product.originalPrice) }}</span>
                 </div>
-                <button class="cart-btn" @click="addToCart(product)">
-                  <svg
-                    class="icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path
-                      d="M1 1h4l2.68 13.39a2 2 0 0
-                      0 2 1.61h9.72a2 2 0 0 0
-                      2-1.61L23 6H6"
-                    ></path>
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
@@ -353,23 +344,13 @@
 import Header from "../../components/Header1/Header.vue";
 import Footer from "../../components/Footer/Footer.vue";
 import Loading from "../../components/Loading/Loading.vue";
+import axios from 'axios';
 
 export default {
   name: "ProductPage",
   components: { Header, Footer, Loading },
-  mounted() {
-    // Simulate loading
-    setTimeout(() => {
-      // Initialize liked state from localStorage
-      const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-      const wishlistIds = wishlist.map(item => item.id);
-
-      this.allProducts.forEach(product => {
-        product.isLiked = wishlistIds.includes(product.id);
-      });
-
-      this.isLoading = false;
-    }, 1000);
+  async mounted() {
+    await this.fetchProducts();
   },
   data() {
     return {
@@ -378,7 +359,7 @@ export default {
       viewMode: "grid",
       sortBy: "latest",
       itemsPerPage: 20,
-      priceRange: [2, 7499],
+      priceRange: [0, 100000000],
       categories: [
         {
           id: "electronics",
@@ -399,24 +380,8 @@ export default {
         { id: "backpacks", name: "Backpacks", isOpen: false },
         { id: "womens-fashion", name: "Women's Fashion", isOpen: false },
       ],
-      allProducts: [
-        { id: 1, name: "Sennheiser Momentum 4", price: 255, originalPrice: 299, badge: "15%", badgeColor: "green", reviews: 0, image: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop" },
-        { id: 2, name: "Bose QuietComfort", price: 349, badge: "Out of Stock", badgeColor: "red", reviews: 0, image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop" },
-        { id: 3, name: "Beats Studio Buds +", price: 170, reviews: 0, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&h=400&fit=crop" },
-        { id: 4, name: "Beats Fit Pro", price: 155, reviews: 0, image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop" },
-        { id: 5, name: "Apple AirPods Pro", price: 299, reviews: 0, image: "https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=400&fit=crop" },
-        { id: 6, name: "OnePlus 11 5G", price: 759.99, reviews: 0, image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=400&fit=crop" },
-        { id: 7, name: "Samsung Galaxy S24 Ultra", price: 799, reviews: 0, image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop" },
-        { id: 8, name: "Apple iMac 2023", price: 1349, reviews: 0, image: "https://images.unsplash.com/photo-1517059224940-d4af9eec41b7?w=400&h=400&fit=crop" },
-        { id: 9, name: "MacBook Pro 2023", price: 1499, reviews: 0, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop" },
-        { id: 10, name: "JYX Jeans for Men", price: 68, reviews: 0, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop" },
-      ],
-      latestProducts: [
-        { id: 1, name: "Sennheiser Momentum 4", price: 255, originalPrice: 299, reviews: 0, image: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop" },
-        { id: 2, name: "Bose QuietComfort", price: 349, reviews: 0, image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop" },
-        { id: 3, name: "Beats Studio Buds +", price: 170, reviews: 0, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&h=400&fit=crop" },
-        { id: 4, name: "Beats Fit Pro", price: 155, reviews: 0, image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop" },
-      ],
+      allProducts: [],
+      latestProducts: [],
     };
   },
   computed: {
@@ -453,6 +418,46 @@ export default {
     }
   },
   methods: {
+    async fetchProducts() {
+      try {
+        this.isLoading = true;
+        const response = await axios.get('/elec/api/v1/products', {
+          headers: {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwaHVuZ3ZhbnZ1MEBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJpc3MiOiJlbGVjIiwibmFtZSI6IkFkbWluIEFkbWluIiwiZXhwIjoxNzYyNDE1NjgzLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYyMzk0MDgzLCJqdGkiOiI5Y2Y4NDlhYS1jMDI5LTRhZDYtODBkNS1kMDIxMjZkMjUyNDMifQ.e8a_xw0NPix2obE5x4KU8wMKQSABC7RybwYVwPtsl5U'
+          }
+        });
+
+        if (response.data.code === 200 && response.data.result) {
+          // Chuyển đổi dữ liệu từ API sang format cần thiết
+          this.allProducts = response.data.result.map(product => ({
+            id: product.id,
+            name: product.name,
+            price: product.minPrice, // Sử dụng minPrice
+            originalPrice: product.maxPrice !== product.minPrice ? product.maxPrice : null,
+            badge: !product.inStock ? "Out of Stock" : null,
+            badgeColor: !product.inStock ? "red" : null,
+            reviews: 0, // API không có review, set mặc định
+            image: product.thumbnail,
+            isLiked: false
+          }));
+
+          // Lấy 4 sản phẩm mới nhất cho Latest Products
+          this.latestProducts = this.allProducts.slice(0, 4);
+
+          // Initialize liked state from localStorage
+          const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
+          const wishlistIds = wishlist.map(item => item.id);
+
+          this.allProducts.forEach(product => {
+            product.isLiked = wishlistIds.includes(product.id);
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
     goToProductDetail(productId) {
       // Navigate to product detail page with only product ID
       this.$router.push({
@@ -533,6 +538,27 @@ export default {
       // Open cart sidebar
       window.dispatchEvent(new Event('openCart'));
     },
+    formatPrice(price) {
+      // Format giá theo định dạng VND: 27.990.000 đ
+      return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+      }).format(price);
+    },
+    formatPriceInput(price) {
+      // Format giá cho input với dấu chấm phân cách
+      return new Intl.NumberFormat('vi-VN').format(price);
+    },
+    updateMinPrice(value) {
+      // Xóa tất cả dấu chấm và chuyển về số
+      const numValue = parseInt(value.replace(/\./g, '') || '0');
+      this.priceRange[0] = numValue;
+    },
+    updateMaxPrice(value) {
+      // Xóa tất cả dấu chấm và chuyển về số
+      const numValue = parseInt(value.replace(/\./g, '') || '0');
+      this.priceRange[1] = numValue;
+    }
   },
 };
 </script>
