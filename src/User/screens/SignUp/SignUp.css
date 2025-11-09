@@ -236,7 +236,7 @@
 }
 
 /* Buttons */
-.btn-create {
+.btn-signin {
   width: 100%;
   padding: 12px;
   background: #0066FF;
@@ -250,7 +250,7 @@
   margin-bottom: 14px;
 }
 
-.btn-create:hover {
+.btn-signin:hover {
   background: #0052CC;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 102, 255, 0.3);
@@ -329,22 +329,23 @@
 }
 
 /* Sign In Link */
-.signin-link {
+.login-link {
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #666;
 }
 
-.signin-link a {
+.login-link a {
   color: #0066FF;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
-.signin-link a:hover {
+.login-link a:hover {
   color: #0052CC;
 }
+
 
 /* Responsive */
 @media (max-width: 1024px) {

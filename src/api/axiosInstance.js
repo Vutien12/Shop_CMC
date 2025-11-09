@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/elec/api/v1', // base chung cho toàn API
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,// base chung cho toàn API
   withCredentials: true,
   timeout: 10000,
 });

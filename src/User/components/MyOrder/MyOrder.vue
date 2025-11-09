@@ -1,10 +1,10 @@
 <template>
   <div class="account-wrapper">
     <Header1 />
-
     <Loading v-if="isLoading" />
 
     <div v-else class="account-page">
+      <!-- Sidebar -->
       <!-- Sidebar -->
       <aside class="account-sidebar">
         <nav class="sidebar-nav">
@@ -37,7 +37,6 @@
 
       <!-- Main Content -->
       <main class="account-main">
-        <!-- Breadcrumb -->
         <div class="breadcrumb">
           <router-link to="/">Home</router-link>
           <i class="fa-solid fa-chevron-right"></i>
@@ -46,72 +45,65 @@
           <span>My Orders</span>
         </div>
 
-        <!-- Orders Section -->
         <section class="orders-section">
-          <h2>My Orders</h2>
+          <div class="section-header">
+            <h2>My Orders</h2>
+          </div>
 
           <!-- Empty state -->
           <div v-if="orders.length === 0" class="empty-orders">
             <i class="fa-solid fa-cart-shopping"></i>
             <p>You haven't placed any orders yet</p>
-            <router-link to="/product" class="btn-shop">Start Shopping</router-link>
+            <router-link to="/home" class="btn-shop">Start Shopping</router-link>
           </div>
 
-          <!-- Orders table -->
+          <!-- Orders Table -->
           <div v-else class="orders-table-wrapper">
             <table class="orders-table">
               <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Review</th>
-                  <th>Action</th>
-                </tr>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Transaction</th>
+                <th>Action</th>
+              </tr>
               </thead>
               <tbody>
-                <tr v-for="order in orders" :key="order.id">
-                  <td data-label="Order ID">
-                    <div class="order-id">{{ order.id }}</div>
-                  </td>
-                  <td data-label="Date">
-                    <div class="order-date">{{ order.date }}</div>
-                  </td>
-                  <td data-label="Status">
+              <tr v-for="order in orders" :key="order.id">
+                <td>{{ order.id }}</td>
+                <td>{{ order.date }}</td>
+                <td>
                     <span class="status-badge" :class="order.statusClass">
                       {{ order.status }}
                     </span>
-                  </td>
-                  <td data-label="Total">
-                    <div class="order-total">{{ order.total }}</div>
-                  </td>
-                  <td data-label="Review">
-                    <button class="btn-review" @click="openReviewModal(order)">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                  </td>
-                  <td data-label="Action">
-                    <button class="btn-view" @click="viewOrder(order.id)">
-                      <i class="fa-regular fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
+                </td>
+                <td>{{ order.total }}</td>
+                <td class="transaction-id">{{ order.transaction }}</td>
+                <td>
+                  <router-link :to="`/orders/${order.id}`" class="action-btn">
+                    <i class="fa-regular fa-eye"></i>
+                  </router-link>
+                </td>
+              </tr>
               </tbody>
             </table>
+
+            <!-- Pagination -->
+            <div class="pagination" v-if="totalPages > 1">
+              <button @click="changePage(currentPage - 1)" :disabled="currentPage === 0">
+                Previous
+              </button>
+              <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+              <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages - 1">
+                Next
+              </button>
+            </div>
           </div>
         </section>
       </main>
     </div>
-
-    <!-- Review Modal -->
-    <Review
-      :isOpen="isReviewModalOpen"
-      :productId="selectedProductForReview?.id"
-      :productName="selectedProductForReview?.name"
-      @close="closeReviewModal"
-      @submit="handleReviewSubmit"
-    />
 
     <Footer />
   </div>
@@ -123,94 +115,87 @@ import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
-import Review from '@/User/screens/Review/Review.vue';
-
-defineOptions({
-  name: 'MyOrderPage'
-});
+import { getOrders } from '@/api/orderApi.js';
+import { logout } from '@/api/authApi.js';
 
 const router = useRouter();
+
 const isLoading = ref(true);
 const orders = ref([]);
-const isReviewModalOpen = ref(false);
-const selectedOrder = ref(null);
-const selectedProductForReview = ref(null);
+const currentPage = ref(0);
+const totalPages = ref(0);
+const pageSize = 10;
 
-const loadOrders = () => {
-  const savedOrders = localStorage.getItem('userOrders');
-  if (savedOrders) {
-    try {
-      orders.value = JSON.parse(savedOrders);
-      console.log('Loaded orders:', orders.value);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      orders.value = [];
-    }
-  }
+const formatCurrency = (amount, currency = 'VND') => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(amount);
 };
 
-const openReviewModal = (order) => {
-  selectedOrder.value = order;
-
-  // Get the first product from the order to review
-  if (order.items && order.items.length > 0) {
-    selectedProductForReview.value = order.items[0];
-    isReviewModalOpen.value = true;
-  } else {
-    alert('No products found in this order');
-  }
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
 };
 
-const closeReviewModal = () => {
-  isReviewModalOpen.value = false;
-  selectedOrder.value = null;
-  selectedProductForReview.value = null;
-};
-
-const handleReviewSubmit = (reviewData) => {
-  console.log('Review submitted:', reviewData);
-
-  // Add product information to review
-  const completeReviewData = {
-    ...reviewData,
-    productId: selectedProductForReview.value.id,
-    productName: selectedProductForReview.value.name,
-    orderId: selectedOrder.value.id,
-    userName: reviewData.name,
-    userRating: reviewData.rating,
-    userComment: reviewData.comment,
-    date: new Date().toISOString()
+const getStatusClass = (status) => {
+  const map = {
+    PAID: 'status-paid',
+    PENDING: 'status-pending',
+    PENDING_PAYMENT: 'status-pending-payment',
+    CANCELLED: 'status-cancelled'
   };
-
-  // Save review to localStorage
-  const reviews = JSON.parse(localStorage.getItem('productReviews') || '[]');
-  reviews.push(completeReviewData);
-  localStorage.setItem('productReviews', JSON.stringify(reviews));
-
-  console.log('Review saved:', completeReviewData);
-
-  // Show success message
-  alert('Thank you for your review!');
+  return map[status] || 'status-pending';
 };
 
-const viewOrder = (orderId) => {
-  console.log('View order:', orderId);
-  // Navigate to order detail page
-  // router.push(`/order/${orderId}`);
+const loadOrders = async () => {
+  try {
+    isLoading.value = true;
+    const res = await getOrders(currentPage.value, pageSize);
+    const data = res.data.result;
+
+    orders.value = data.content.map(order => ({
+      id: order.id,
+      date: formatDate(order.createdAt),
+      status: order.status.replace('_', ' '),
+      statusClass: getStatusClass(order.status),
+      total: formatCurrency(order.total, order.currency),
+      transaction: order.transactions[0]?.transactionId
+        ? `...${order.transactions[0].transactionId.slice(-8)}`
+        : '-'
+    }));
+
+    totalPages.value = data.totalPages;
+  } catch (error) {
+    console.error('Load orders failed:', error);
+    if (error.response?.status === 401) handleLogout();
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const handleLogout = () => {
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('userEmail');
-  window.dispatchEvent(new Event('loginStatusChanged'));
-  router.push('/login');
+const changePage = (page) => {
+  if (page >= 0 && page < totalPages.value) {
+    currentPage.value = page;
+    loadOrders();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
+const handleLogout = async () => {
+  try {
+    await logout();
+  } catch {
+    console.warn('Logout failed');
+  } finally {
+    localStorage.clear();
+    window.dispatchEvent(new Event('loginStatusChanged'));
+    router.push('/login');
+  }
 };
 
 onMounted(() => {
   loadOrders();
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1000);
 });
 </script>
 

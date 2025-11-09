@@ -19,102 +19,97 @@
         <!-- Title -->
         <h1 class="register-title">Register</h1>
         <p class="register-subtitle">Enter your details below to create your account.</p>
-
+        <!-- General Error -->
+        <div v-if="generalError" class="error-message general-error">
+          {{ generalError }}
+        </div>
         <!-- Register Form -->
-        <form @submit.prevent="handleRegister" class="register-form">
-          <!-- Error Message -->
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
+        <form @submit.prevent="handleSignup" class="register-form">
+          <!-- General Error -->
+          <div v-if="generalError" class="error-message general-error">
+            {{ generalError }}
           </div>
-
-          <!-- Success Message -->
-          <div v-if="successMessage" class="success-message">
-            {{ successMessage }}
-          </div>
-
-          <!-- First Name Input -->
-          <div class="form-group">
-            <label for="firstName">
-              First Name <span class="required">*</span>
-            </label>
-            <div class="input-wrapper">
-              <font-awesome-icon :icon="['fas', 'user']" class="input-icon" />
-              <input
-                type="text"
-                id="firstName"
-                v-model="firstName"
-                placeholder="First Name"
-                required
-              />
+            <!-- First Name -->
+            <div class="form-group">
+              <label>First Name <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <font-awesome-icon :icon="['fas', 'user']" class="input-icon" />
+                <input
+                  type="text"
+                  v-model="firstName"
+                  placeholder="Nguyen"
+                  required
+                  :class="{ 'error': fieldErrors.firstName }"
+                />
+              </div>
+              <p v-if="fieldErrors.firstName" class="field-error">{{ fieldErrors.firstName }}</p>
             </div>
-          </div>
 
-          <!-- Last Name Input -->
+          <!-- Last Name -->
           <div class="form-group">
-            <label for="lastName">
-              Last Name <span class="required">*</span>
-            </label>
+            <label>Last Name <span class="required">*</span></label>
             <div class="input-wrapper">
               <font-awesome-icon :icon="['fas', 'user']" class="input-icon" />
               <input
                 type="text"
-                id="lastName"
                 v-model="lastName"
-                placeholder="Last Name"
+                placeholder="Van A"
                 required
+                :class="{ 'error': fieldErrors.lastName }"
               />
             </div>
+            <p v-if="fieldErrors.lastName" class="field-error">{{ fieldErrors.lastName }}</p>
           </div>
 
-          <!-- Email Input -->
+          <!-- Email -->
           <div class="form-group">
-            <label for="email">
-              Email <span class="required">*</span>
-            </label>
+            <label>Email <span class="required">*</span></label>
             <div class="input-wrapper">
               <font-awesome-icon :icon="['fas', 'envelope']" class="input-icon" />
               <input
                 type="email"
-                id="email"
                 v-model="email"
-                placeholder="Enter your email"
+                placeholder="nguyen@example.com"
                 required
+                :class="{ 'error': fieldErrors.email }"
               />
             </div>
+            <p v-if="fieldErrors.email" class="field-error">{{ fieldErrors.email }}</p>
           </div>
 
-          <!-- Phone Input -->
+          <!-- Phone -->
           <div class="form-group">
-            <label for="phone">
-              Phone <span class="required">*</span>
-            </label>
+            <label>Phone <span class="required">*</span></label>
             <div class="input-wrapper">
               <font-awesome-icon :icon="['fas', 'phone']" class="input-icon" />
               <input
                 type="tel"
-                id="phone"
                 v-model="phone"
-                placeholder="Phone"
+                placeholder="0987654321"
                 required
+                :class="{ 'error': fieldErrors.phone }"
               />
             </div>
+            <p v-if="fieldErrors.phone" class="field-error">{{ fieldErrors.phone }}</p>
           </div>
 
-          <!-- Password Input -->
+          <!-- Password -->
           <div class="form-group">
-            <label for="password">
-              Password <span class="required">*</span>
-            </label>
+            <label>Password <span class="required">*</span></label>
             <div class="input-wrapper">
               <font-awesome-icon :icon="['fas', 'lock']" class="input-icon" />
               <input
-                type="password"
-                id="password"
+                :type="showPassword ? 'text' : 'password'"
                 v-model="password"
-                placeholder="Password"
+                placeholder="••••••"
                 required
+                :class="{ 'error': fieldErrors.password }"
               />
+              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
+                <font-awesome-icon :icon="['fas', showPassword ? 'eye-slash' : 'eye']" />
+              </button>
             </div>
+            <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
           </div>
 
           <!-- Confirm Password Input -->
@@ -125,13 +120,18 @@
             <div class="input-wrapper">
               <font-awesome-icon :icon="['fas', 'lock']" class="input-icon" />
               <input
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 id="confirmPassword"
                 v-model="confirmPassword"
-                placeholder="Confirm Password"
+                placeholder="••••••"
                 required
+                :class="{ 'error': fieldErrors.password }"
               />
+              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
+                <font-awesome-icon :icon="['fas', showPassword ? 'eye-slash' : 'eye']" />
+              </button>
             </div>
+            <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
           </div>
 
           <!-- Privacy Policy Checkbox -->
@@ -142,8 +142,10 @@
             </label>
           </div>
 
-          <!-- Create Account Button -->
-          <button type="submit" class="btn-create">Create Account</button>
+          <!-- Sign Up Button -->
+          <button type="submit" class="btn-signin" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Creating...' : 'Sign Up' }}
+          </button>
 
           <!-- Divider -->
           <div class="divider">
@@ -152,19 +154,19 @@
 
           <!-- Social Register Buttons -->
           <div class="social-login">
-            <button type="button" class="btn-social btn-google">
+            <button type="button" class="btn-social btn-google" @click="loginWithGoogle">
               <font-awesome-icon :icon="['fab', 'google']" />
-              <span>Sign up with Google</span>
+              <span>Continue with Google</span>
             </button>
-            <button type="button" class="btn-social btn-facebook">
+            <button type="button" class="btn-social btn-facebook" @click="loginWithFacebook">
               <font-awesome-icon :icon="['fab', 'facebook']" />
-              <span>Sign up with Facebook</span>
+              <span>Continue with Facebook</span>
             </button>
           </div>
 
           <!-- Sign In Link -->
-          <div class="signin-link">
-            Already Have an Account? <a href="#" @click.prevent="goToLogin">Sign in</a>
+          <div class="login-link">
+            Already have an account? <a href="#" @click.prevent="goToLogin">Sign in</a>
           </div>
         </form>
       </div>
@@ -177,77 +179,103 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Loading from '@/User/components/Loading/Loading.vue';
+import { OAuthProviders } from '@/Config/oauth.js';
+import { signup } from '@/api/authApi.js';
+
+defineOptions({
+  name: 'SignupPage'
+});
 
 const router = useRouter();
 const isLoading = ref(true);
+const isSubmitting = ref(false);
+
 const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
 const phone = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const confirmPassword = ref('');
 const agreeToPolicy = ref(false);
-const errorMessage = ref('');
-const successMessage = ref('');
 
-const goBack = () => {
-  router.go(-1);
+const { google, facebook } = OAuthProviders;
+
+// Lỗi
+const generalError = ref('');
+const fieldErrors = ref({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  password: ''
+});
+
+const goBack = () => router.go(-1);
+const goToLogin = () => router.push('/login');
+
+const resetErrors = () => {
+  generalError.value = '';
+  fieldErrors.value = { firstName: '', lastName: '', email: '', phone: '', password: '' };
 };
 
-const goToLogin = () => {
-  router.push('/login');
-};
+const handleSignup = async () => {
+  resetErrors();
+  isSubmitting.value = true;
 
-const handleRegister = () => {
-  // Reset messages
-  errorMessage.value = '';
-  successMessage.value = '';
-
-  // Kiểm tra mật khẩu khớp
   if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Mật khẩu xác nhận không khớp!';
+    fieldErrors.value.password = 'Confirmation password does not match';
+    isSubmitting.value = false;
     return;
   }
-
-  // Kiểm tra độ dài mật khẩu
-  if (password.value.length < 6) {
-    errorMessage.value = 'Mật khẩu phải có ít nhất 6 ký tự!';
+  if (!agreeToPolicy.value) {
+    generalError.value = 'You must agree to the Privacy Policy';
+    isSubmitting.value = false;
     return;
   }
+  try {
+    const payload = {
+      firstName: firstName.value.trim(),
+      lastName: lastName.value.trim(),
+      email: email.value.trim(),
+      phone: phone.value.trim(),
+      password: password.value,
+      enabled: true
+    };
 
-  // Lấy danh sách tài khoản hiện có từ localStorage
-  let accounts = JSON.parse(localStorage.getItem('userAccounts') || '[]');
+    const res = await signup(payload);
 
-  // Kiểm tra email đã tồn tại chưa
-  const existingAccount = accounts.find(acc => acc.email === email.value);
-  if (existingAccount) {
-    errorMessage.value = 'Email này đã được đăng ký!';
-    return;
+    if (res.data.code === 200 || res.data.code === 201) {
+      alert('Registration successful! Please login.');
+      router.push('/login');
+    }
+  } catch (err) {
+    console.error('Signup error:', err);
+    const response = err.response?.data;
+
+    if (response?.code === 400 && response.result) {
+      // Validation errors
+      Object.keys(response.result).forEach(key => {
+        if (Object.hasOwn(fieldErrors.value, key)) {
+          fieldErrors.value[key] = response.result[key];
+        }
+      });
+    } else if (response?.code === 409) {
+      generalError.value = 'Email already in use.';
+    } else {
+      generalError.value = response?.message || 'Registration failed. Please try again.!';
+    }
+  } finally {
+    isSubmitting.value = false;
   }
+};
 
-  // Tạo tài khoản mới
-  const newAccount = {
-    firstName: firstName.value,
-    lastName: lastName.value,
-    email: email.value,
-    phone: phone.value,
-    password: password.value,
-    createdAt: new Date().toISOString()
-  };
+const loginWithGoogle = () => {
+  window.location.href = google;
+};
 
-  // Thêm tài khoản mới vào danh sách
-  accounts.push(newAccount);
-
-  // Lưu vào localStorage
-  localStorage.setItem('userAccounts', JSON.stringify(accounts));
-
-  console.log('Registration successful!', newAccount);
-  successMessage.value = 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...';
-
-  // Chuyển đến trang đăng nhập sau 1.5 giây
-  setTimeout(() => {
-    router.push('/login');
-  }, 1500);
+const loginWithFacebook = () => {
+  window.location.href = facebook;
 };
 
 onMounted(() => {
@@ -258,3 +286,31 @@ onMounted(() => {
 </script>
 
 <style src="./SignUp.css"></style>
+<style scoped>
+/* Thêm style cho lỗi */
+.field-error {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+.general-error {
+  background-color: #fee;
+  color: #c53030;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.input-wrapper input.error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 1px #e74c3c;
+}
+
+.btn-signin:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+</style>

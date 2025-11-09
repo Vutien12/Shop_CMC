@@ -1,7 +1,9 @@
+/* Account Wrapper */
 .account-wrapper {
   background-color: white;
 }
 
+/* Account Page */
 .account-page {
   display: flex;
   min-height: calc(100vh - 200px);
@@ -46,6 +48,7 @@
   color: #0066FF;
 }
 
+.nav-item.active,
 .nav-item.router-link-active {
   background-color: #f0f7ff;
   color: #0066FF;
@@ -99,7 +102,7 @@
 
 .orders-section h2 {
   font-size: 24px;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
   color: #1a1a1a;
   font-weight: 600;
 }
@@ -127,73 +130,51 @@
 }
 
 .orders-table td {
-  padding: 20px 15px;
-  border-bottom: 1px solid #dee2e6;
-  vertical-align: middle;
+  padding: 18px 15px;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.order-id {
-  font-weight: 600;
-  color: #212529;
-}
-
-.order-date {
-  color: #6c757d;
+.orders-table tbody tr:hover {
+  background-color: #f8f9fa;
 }
 
 .status-badge {
   display: inline-block;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
 }
 
 .status-pending {
-  background-color: #cfe2ff;
-  color: #0068e1;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-pending-payment {
-  background-color: #fff3cd;
-  color: #ff9800;
+  background-color: #fff3e0;
+  color: #f57c00;
 }
 
-.order-total {
-  font-weight: 600;
-  color: #212529;
-}
-
-.btn-review {
-  background: none;
+.action-btn {
+  background-color: #f0f0f0;
   border: none;
-  color: #6c757d;
-  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
   transition: all 0.3s;
+  color: #666;
 }
 
-.btn-review:hover {
-  background-color: #f8f9fa;
-  color: #0068e1;
-}
-
-.btn-view {
-  background: none;
-  border: none;
-  color: #6c757d;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
-.btn-view:hover {
-  background-color: #f8f9fa;
-  color: #0068e1;
+.action-btn:hover {
+  background-color: #0066FF;
+  color: white;
 }
 
 /* Empty State */
@@ -283,3 +264,39 @@
   }
 }
 
+
+.transaction-id {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #666;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-paid { background: #d4edda; color: #155724; }
+.status-pending { background: #fff3cd; color: #856404; }
+.status-pending-payment { background: #f8d7da; color: #721c24; }
+.status-cancelled { background: #f5c6cb; color: #721c24; }

@@ -1,9 +1,7 @@
 <template>
   <div class="account-wrapper">
     <Header1 />
-
     <Loading v-if="isLoading" />
-
     <div v-else class="account-page">
       <!-- Sidebar -->
       <aside class="account-sidebar">
@@ -37,11 +35,17 @@
 
       <!-- Main Content -->
       <main class="account-main">
-      <!-- Recent Orders Section -->
+        <div class="breadcrumb">
+          <router-link to="/">Home</router-link>
+          <i class="fa-solid fa-chevron-right"></i>
+          <router-link to="/account">My Account</router-link>
+        </div>
+
+        <!-- Recent Orders Section -->
       <section class="orders-section">
         <div class="section-header">
           <h2>Recent Orders</h2>
-          <a href="#" class="view-all">View All</a>
+          <a href="/orders" class="view-all">View All</a>
         </div>
 
         <div class="orders-table-wrapper">
@@ -52,7 +56,7 @@
                 <th>Date</th>
                 <th>Status</th>
                 <th>Total</th>
-                <th>Tracking</th>
+                <th>Transaction</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -66,11 +70,11 @@
                   </span>
                 </td>
                 <td>{{ order.total }}</td>
-                <td>{{ order.tracking }}</td>
+                <td class="transaction-id">{{ order.tracking }}</td>
                 <td>
-                  <button class="action-btn">
+                  <router-link :to="`/orders/${order.id}`" class="action-btn">
                     <i class="fa-regular fa-eye"></i>
-                  </button>
+                  </router-link>
                 </td>
               </tr>
             </tbody>
@@ -82,7 +86,7 @@
       <section class="account-info-section">
         <div class="section-header">
           <h2>Account Information</h2>
-          <a href="#" class="edit-link">Edit</a>
+          <router-link to="/profile" class="edit-link">Edit</router-link>
         </div>
 
         <div class="info-grid">
@@ -118,71 +122,93 @@ import { useRouter } from 'vue-router';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
+import { getRecentOrders, getUserInfo } from '@/api/accountApi.js';
+import { logout } from '@/api/authApi.js';
 
 const router = useRouter();
 
 const isLoading = ref(true);
-const recentOrders = ref([
-  {
-    id: '2184',
-    date: 'Oct 19, 2025',
-    status: 'Pending',
-    statusClass: 'status-pending',
-    total: '$170.00',
-    tracking: '-'
-  },
-  {
-    id: '2183',
-    date: 'Oct 18, 2025',
-    status: 'Pending Payment',
-    statusClass: 'status-pending-payment',
-    total: 'BDT 170.00',
-    tracking: '-'
-  },
-  {
-    id: '2179',
-    date: 'Oct 15, 2025',
-    status: 'Pending Payment',
-    statusClass: 'status-pending-payment',
-    total: '$760.00',
-    tracking: '-'
-  },
-  {
-    id: '2178',
-    date: 'Oct 14, 2025',
-    status: 'Pending',
-    statusClass: 'status-pending',
-    total: '$8.66',
-    tracking: '-'
-  },
-  {
-    id: '2172',
-    date: 'Oct 12, 2025',
-    status: 'Pending',
-    statusClass: 'status-pending',
-    total: '$824.99',
-    tracking: '-'
-  }
-]);
-
+const recentOrders = ref([]);
 const userInfo = ref({
-  name: 'John Doe',
-  email: localStorage.getItem('userEmail') || 'user@email.com',
-  phone: '+1 234 567 8900',
-  address: '123 Main Street, City, Country, 12345'
+  name: '',
+  email: '',
+  phone: '',
+  address: 'Chưa có địa chỉ mặc định'
 });
 
-const handleLogout = () => {
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('userEmail');
-  window.dispatchEvent(new Event('loginStatusChanged'));
-  router.push('/login');
+const formatCurrency = (amount, currency = 'VND') => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency
+  }).format(amount);
 };
 
-onMounted(() => {
-  setTimeout(() => {
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+const getStatusClass = (status) => {
+  const map = {
+    PAID: 'status-paid',
+    PENDING: 'status-pending',
+    PENDING_PAYMENT: 'status-pending-payment',
+    CANCELLED: 'status-cancelled'
+  };
+  return map[status] || 'status-pending';
+};
+
+const handleLogout = async () => {
+  try {
+    await logout();
+  } catch {
+    console.warn('Logout API failed');
+  } finally {
+    localStorage.clear();
+    window.dispatchEvent(new Event('loginStatusChanged'));
+    router.push('/login');
+  }
+};
+
+onMounted(async () => {
+  try {
+    const [ordersRes, userRes] = await Promise.all([
+      getRecentOrders(0, 5),
+      getUserInfo()
+    ]);
+
+    // Recent Orders
+    recentOrders.value = ordersRes.data.result.content.map(order => ({
+      id: order.id,
+      date: formatDate(order.createdAt),
+      status: order.status.replace('_', ' '),
+      statusClass: getStatusClass(order.status),
+      total: formatCurrency(order.total, order.currency),
+      tracking: order.transactions[0]?.transactionId
+        ? `...${order.transactions[0].transactionId.slice(-8)}`
+        : '-'
+    }));
+
+    // User Info
+    const user = userRes.data.result;
+    userInfo.value = {
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      phone: user.phone || 'Chưa cập nhật',
+      address: user.defaultAddress
+        ? `${user.defaultAddress.address1}, ${user.defaultAddress.city}, ${user.defaultAddress.country}`
+        : 'Chưa có địa chỉ mặc định'
+    };
+
+  } catch (error) {
+    console.error('Load account data failed:', error);
+    if (error.response?.status === 401) handleLogout();
+  } finally {
     isLoading.value = false;
-  }, 1000);
+  }
 });
 </script>
 
