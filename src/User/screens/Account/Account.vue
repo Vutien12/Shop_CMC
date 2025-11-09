@@ -199,7 +199,7 @@ onMounted(async () => {
       email: user.email,
       phone: user.phone || 'Chưa cập nhật',
       address: user.defaultAddress
-        ? `${user.defaultAddress.address1}, ${user.defaultAddress.city}, ${user.defaultAddress.country}`
+        ? `${user.defaultAddress.addressLine}${user.defaultAddress.addressLine2 ? ', ' + user.defaultAddress.addressLine2 : ''}, ${user.defaultAddress.city}, ${user.defaultAddress.country}`
         : 'Chưa có địa chỉ mặc định'
     };
 

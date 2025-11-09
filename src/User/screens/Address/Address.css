@@ -245,6 +245,7 @@
   transition: background-color 0.3s;
   font-family: 'Poppins', sans-serif;
   align-self: flex-start;
+  margin-bottom: 20px;
 }
 
 .btn-add-address:hover {
@@ -269,7 +270,12 @@
   border-radius: 8px;
   padding: 20px;
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
 }
+
 
 .address-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -301,7 +307,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  padding-top: 10px;
+  padding-top: 15px;
 }
 
 .action-btn {
@@ -444,3 +450,6 @@
     width: 100%;
   }
 }
+
+
+
