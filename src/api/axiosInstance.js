@@ -1,4 +1,5 @@
 import axios from 'axios';
+import router from '@/Router/routes.js'
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,// base chung cho toàn API
@@ -31,11 +32,12 @@ api.interceptors.response.use(
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
-      } catch {
+      } catch (refreshError) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
-        window.location.href = '/login';
+        await router.push('/login');
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);

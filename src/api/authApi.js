@@ -1,4 +1,5 @@
 import api from './axiosInstance.js';
+import router from '@/Router/routes.js';
 
 // Login thường
 export const login = (email, password, rememberMe = false) => {
@@ -14,8 +15,14 @@ export const signup = (userData) => {
 export const logout = async () => {
   try {
     await api.post('/auth/logout');
+  } catch {
+    console.warn('Logout API failed, proceeding with client cleanup');
   } finally {
-    localStorage.clear();
-    window.location.href = '/login';
+    // XÓA TOÀN BỘ dữ liệu người dùng
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    // Chuyển hướng về login
+    await router.push('/login');
   }
 };

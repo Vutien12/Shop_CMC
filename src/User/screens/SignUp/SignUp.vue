@@ -101,7 +101,7 @@
               <input
                 :type="showPassword ? 'text' : 'password'"
                 v-model="password"
-                placeholder="••••••"
+                placeholder="••••••••••••"
                 required
                 :class="{ 'error': fieldErrors.password }"
               />
@@ -123,7 +123,7 @@
                 :type="showPassword ? 'text' : 'password'"
                 id="confirmPassword"
                 v-model="confirmPassword"
-                placeholder="••••••"
+                placeholder="••••••••••••"
                 required
                 :class="{ 'error': fieldErrors.password }"
               />

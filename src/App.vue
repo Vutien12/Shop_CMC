@@ -2,6 +2,7 @@
 
 <template>
   <router-view></router-view>
+  <ToastContainer />
 </template>
 
 <style>

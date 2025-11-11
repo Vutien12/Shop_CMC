@@ -55,7 +55,7 @@
                   :type="showPassword ? 'text' : 'password'"
                   id="password"
                   v-model="password"
-                  placeholder="••••••"
+                  placeholder="••••••••••••"
                   required
                   :class="{ 'error': fieldErrors.password }"
                 />

@@ -289,7 +289,7 @@
 .status-pending-payment { background: #f8d7da; color: #721c24; }
 .status-cancelled { background: #f5c6cb; color: #721c24; }
 
-/* Account.css */
+/* UserAccount.css */
 .transaction-id {
   font-family: monospace;
   font-size: 0.85rem;
