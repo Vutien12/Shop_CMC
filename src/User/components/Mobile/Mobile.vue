@@ -316,7 +316,7 @@
             <div class="filter-spinner"></div>
             <p class="filter-loading-text">Đang lọc sản phẩm...</p>
           </div>
-          
+
           <div class="products-grid">
             <div
               v-for="product in products"
@@ -469,16 +469,16 @@ export default {
       return this.allProducts.filter(product => {
         // Lọc theo giá
         const priceMatch = product.price >= this.priceRange[0] && product.price <= this.priceRange[1];
-        
+
         // Lọc theo brand (nếu có brand được chọn)
-        const brandMatch = this.selectedBrands.length === 0 || 
-          this.selectedBrands.some(selectedBrand => 
+        const brandMatch = this.selectedBrands.length === 0 ||
+          this.selectedBrands.some(selectedBrand =>
             product.brand && product.brand.toLowerCase() === selectedBrand.toLowerCase()
           );
-        
+
         // Lọc theo RAM (nếu có RAM được chọn) - để sau này implement
         const ramMatch = this.selectedRam.length === 0 || true; // Tạm thời chấp nhận tất cả
-        
+
         return priceMatch && brandMatch && ramMatch;
       });
     },
