@@ -18,6 +18,7 @@ import Checkout from "./User/screens/Checkout/Checkout.vue";
 import MyOrder from "./User/components/MyOrder/MyOrder.vue";
 import Review from "./User/screens/Review/Review.vue";
 import Header from "./User/components/Header1/Header.vue";
+import Mobile from "./User/components/Mobile/Mobile.vue";
 
 
 const routes = [
@@ -120,8 +121,12 @@ const routes = [
         name: 'Header',
         component: Header,
         path: '/header',
-    }
-
+    },
+    {
+        name: 'Mobile',
+        component: Mobile,
+        path: '/mobile',
+    },
 ];
 const router = createRouter ({
     history:createWebHistory(),

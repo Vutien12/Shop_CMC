@@ -51,7 +51,6 @@
                 v-for="subcat in cat.subcategories"
                 :key="subcat.id"
                 class="subcategory-item"
-                @click="handleSubcategoryClick(subcat.id)"
               >
                 <svg
                   class="subcategory-icon"
@@ -71,6 +70,8 @@
         <!-- Filters Section -->
         <div class="filters-section">
           <h3 class="section-title">Filters</h3>
+
+          <!-- Price Filter -->
           <div class="price-filter">
             <h4 class="filter-title">Price</h4>
             <div class="price-inputs">
@@ -95,6 +96,44 @@
               v-model.number="priceRange[1]"
               class="price-slider"
             />
+          </div>
+
+          <!-- Brand Filter -->
+          <div class="brand-filter">
+            <h4 class="filter-title">Brand</h4>
+            <div class="filter-options">
+              <label
+                v-for="brand in brands"
+                :key="brand.id"
+                class="filter-checkbox"
+              >
+                <input
+                  type="checkbox"
+                  v-model="selectedBrands"
+                  :value="brand.id"
+                />
+                <span class="checkbox-label">{{ brand.name }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- RAM Filter -->
+          <div class="ram-filter">
+            <h4 class="filter-title">RAM</h4>
+            <div class="filter-options">
+              <label
+                v-for="ram in ramOptions"
+                :key="ram.id"
+                class="filter-checkbox"
+              >
+                <input
+                  type="checkbox"
+                  v-model="selectedRam"
+                  :value="ram.id"
+                />
+                <span class="checkbox-label">{{ ram.name }}</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -167,7 +206,7 @@
 
         <!-- Latest Products -->
         <div class="latest-products">
-          <h3 class="section-title">Latest Products</h3>
+          <h3 class="section-title">Latest Smartphones</h3>
           <div class="latest-products-list">
             <div
               v-for="product in latestProducts"
@@ -210,7 +249,7 @@
             </svg>
             <span>Categories</span>
           </button>
-          <h1 class="page-title">Shop</h1>
+          <h1 class="page-title">Smartphones</h1>
           <div class="header-controls">
             <!-- View Toggle -->
             <div class="view-toggle">
@@ -268,15 +307,22 @@
         </div>
 
         <!-- Loading State -->
-        <Loading v-if="isLoading" text="Loading products..." />
+        <Loading v-if="isLoading" text="Loading smartphones..." />
 
         <!-- Products Grid -->
-        <div v-else class="products-grid">
-          <div
-            v-for="product in products"
-            :key="product.id"
-            class="product-card"
-          >
+        <div v-else class="products-grid-wrapper">
+          <!-- Filter Loading Overlay -->
+          <div v-if="isFiltering" class="filter-loading-overlay">
+            <div class="filter-spinner"></div>
+            <p class="filter-loading-text">Đang lọc sản phẩm...</p>
+          </div>
+          
+          <div class="products-grid">
+            <div
+              v-for="product in products"
+              :key="product.id"
+              class="product-card"
+            >
             <div class="product-card-inner">
               <div class="product-badge-row">
                 <span
@@ -335,6 +381,7 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
     <Footer />
@@ -342,13 +389,13 @@
 </template>
 
 <script>
-import Header from "../../components/Header1/Header.vue";
-import Footer from "../../components/Footer/Footer.vue";
-import Loading from "../../components/Loading/Loading.vue";
+import Header from "../Header1/Header.vue";
+import Footer from "../Footer/Footer.vue";
+import Loading from "../Loading/Loading.vue";
 import axios from 'axios';
 
 export default {
-  name: "ProductPage",
+  name: "MobilePage",
   components: { Header, Footer, Loading },
   async mounted() {
     await this.fetchProducts();
@@ -356,6 +403,7 @@ export default {
   data() {
     return {
       isLoading: true,
+      isFiltering: false,
       sidebarOpen: false,
       viewMode: "grid",
       sortBy: "latest",
@@ -383,13 +431,55 @@ export default {
       ],
       allProducts: [],
       latestProducts: [],
+      brands: [
+        { id: "Apple", name: "Apple" },
+        { id: "OnePlus", name: "OnePlus" },
+        { id: "Huawei", name: "Huawei" },
+        { id: "Samsung", name: "Samsung" },
+        { id: "Xiaomi", name: "Xiaomi" },
+        { id: "ZTE", name: "ZTE" },
+        { id: "ASUS", name: "ASUS" },
+        { id: "GOOGLE", name: "GOOGLE" },
+        { id: "LG", name: "LG" },
+        { id: "TCL", name: "TCL" },
+        { id: "Nokia", name: "Nokia" },
+        { id: "OPPO", name: "OPPO" },
+        { id: "Vivo", name: "Vivo" },
+        { id: "Realme", name: "Realme" },
+        { id: "Sony", name: "Sony" },
+        { id: "Motorola", name: "Motorola" },
+        { id: "Honor", name: "Honor" }
+      ],
+      ramOptions: [
+        { id: "2gb", name: "2GB" },
+        { id: "4gb", name: "4GB" },
+        { id: "6gb", name: "6GB" },
+        { id: "8gb", name: "8GB" },
+        { id: "12gb", name: "12GB" },
+        { id: "16gb", name: "16GB" },
+        { id: "32gb", name: "32GB" }
+      ],
+      selectedBrands: [],
+      selectedRam: []
     };
   },
   computed: {
     filteredProducts() {
-      // Lọc sản phẩm theo price range
+      // Lọc sản phẩm theo price range, brand và RAM
       return this.allProducts.filter(product => {
-        return product.price >= this.priceRange[0] && product.price <= this.priceRange[1];
+        // Lọc theo giá
+        const priceMatch = product.price >= this.priceRange[0] && product.price <= this.priceRange[1];
+        
+        // Lọc theo brand (nếu có brand được chọn)
+        const brandMatch = this.selectedBrands.length === 0 || 
+          this.selectedBrands.some(selectedBrand => 
+            product.brand && product.brand.toLowerCase() === selectedBrand.toLowerCase()
+          );
+        
+        // Lọc theo RAM (nếu có RAM được chọn) - để sau này implement
+        const ramMatch = this.selectedRam.length === 0 || true; // Tạm thời chấp nhận tất cả
+        
+        return priceMatch && brandMatch && ramMatch;
       });
     },
     sortedProducts() {
@@ -418,7 +508,27 @@ export default {
       return this.filteredProducts.length;
     }
   },
+  watch: {
+    selectedBrands() {
+      this.triggerFilterLoading();
+    },
+    selectedRam() {
+      this.triggerFilterLoading();
+    },
+    priceRange: {
+      handler() {
+        this.triggerFilterLoading();
+      },
+      deep: true
+    }
+  },
   methods: {
+    triggerFilterLoading() {
+      this.isFiltering = true;
+      setTimeout(() => {
+        this.isFiltering = false;
+      }, 500); // 500ms loading effect
+    },
     async fetchProducts() {
       try {
         this.isLoading = true;
@@ -429,17 +539,23 @@ export default {
         });
 
         if (response.data.code === 200 && response.data.result) {
+          // Lọc chỉ lấy sản phẩm có category là "Smartphones"
+          const smartphoneProducts = response.data.result.filter(product =>
+            product.categories && product.categories.includes("Smartphones")
+          );
+
           // Chuyển đổi dữ liệu từ API sang format cần thiết
-          this.allProducts = response.data.result.map(product => ({
+          this.allProducts = smartphoneProducts.map(product => ({
             id: product.id,
             name: product.name,
-            price: product.minPrice, // Sử dụng minPrice
+            price: product.minPrice,
             originalPrice: product.maxPrice !== product.minPrice ? product.maxPrice : null,
             badge: !product.inStock ? "Out of Stock" : null,
             badgeColor: !product.inStock ? "red" : null,
-            reviews: 0, // API không có review, set mặc định
+            reviews: 0,
             image: product.thumbnail,
-            isLiked: false
+            isLiked: false,
+            brand: product.brand || ""
           }));
 
           // Lấy 4 sản phẩm mới nhất cho Latest Products
@@ -454,7 +570,7 @@ export default {
           });
         }
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching smartphones:', error);
       } finally {
         this.isLoading = false;
       }
@@ -507,13 +623,6 @@ export default {
       if (category) {
         category.isOpen = !category.isOpen;
       }
-    },
-    handleSubcategoryClick(subcategoryId) {
-      // Nếu click vào "Mobiles", chuyển sang trang Mobile
-      if (subcategoryId === 'mobiles') {
-        this.$router.push('/mobile');
-      }
-      // Có thể thêm các subcategory khác ở đây
     },
     addToCart(product) {
       // Get current cart from localStorage
@@ -571,4 +680,4 @@ export default {
 };
 </script>
 
-<style src="./product.css" scoped></style>
+<style src="./Mobile.css" scoped></style>
