@@ -384,7 +384,7 @@ export default {
 
         const response = await axios.get('/elec/api/v1/products', {
           headers: {
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwaHVuZ3ZhbnZ1MEBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJpc3MiOiJlbGVjIiwibmFtZSI6IkFkbWluIEFkbWluIiwiZXhwIjoxNzYyODQ4NTg4LCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYyODI2OTg4LCJqdGkiOiJkZGRkZjdjNy1kNTI3LTRmMWMtYjY5Mi03Y2U2MmY0ZDFiZmMifQ.iAut2XXzq5rvSSWH77Ncn4b337jzUjou5ltKD5ad0qU'
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwaHVuZ3ZhbnZ1MEBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJpc3MiOiJlbGVjIiwibmFtZSI6IkFkbWluIEFkbWluIiwiZXhwIjoxNzYyOTMzMzEzLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYyOTExNzEzLCJqdGkiOiI1NGNlNTcwOC1jZTVkLTQzMjEtYTMwOS1iYjY4ZTJmOGFjYmYifQ.nb-ljKK2lH5H9UTS_Nr_UDD-H6CUq4apCnAyn27vwZU'
           }
         });
 
