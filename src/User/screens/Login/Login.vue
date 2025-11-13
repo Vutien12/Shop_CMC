@@ -208,12 +208,36 @@ const handleLogin = async () => {
 };
 
 
+// Thêm vào <script setup>
 const loginWithGoogle = () => {
-  window.location.href = google;
+  const { clientId, redirectUri } = google;
+  const scope = 'email profile openid';
+  const state = Math.random().toString(36).substring(7); // chống CSRF
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `response_type=code&` +
+    `scope=${encodeURIComponent(scope)}&` +
+    `state=${state}&` +
+    `access_type=offline&prompt=consent`;
+  window.location.href = url;
 };
 
 const loginWithFacebook = () => {
-  window.location.href = facebook;
+  const { clientId, redirectUri } = facebook;
+  const scope = 'email,public_profile';
+  const state = Math.random().toString(36).substring(7);
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://www.facebook.com/v20.0/dialog/oauth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `response_type=code&` +
+    `scope=${scope}&` +
+    `state=${state}`;
+  window.location.href = url;
 };
 
 onMounted(() => {

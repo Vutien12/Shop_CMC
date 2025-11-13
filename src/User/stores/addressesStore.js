@@ -1,7 +1,7 @@
 // src/User/stores/addressStore.js
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { getAddresses } from '@/api/accountApi.js';
+import { getAddresses} from '@/api/accountApi.js';
 
 export const useAddressStore = defineStore('address', () => {
   const addresses = ref([]);
@@ -35,16 +35,14 @@ export const useAddressStore = defineStore('address', () => {
         id: addr.id,
         firstName: addr.firstName || '',
         lastName: addr.lastName || '',
-        isDefault: addr.isDefault || false,
+        phone: addr.phone || '',
         addressLine: addr.addressLine || '',
         addressLine2: addr.addressLine2 || '',
-        ward: addr.ward || '',
-        district: addr.district || '',
         city: addr.city || '',
         stateOrProvince: addr.stateOrProvince || '',
         postalCode: addr.postalCode || '',
         country: addr.country || 'Vietnam',
-        phone: addr.phone || ''
+        isDefault: addr.isDefault || false,
       }));
 
       addresses.value = formatted;
@@ -63,6 +61,20 @@ export const useAddressStore = defineStore('address', () => {
     }
   };
 
+  const addAddressLocally = (newAddr) => {
+    addresses.value.unshift(newAddr);
+    if (addresses.value.length > pageSize.value && currentPage.value === 0) {
+      addresses.value.pop();
+    }
+  };
+
+  const updateAddressLocally = (id, updatedAddr) => {
+    const index = addresses.value.findIndex(a => a.id === id);
+    if (index !== -1) {
+      addresses.value[index] = updatedAddr;
+    }
+  };
+
   const removeAddressLocally = (id) => {
     addresses.value = addresses.value.filter(addr => addr.id !== id);
     if (addresses.value.length === 0 && currentPage.value > 0) {
@@ -70,5 +82,5 @@ export const useAddressStore = defineStore('address', () => {
     }
   };
 
-  return { addresses, totalPages, currentPage, pageSize, isLoading, fetchAddresses, removeAddressLocally, loadedPages };
+  return { addresses, totalPages, currentPage, pageSize, isLoading, fetchAddresses, addAddressLocally, updateAddressLocally, removeAddressLocally, loadedPages };
 });

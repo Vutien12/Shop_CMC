@@ -1,7 +1,7 @@
 // src/User/stores/wishlistStore.js
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { searchWishlist, removeFromWishlist } from '@/api/accountApi.js';
+import { searchWishlist } from '@/api/accountApi.js';
 
 export const useWishlistStore = defineStore('wishlist', () => {
   const items = ref([]);
@@ -13,11 +13,11 @@ export const useWishlistStore = defineStore('wishlist', () => {
   const loadedPages = ref(new Set());
   const CACHE_DURATION = 2 * 60 * 1000;
 
-  const fetchWishlist = async (page = 0, size = 2, force = false) => {
+  const fetchWishlist = async (page = 0, size = 5, force = false) => {
     const cacheKey = `${page}-${size}`;
     const now = Date.now();
 
-    // Đã load, còn trong cache trả về ngay
+    // Cache kiểm tra
     if (
       !force &&
       loadedPages.value.has(cacheKey) &&
@@ -32,20 +32,33 @@ export const useWishlistStore = defineStore('wishlist', () => {
       const res = await searchWishlist(page, size);
       const data = res.data.result;
 
-      const formatted = data.content.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        name: item.productName,
-        price: new Intl.NumberFormat('vi-VN', {
-          style: 'currency',
-          currency: item.currency || 'VND'
-        }).format(item.productPrice),
-        rawPrice: item.productPrice,
-        image: item.productImage || '/images/placeholder.jpg',
-        addedAt: new Date(item.addedAt).toLocaleDateString('vi-VN'),
-        availability: '_',
-        availabilityClass: '_'
-      }));
+      const formatted = data.content.map(item => {
+        // Tách tên sản phẩm và biến thể
+        let productName = item.productName;
+        let variantDisplay = '';
+
+        if (item.productName) {
+          const parts = item.productName.split(' - ');
+          if (parts.length > 1) {
+            productName = parts[0];
+            variantDisplay = parts.slice(1).join(' - ');
+          }
+        }
+
+        return {
+          id: item.id,
+          variantId: item.variantId,
+          productName,           // Tên chính
+          variantDisplay,        // Biến thể
+          productSku: item.productSku,
+          productPrice: item.productPrice,
+          currency: item.currency || 'VND',
+          productImage: item.productImage || '/images/placeholder.jpg',
+          status: item.status,
+          addedAt: new Date(item.addedAt).toLocaleDateString('vi-VN'),
+          rawPrice: item.productPrice,
+        };
+      });
 
       items.value = formatted;
       totalPages.value = data.totalPages;
@@ -70,5 +83,13 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
   };
 
-  return { items, totalPages, currentPage, pageSize, isLoading, fetchWishlist, removeItemLocally, loadedPages };
+  const updateItemLocally = (id, updatedData) => {
+    const index = items.value.findIndex(i => i.id === id);
+    if (index !== -1) {
+      items.value[index] = { ...items.value[index], ...updatedData, status: 'AVAILABLE' };
+    }
+  };
+
+  return { items, totalPages, currentPage, pageSize, isLoading, fetchWishlist, removeItemLocally, updateItemLocally, loadedPages
+  };
 });

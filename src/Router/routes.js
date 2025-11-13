@@ -18,7 +18,7 @@ import Checkout from "../User/screens/Checkout/Checkout.vue";
 import MyOrder from "../User/components/MyOrder/MyOrder.vue";
 import Review from "../User/screens/Review/Review.vue";
 import Header from "../User/components/Header1/Header.vue";
-import OAuth2Callback from '@/Callback/OAuth2Callback.vue'
+import OAuth2 from '@/OAuth2/OAuth2.vue'
 
 
 const routes = [
@@ -32,7 +32,7 @@ const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
-  { path: "/oauth2/callback", name: "OAuth2Callback", component: OAuth2Callback },
+  { path: "/oauth2/callback/:provider", name: "OAuth2Callback", component: OAuth2 },
   { path: '/header', name: 'Header', component: Header},
   // === PRIVATE ROUTES ===
   { path: '/account', name: 'Account', component: UserAccount, meta: { requiresAuth: true } },

@@ -16,6 +16,10 @@ export const getAddresses = (page = 0, size = 5) => {
   });
 };
 export const removeFromWishlist = (wishlistId) => {return api.delete(`/wishlist/${wishlistId}`);};
+export const updateWishlistItem = (wishlistId) => { return api.put(`/wishlist/${wishlistId}/sync`); };
+export const getAddressById = (id) => { return api.get(`/addresses/${id}`); };
+export const createAddress = (data) => { return api.post('/addresses', data); };
+export const updateAddress = (id, data) => { return api.put(`/addresses/${id}`, data); };
 export const deleteAddress = (id) => {return api.delete(`/addresses/${id}`);};
 export const getMyInfo = () => api.get('/users/my-info');
 export const updateProfile = (data) => api.put('/users/profile', data);
