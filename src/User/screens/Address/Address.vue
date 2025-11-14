@@ -162,7 +162,7 @@ const { isVisible: addressVisible } = useLazyLoad(async () => {
   if (addresses.value.length) return;
   addressLoading.value = true;
   try {
-    const data = await addressStore.fetchAddresses(0, 6);
+    const data = await addressStore.fetchAddresses(0);
     addresses.value = data.addresses;
     totalPages.value = data.totalPages;
     currentPage.value = 0;
@@ -178,7 +178,7 @@ const changePage = async (page) => {
   if (page < 0 || page >= totalPages.value) return;
   addressLoading.value = true;
   try {
-    const data = await addressStore.fetchAddresses(page, 6, true);
+    const data = await addressStore.fetchAddresses(page, undefined, true);
     addresses.value = data.addresses;
     totalPages.value = data.totalPages;
     currentPage.value = page;

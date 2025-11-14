@@ -28,7 +28,7 @@ export const useAccountStore = defineStore('account', () => {
     isLoading.value = true;
     try {
       const [ordersRes, userRes] = await Promise.all([
-        getRecentOrders(0, 5),
+        getRecentOrders(),
         getMyInfo()
       ]);
 

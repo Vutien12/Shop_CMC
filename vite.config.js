@@ -18,10 +18,7 @@ export default defineConfig({
         secure: false,
         rewrite: (p) => p.replace(/^\/api/, '/elec/api')
       },
-      // XÓA 2 DÒNG NÀY:
-      // '/oauth2': { target: 'http://localhost:8080', changeOrigin: true, secure: false },
-      // '/login/oauth2': { target: 'http://localhost:8080', changeOrigin: true, secure: false },
     },
-    historyApiFallback: true, // BÂY GIỜ HOẠT ĐỘNG!
+    historyApiFallback: true,
   }
 })

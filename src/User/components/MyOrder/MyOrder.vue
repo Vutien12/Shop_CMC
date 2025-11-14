@@ -159,7 +159,7 @@ const { isVisible: ordersVisible } = useLazyLoad(async () => {
   if (orders.value.length) return;
   ordersLoading.value = true;
   try {
-    const data = await orderStore.fetchOrders(0, 10);
+    const data = await orderStore.fetchOrders(0);
     orders.value = data.orders;
     totalPages.value = data.totalPages;
     currentPage.value = 0;
@@ -175,7 +175,7 @@ const changePage = async (page) => {
   if (page < 0 || page >= totalPages.value) return;
   ordersLoading.value = true;
   try {
-    const data = await orderStore.fetchOrders(page, 5, true); // force reload
+    const data = await orderStore.fetchOrders(page, undefined, true);
     orders.value = data.orders;
     totalPages.value = data.totalPages;
     currentPage.value = page;

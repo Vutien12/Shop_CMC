@@ -225,7 +225,7 @@ const { isVisible: wishlistVisible } = useLazyLoad(async () => {
   if (wishlistItems.value.length) return;
   wishlistLoading.value = true;
   try {
-    const data = await wishlistStore.fetchWishlist(0, 5);
+    const data = await wishlistStore.fetchWishlist(0);
     wishlistItems.value = data.items;
     totalPages.value = data.totalPages;
     currentPage.value = 0;
@@ -241,7 +241,7 @@ const changePage = async (page) => {
   if (page < 0 || page >= totalPages.value) return;
   wishlistLoading.value = true;
   try {
-    const data = await wishlistStore.fetchWishlist(page, 5, true);
+    const data = await wishlistStore.fetchWishlist(page, undefined, true);
     wishlistItems.value = data.items;
     totalPages.value = data.totalPages;
     currentPage.value = page;

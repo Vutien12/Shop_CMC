@@ -183,9 +183,9 @@ const handleLogin = async () => {
 
       // Chuyển hướng theo role
       if (role === 'ROLE_ADMIN') {
-        router.push('/admin'); // trang dashboard admin
+        await router.push('/admin'); // trang dashboard admin
       } else {
-        router.push('/home'); // trang user bình thường
+        await router.push('/home'); // trang user bình thường
       }
       window.dispatchEvent(new Event('loginStatusChanged'));
     }

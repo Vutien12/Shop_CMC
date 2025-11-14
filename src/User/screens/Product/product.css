@@ -1305,3 +1305,25 @@
     padding: 12px 0;
   }
 }
+
+
+.no-latest-products {
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.price-range {
+  font-weight: 500;
+  color: #0047cd;
+  font-size: 1.1em;
+}
+
+.price-range .original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-weight: normal;
+}

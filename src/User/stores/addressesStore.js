@@ -2,18 +2,20 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { getAddresses} from '@/api/accountApi.js';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@/Config/search.js'
 
 export const useAddressStore = defineStore('address', () => {
   const addresses = ref([]);
   const totalPages = ref(0);
   const currentPage = ref(0);
-  const pageSize = ref(6);
+  const pageDefault = ref(DEFAULT_PAGE);
+  const pageSize = ref(DEFAULT_PAGE_SIZE.addresses);
   const isLoading = ref(false);
   const lastFetched = ref(null);
   const loadedPages = ref(new Set());
   const CACHE_DURATION = 2 * 60 * 1000;
 
-  const fetchAddresses = async (page = 0, size = 6, force = false) => {
+  const fetchAddresses = async (page = pageDefault.value, size = pageSize.value, force = false) => {
     const cacheKey = `${page}-${size}`;
     const now = Date.now();
 

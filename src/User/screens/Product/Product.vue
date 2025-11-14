@@ -1,12 +1,10 @@
 <template>
   <div>
     <Header />
+
     <!-- Overlay -->
-    <div
-      v-if="sidebarOpen"
-      class="sidebar-overlay"
-      @click="sidebarOpen = false"
-    ></div>
+    <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false"></div>
+
     <div class="shop-container">
       <!-- Sidebar -->
       <div class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
@@ -19,16 +17,12 @@
             </svg>
           </button>
         </div>
-        <ul class="category-list">
-          <li
-            v-for="cat in categories"
-            :key="cat.id"
-            class="category-item"
-          >
-            <div
-              class="category-header"
-              @click="toggleCategory(cat.id)"
-            >
+
+        <!-- Danh mục từ API -->
+        <div v-if="isLoadingCategories" class="loading-categories">Loading categories...</div>
+        <ul v-else class="category-list">
+          <li v-for="cat in categories" :key="cat.id" class="category-item">
+            <div class="category-header" @click="toggleCategory(cat.id)">
               <svg
                 class="chevron-icon"
                 :class="{ 'chevron-open': cat.isOpen }"
@@ -41,33 +35,24 @@
               </svg>
               {{ cat.name }}
             </div>
-
-            <!-- Subcategories -->
-            <ul
-              v-if="cat.subcategories && cat.isOpen"
-              class="subcategory-list"
-            >
+            <ul v-if="cat.subcategories?.length && cat.isOpen" class="subcategory-list">
               <li
-                v-for="subcat in cat.subcategories"
-                :key="subcat.id"
+                v-for="sub in cat.subcategories"
+                :key="sub.id"
                 class="subcategory-item"
+                @click.stop="toggleCategory(sub.id)"
+                :class="{ active: selectedCategories.includes(sub.id) }"
               >
-                <svg
-                  class="subcategory-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg class="subcategory-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 6 15 12 9 18"></polyline>
                 </svg>
-                {{ subcat.name }}
+                {{ sub.name }}
               </li>
             </ul>
           </li>
         </ul>
 
-        <!-- Filters Section -->
+        <!-- Lọc giá -->
         <div class="filters-section">
           <h3 class="section-title">Filters</h3>
           <div class="price-filter">
@@ -78,6 +63,7 @@
                 :value="formatPriceInput(priceRange[0])"
                 @input="updateMinPrice($event.target.value)"
                 class="price-input"
+                placeholder="Min"
               />
               <span class="price-separator">-</span>
               <input
@@ -85,14 +71,16 @@
                 :value="formatPriceInput(priceRange[1])"
                 @input="updateMaxPrice($event.target.value)"
                 class="price-input"
+                placeholder="Max"
               />
             </div>
             <input
               type="range"
               min="0"
-              max="100000000"
+              :max="100000000"
               v-model.number="priceRange[1]"
               class="price-slider"
+              @input="setPriceRange(priceRange[0], priceRange[1])"
             />
           </div>
         </div>
@@ -103,16 +91,16 @@
 
           <div class="sidebar-control-group">
             <label class="control-label">Sort By</label>
-            <select v-model="sortBy" class="sidebar-select">
-              <option value="latest">Latest</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
+            <select v-model="sortBy" @change="setSort(sortBy)" class="sidebar-select">
+              <option value="updatedAt,desc">Latest</option>
+              <option value="minPrice,asc">Price: Low to High</option>
+              <option value="minPrice,desc">Price: High to Low</option>
             </select>
           </div>
 
           <div class="sidebar-control-group">
             <label class="control-label">Items Per Page</label>
-            <select v-model.number="itemsPerPage" class="sidebar-select">
+            <select v-model.number="pageSize" @change="setPageSize(pageSize)" class="sidebar-select">
               <option value="20">20</option>
               <option value="40">40</option>
               <option value="60">60</option>
@@ -126,13 +114,7 @@
                 @click="viewMode = 'grid'"
                 :class="['sidebar-view-btn', { active: viewMode === 'grid' }]"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="3" width="7" height="7"></rect>
                   <rect x="14" y="3" width="7" height="7"></rect>
                   <rect x="14" y="14" width="7" height="7"></rect>
@@ -144,13 +126,7 @@
                 @click="viewMode = 'list'"
                 :class="['sidebar-view-btn', { active: viewMode === 'list' }]"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="8" y1="6" x2="21" y2="6"></line>
                   <line x1="8" y1="12" x2="21" y2="12"></line>
                   <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -167,39 +143,36 @@
         <!-- Latest Products -->
         <div class="latest-products">
           <h3 class="section-title">Latest Products</h3>
-          <div class="latest-products-list">
-            <div
-              v-for="product in latestProducts"
-              :key="product.id"
-              class="latest-product-item"
-            >
+          <div v-if="latestProducts.length" class="latest-products-list">
+            <div v-for="p in latestProducts" :key="p.id" class="latest-product-item">
               <div class="latest-product-image">
-                <img :src="product.image" :alt="product.name" />
+                <img :src="p.image" :alt="p.name" />
               </div>
               <div class="latest-product-info">
-                <p class="latest-product-name">{{ product.name }}</p>
+                <p class="latest-product-name">{{ p.name }}</p>
                 <div class="rating">
                   <span v-for="i in 5" :key="i" class="star">★</span>
-                  <span class="review-count">{{ product.reviews }} Review</span>
+                  <span class="review-count">0 Review</span>
                 </div>
                 <div class="latest-product-price">
-                  <span
-                    :class="['price', { 'discounted': product.originalPrice }]"
-                  >{{ formatPrice(product.price) }}</span>
-                  <span
-                    v-if="product.originalPrice"
-                    class="original-price"
-                  >{{ formatPrice(product.originalPrice) }}</span>
+                  <span class="latest-product-price">
+                    {{ formatPrice(p.price) }}
+                    <template v-if="p.maxPrice && p.maxPrice > p.price">
+                      - {{ formatPrice(p.maxPrice) }}
+                    </template>
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
+          <div v-else class="no-latest-products">
+            No new products at the moment.
           </div>
         </div>
       </div>
 
       <!-- Main Content -->
       <div class="main-content">
-        <!-- Header -->
         <div class="content-header">
           <button class="sidebar-toggle-btn" @click="sidebarOpen = true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -217,13 +190,7 @@
                 @click="viewMode = 'grid'"
                 :class="['view-btn', { active: viewMode === 'grid' }]"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="3" width="7" height="7"></rect>
                   <rect x="14" y="3" width="7" height="7"></rect>
                   <rect x="14" y="14" width="7" height="7"></rect>
@@ -234,13 +201,7 @@
                 @click="viewMode = 'list'"
                 :class="['view-btn', { active: viewMode === 'list' }]"
               >
-                <svg
-                  class="icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="8" y1="6" x2="21" y2="6"></line>
                   <line x1="8" y1="12" x2="21" y2="12"></line>
                   <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -250,317 +211,148 @@
                 </svg>
               </button>
             </div>
-
             <!-- Sorting + Items per page -->
-            <select v-model="sortBy" class="control-select">
-              <option value="latest">Latest</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
+            <select v-model="sortBy" @change="setSort(sortBy)" class="control-select">
+              <option value="updatedAt,desc">Latest</option>
+              <option value="minPrice,asc">Price: Low to High</option>
+              <option value="minPrice,desc">Price: High to Low</option>
             </select>
-
-            <select v-model.number="itemsPerPage" class="control-select">
+            <select v-model.number="pageSize" @change="setPageSize(pageSize)" class="control-select">
+              <option value="10">10</option>
               <option value="20">20</option>
               <option value="40">40</option>
-              <option value="60">60</option>
             </select>
           </div>
         </div>
 
-        <!-- Loading State -->
+        <!-- Loading -->
         <Loading v-if="isLoading" text="Loading products..." />
 
         <!-- Products Grid -->
         <div v-else class="products-grid">
-          <div
-            v-for="product in products"
-            :key="product.id"
-            class="product-card"
-          >
+          <div v-for="p in products" :key="p.id" class="product-card">
             <div class="product-card-inner">
               <div class="product-badge-row">
-                <span
-                  v-if="product.originalPrice"
-                  class="sale-badge"
-                >
-                  🔥 Sale
-                </span>
-                <span
-                  v-else-if="product.badge"
-                  :class="['badge', product.badgeColor]"
-                >
-                  {{ product.badge }}
-                </span>
-                <button
-                  @click="toggleLike(product.id)"
-                  :class="['like-btn', { liked: product.isLiked }]"
-                >
-                  <svg
-                    class="heart-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5
-                      5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78
-                      1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    ></path>
+                <span v-if="p.originalPrice" class="sale-badge">🔥 Sale</span>
+                <span v-else-if="p.badge" :class="['badge', p.badgeColor]">{{ p.badge }}</span>
+                <button @click="toggleLike(p)" :class="['like-btn', { liked: p.isLiked }]">
+                  <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
               </div>
 
-              <div class="product-image" @click="goToProductDetail(product.id)" style="cursor: pointer;">
-                <img :src="product.image" :alt="product.name" />
+              <div class="product-image" @click="goToProductDetail(p.id)" style="cursor: pointer;">
+                <img :src="p.image" :alt="p.name" />
               </div>
-              <h3 class="product-name" @click="goToProductDetail(product.id)" style="cursor: pointer;">{{ product.name }}</h3>
 
+              <h3 class="product-name" @click="goToProductDetail(p.id)" style="cursor: pointer;">
+                {{ p.name }}
+              </h3>
+              <!--
               <div class="rating">
                 <span v-for="i in 5" :key="i" class="star">★</span>
-                <span class="review-count">{{ product.reviews }} Review</span>
+                <span class="review-count">0 Review</span>
               </div>
-
+               -->
               <div class="product-footer">
                 <div class="price-group">
-                  <span
-                    :class="['price', { 'discounted': product.originalPrice }]"
-                  >{{ formatPrice(product.price) }}</span>
-                  <span
-                    v-if="product.originalPrice"
-                    class="original-price"
-                  >{{ formatPrice(product.originalPrice) }}</span>
+                  <div class="price-group">
+                    <span class="price-range">
+                      {{ formatPrice(p.price) }}
+                      <template v-if="p.maxPrice > p.price">
+                        - {{ formatPrice(p.maxPrice) }}
+                      </template>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Phân trang -->
+        <div v-if="totalPages > 1" class="pagination">
+          <button @click="changePage(currentPage - 1)" :disabled="!hasPrevPage" class="page-btn">Trước</button>
+          <button
+            v-for="n in Math.min(5, totalPages)"
+            :key="n"
+            @click="changePage(n - 1)"
+            :class="['page-btn', { active: currentPage === n - 1 }]"
+          >{{ n }}</button>
+          <button @click="changePage(currentPage + 1)" :disabled="!hasNextPage" class="page-btn">Sau</button>
+        </div>
       </div>
     </div>
+
     <Footer />
+
+    <!--
+    <div style="position: fixed; bottom: 10px; left: 10px; background: #000; color: lime; padding: 10px; font-size: 12px; z-index: 9999; font-family: monospace;">
+      <div>Products: {{ products.length }}</div>
+      <div>Categories: {{ categories.length }}</div>
+      <div>Latest: {{ latestProducts.length }}</div>
+      <div v-for="p in products.slice(0,1)" :key="p.id">
+        ID: {{ p.id }} | Name: {{ p.name }}
+      </div>
+    </div>
+    -->
   </div>
 </template>
 
-<script>
-import Header from "../../components/Header1/Header.vue";
-import Footer from "../../components/Footer/Footer.vue";
-import Loading from "../../components/Loading/Loading.vue";
-import axios from 'axios';
+<script setup>
+import { ref, onMounted, nextTick, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import Header from '@/User/components/Header/Header1.vue';
+import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
+import { useProductStore } from '@/User/stores/productStore.js';
 
-export default {
-  name: "ProductPage",
-  components: { Header, Footer, Loading },
-  async mounted() {
-    await this.fetchProducts();
-  },
-  data() {
-    return {
-      isLoading: true,
-      sidebarOpen: false,
-      viewMode: "grid",
-      sortBy: "latest",
-      itemsPerPage: 20,
-      priceRange: [0, 100000000],
-      categories: [
-        {
-          id: "electronics",
-          name: "Electronics",
-          isOpen: false,
-          subcategories: [
-            { id: "mobiles", name: "Mobiles" },
-            { id: "mobile-accessories", name: "Mobile Accessories" },
-            { id: "hot-brands", name: "Hot Brands" },
-            { id: "laptops", name: "Laptops" },
-            { id: "computer-accessories", name: "Computer Accessories" }
-          ]
-        },
-        { id: "mens-fashion", name: "Men's Fashion", isOpen: false },
-        { id: "consumer-electronics", name: "Consumer Electronics", isOpen: false },
-        { id: "watches", name: "Watches", isOpen: false },
-        { id: "home-appliances", name: "Home Appliances", isOpen: false },
-        { id: "backpacks", name: "Backpacks", isOpen: false },
-        { id: "womens-fashion", name: "Women's Fashion", isOpen: false },
-      ],
-      allProducts: [],
-      latestProducts: [],
-    };
-  },
-  computed: {
-    filteredProducts() {
-      // Lọc sản phẩm theo price range
-      return this.allProducts.filter(product => {
-        return product.price >= this.priceRange[0] && product.price <= this.priceRange[1];
-      });
-    },
-    sortedProducts() {
-      // Sắp xếp sản phẩm theo lựa chọn
-      let sorted = [...this.filteredProducts];
+const router = useRouter();
+const store = useProductStore();
 
-      switch(this.sortBy) {
-        case 'latest':
-          // Giữ nguyên thứ tự mặc định
-          break;
-        case 'price-low':
-          sorted.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          sorted.sort((a, b) => b.price - a.price);
-          break;
-      }
+const sidebarOpen = ref(false);
+const viewMode = ref('grid');
 
-      return sorted;
-    },
-    products() {
-      // Phân trang sản phẩm
-      return this.sortedProducts.slice(0, this.itemsPerPage);
-    },
-    totalProducts() {
-      return this.filteredProducts.length;
-    }
-  },
-  methods: {
-    async fetchProducts() {
-      try {
-        this.isLoading = true;
-        const response = await axios.get('/elec/api/v1/products', {
-          headers: {
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwaHVuZ3ZhbnZ1MEBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJpc3MiOiJlbGVjIiwibmFtZSI6IkFkbWluIEFkbWluIiwiZXhwIjoxNzYyNDE1NjgzLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYyMzk0MDgzLCJqdGkiOiI5Y2Y4NDlhYS1jMDI5LTRhZDYtODBkNS1kMDIxMjZkMjUyNDMifQ.e8a_xw0NPix2obE5x4KU8wMKQSABC7RybwYVwPtsl5U'
-          }
-        });
+const {
+  products, latestProducts, categories,
+  isLoading, isLoadingCategories,
+  totalPages, currentPage, pageSize, sortBy, priceRange, selectedCategories,
+  hasPrevPage, hasNextPage,
+  fetchCategories, fetchProducts,
+  setSort, setPageSize, setPriceRange,
+  toggleCategory, changePage, toggleLike
+} = store;
 
-        if (response.data.code === 200 && response.data.result) {
-          // Chuyển đổi dữ liệu từ API sang format cần thiết
-          this.allProducts = response.data.result.map(product => ({
-            id: product.id,
-            name: product.name,
-            price: product.minPrice, // Sử dụng minPrice
-            originalPrice: product.maxPrice !== product.minPrice ? product.maxPrice : null,
-            badge: !product.inStock ? "Out of Stock" : null,
-            badgeColor: !product.inStock ? "red" : null,
-            reviews: 0, // API không có review, set mặc định
-            image: product.thumbnail,
-            isLiked: false
-          }));
+const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+const formatPriceInput = (price) => new Intl.NumberFormat('vi-VN').format(price);
 
-          // Lấy 4 sản phẩm mới nhất cho Latest Products
-          this.latestProducts = this.allProducts.slice(0, 4);
-
-          // Initialize liked state from localStorage
-          const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-          const wishlistIds = wishlist.map(item => item.id);
-
-          this.allProducts.forEach(product => {
-            product.isLiked = wishlistIds.includes(product.id);
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    goToProductDetail(productId) {
-      // Navigate to product detail page with only product ID
-      this.$router.push({
-        path: '/productdetail',
-        query: { id: productId }
-      });
-    },
-    toggleLike(id) {
-      const product = this.allProducts.find((p) => p.id === id);
-      if (!product) return;
-
-      // Toggle liked state
-      product.isLiked = !product.isLiked;
-
-      // Get current wishlist from localStorage
-      let wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-
-      if (product.isLiked) {
-        // Add to wishlist
-        const wishlistItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price.toFixed(2),
-          image: product.image,
-          availability: product.badge === 'Out of Stock' ? 'Out of Stock' : 'In Stock',
-          availabilityClass: product.badge === 'Out of Stock' ? 'out-of-stock' : 'in-stock'
-        };
-
-        // Check if item already exists
-        const exists = wishlist.some(item => item.id === product.id);
-        if (!exists) {
-          wishlist.push(wishlistItem);
-          localStorage.setItem('userWishlist', JSON.stringify(wishlist));
-        }
-      } else {
-        // Remove from wishlist
-        wishlist = wishlist.filter(item => item.id !== product.id);
-        localStorage.setItem('userWishlist', JSON.stringify(wishlist));
-      }
-
-      // Dispatch event để cập nhật số lượng wishlist trong header
-      window.dispatchEvent(new Event('wishlistChanged'));
-    },
-    toggleCategory(categoryId) {
-      const category = this.categories.find(cat => cat.id === categoryId);
-      if (category) {
-        category.isOpen = !category.isOpen;
-      }
-    },
-    addToCart(product) {
-      // Get current cart from localStorage
-      let cart = JSON.parse(localStorage.getItem('userCart') || '[]');
-
-      // Check if product already exists in cart
-      const existingItem = cart.find(item => item.id === product.id);
-
-      if (existingItem) {
-        // Increase quantity
-        existingItem.quantity++;
-      } else {
-        // Add new item to cart
-        const cartItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price.toFixed(2),
-          image: product.image,
-          quantity: 1
-        };
-        cart.push(cartItem);
-      }
-
-      // Save to localStorage
-      localStorage.setItem('userCart', JSON.stringify(cart));
-
-      // Dispatch event để cập nhật số lượng cart trong header
-      window.dispatchEvent(new Event('cartChanged'));
-
-      // Open cart sidebar
-      window.dispatchEvent(new Event('openCart'));
-    },
-    formatPrice(price) {
-      // Format giá theo định dạng VND: 27.990.000 đ
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(price);
-    },
-    formatPriceInput(price) {
-      // Format giá cho input với dấu chấm phân cách
-      return new Intl.NumberFormat('vi-VN').format(price);
-    },
-    updateMinPrice(value) {
-      // Xóa tất cả dấu chấm và chuyển về số
-      const numValue = parseInt(value.replace(/\./g, '') || '0');
-      this.priceRange[0] = numValue;
-    },
-    updateMaxPrice(value) {
-      // Xóa tất cả dấu chấm và chuyển về số
-      const numValue = parseInt(value.replace(/\./g, '') || '0');
-      this.priceRange[1] = numValue;
-    }
-  },
+const updateMinPrice = (val) => {
+  const num = parseInt(val.replace(/\./g, '') || '0', 10);
+  setPriceRange(num, priceRange.value[1]);
 };
+const updateMaxPrice = (val) => {
+  const num = parseInt(val.replace(/\./g, '') || '0', 10);
+  setPriceRange(priceRange.value[0], num);
+};
+
+const goToProductDetail = (id) => {
+  router.push({ path: '/productdetail', query: { id } });
+};
+
+// Watch viewMode để thay đổi class grid/list nếu cần
+watch(viewMode, (newMode) => {
+  document.body.classList.toggle('list-view', newMode === 'list');
+  document.body.classList.toggle('grid-view', newMode === 'grid');
+}, { immediate: true });
+
+onMounted(async () => {
+  console.log('Store instance:', store);
+  await fetchCategories();
+  await fetchProducts();
+  await nextTick();
+  console.log('After render - Products:', products.value.length);
+});
 </script>
 
 <style src="./product.css" scoped></style>

@@ -35,20 +35,17 @@ onMounted(async () => {
     console.log('[OAuth2] Gọi BE:', `/auth/oauth2/callback/${provider}`, { code });
     const res = await api.get(`/auth/oauth2/callback/${provider}`, {
       params: { code },
-      withCredentials: true  // BẮT BUỘC: để nhận cookie refreshToken
+      withCredentials: true
     });
 
     console.log('[OAuth2] Response:', res.data);
 
-    // CHECK code === 200
     if (res.data.code === 200 && res.data.result?.accessToken) {
       const { accessToken } = res.data.result;
-
       // Lưu accessToken
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('isLoggedIn', 'true');
 
-      // Giải mã role
       const decoded = jwt_decode(accessToken);
       const role = decoded.scope || 'ROLE_USER';
       console.log('[OAuth2] Login thành công, role:', role);

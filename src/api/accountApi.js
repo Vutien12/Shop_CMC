@@ -1,27 +1,50 @@
 import api from './axiosInstance.js';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT } from '@/Config/search.js';
 
-export const getRecentOrders = (page = 0, size = 5) => {
-  return api.get('/orders/search', {
-    params: { page, size, sort: 'createdAt,desc' }
+// Orders
+export const getRecentOrders = (page, size) =>
+  api.get('/orders/search', {
+    params: {
+      page: page ?? DEFAULT_PAGE,
+      size: size ?? DEFAULT_PAGE_SIZE.orders,
+      sort: DEFAULT_SORT.orders
+    }
   });
-};
-export const searchWishlist = (page = 0, size = 5) => {
+
+// Wishlist
+export const searchWishlist = (
+  page = DEFAULT_PAGE,
+  size = DEFAULT_PAGE_SIZE.wishlist
+) => {
   return api.get('/wishlist/search', {
-    params: { page, size, sort: 'addedAt,desc' }
+    params: { page, size, sort: DEFAULT_SORT.wishlist }
   });
 };
-export const getAddresses = (page = 0, size = 5) => {
+
+// Addresses
+export const getAddresses = (
+  page = DEFAULT_PAGE,
+  size = DEFAULT_PAGE_SIZE.addresses
+) => {
   return api.get('/addresses/search', {
-    params: { page, size, sort: 'createdAt,desc' }
+    params: { page, size, sort: DEFAULT_SORT.addresses }
   });
 };
-export const removeFromWishlist = (wishlistId) => {return api.delete(`/wishlist/${wishlistId}`);};
-export const updateWishlistItem = (wishlistId) => { return api.put(`/wishlist/${wishlistId}/sync`); };
-export const getAddressById = (id) => { return api.get(`/addresses/${id}`); };
-export const createAddress = (data) => { return api.post('/addresses', data); };
-export const updateAddress = (id, data) => { return api.put(`/addresses/${id}`, data); };
-export const deleteAddress = (id) => {return api.delete(`/addresses/${id}`);};
+
+// Wishlist actions
+export const removeFromWishlist = (wishlistId) =>
+  api.delete(`/wishlist/${wishlistId}`);
+
+export const updateWishlistItem = (wishlistId) =>
+  api.put(`/wishlist/${wishlistId}/sync`);
+
+// Address actions
+export const getAddressById = (id) => api.get(`/addresses/${id}`);
+export const createAddress = (data) => api.post('/addresses', data);
+export const updateAddress = (id, data) => api.put(`/addresses/${id}`, data);
+export const deleteAddress = (id) => api.delete(`/addresses/${id}`);
+
+// User info
 export const getMyInfo = () => api.get('/users/my-info');
 export const updateProfile = (data) => api.put('/users/profile', data);
 export const changePassword = (data) => api.post('/users/change-password', data);
-

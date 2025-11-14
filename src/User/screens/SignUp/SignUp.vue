@@ -154,11 +154,11 @@
 
           <!-- Social Register Buttons -->
           <div class="social-login">
-            <button type="button" class="btn-social btn-google" @click="loginWithGoogle">
+            <button type="button" class="btn-social btn-google" @click="signupWithGoogle">
               <font-awesome-icon :icon="['fab', 'google']" />
               <span>Continue with Google</span>
             </button>
-            <button type="button" class="btn-social btn-facebook" @click="loginWithFacebook">
+            <button type="button" class="btn-social btn-facebook" @click="signupWithFacebook">
               <font-awesome-icon :icon="['fab', 'facebook']" />
               <span>Continue with Facebook</span>
             </button>
@@ -201,7 +201,7 @@ const agreeToPolicy = ref(false);
 
 const { google, facebook } = OAuthProviders;
 
-// Lỗi
+// Errors
 const generalError = ref('');
 const fieldErrors = ref({
   firstName: '',
@@ -247,7 +247,7 @@ const handleSignup = async () => {
 
     if (res.data.code === 200 || res.data.code === 201) {
       alert('Registration successful! Please login.');
-      router.push('/login');
+      await router.push('/login');
     }
   } catch (err) {
     console.error('Signup error:', err);
@@ -270,12 +270,39 @@ const handleSignup = async () => {
   }
 };
 
-const loginWithGoogle = () => {
-  window.location.href = google;
+// === ĐĂNG KÝ BẰNG GOOGLE ===
+const signupWithGoogle = () => {
+  const { clientId, redirectUri } = google;
+  const scope = 'email profile openid';
+  const state = Math.random().toString(36).substring(7);
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `response_type=code&` +
+    `scope=${encodeURIComponent(scope)}&` +
+    `state=${state}&` +
+    `access_type=offline&prompt=consent`;
+
+  window.location.href = url;
 };
 
-const loginWithFacebook = () => {
-  window.location.href = facebook;
+// === ĐĂNG KÝ BẰNG FACEBOOK ===
+const signupWithFacebook = () => {
+  const { clientId, redirectUri } = facebook;
+  const scope = 'email,public_profile';
+  const state = Math.random().toString(36).substring(7);
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://www.facebook.com/v20.0/dialog/oauth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `response_type=code&` +
+    `scope=${scope}&` +
+    `state=${state}`;
+
+  window.location.href = url;
 };
 
 onMounted(() => {

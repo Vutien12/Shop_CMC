@@ -2,21 +2,22 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { getRecentOrders } from '@/api/accountApi.js'
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@/Config/search.js'
 
 export const useOrderStore = defineStore('order', () => {
   const orders = ref([]);
   const totalPages = ref(0);
   const currentPage = ref(0);
-  const pageSize = ref(10);
   const isLoading = ref(false);
   const lastFetched = ref(null);
   const loadedPages = ref(new Set());
   const CACHE_DURATION = 2 * 60 * 1000;
+  const pageDefault = ref(DEFAULT_PAGE);
+  const pageSize = ref(DEFAULT_PAGE_SIZE.orders);
 
-  const fetchOrders = async (page = 0, size = 5, force = false) => {
+  const fetchOrders = async (page = pageDefault.value, size = pageSize.value, force = false) => {
     const cacheKey = `${page}-${size}`;
     const now = Date.now();
-
     // Đã load, còn trong cache trả về ngay
     if (
       !force &&
