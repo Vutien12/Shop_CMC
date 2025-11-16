@@ -510,3 +510,106 @@
     font-size: 12px;
   }
 }
+
+
+
+
+/* === THÊM MỚI: Nút Clear Cart === */
+.btn-clear-cart {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #ef4444;
+  border: 1.5px solid #fecaca;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-clear-cart:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.btn-clear-cart i {
+  font-size: 14px;
+}
+
+/* === CẢI THIỆN: Summary Actions === */
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-checkout {
+  background: #0068e1 !important;
+}
+
+.btn-checkout:hover {
+  background: #094580 !important;
+}
+
+/* === CẢI THIỆN: Variant Name === */
+.variant-name {
+  font-size: 13.5px;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+
+/* === CẢI THIỆN: Options List === */
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.options-list small {
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.options-list strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* === CẢI THIỆN: Quantity Display === */
+.quantity-display {
+  font-weight: 600;
+  color: #111827;
+  font-size: 15px;
+}
+
+/* === Mobile: Cải thiện label === */
+@media (max-width: 1000px) {
+  .cart-table tbody td::before {
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+  }
+
+  .variant-name {
+    font-size: 13px;
+    margin: 6px 0;
+  }
+
+  .options-list {
+    gap: 3px;
+  }
+
+  .options-list small {
+    font-size: 12px;
+  }
+}

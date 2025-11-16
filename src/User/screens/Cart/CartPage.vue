@@ -1,32 +1,20 @@
 <template>
   <div class="cart-page-wrapper">
     <Header1 />
-
     <Loading v-if="isLoading" />
 
     <div v-else class="cart-page">
       <div class="container">
-        <!-- Progress Steps -->
+        <!-- Checkout Steps -->
         <div class="checkout-steps">
-          <div class="step active">
-            <span class="step-number">1</span>
-            <span class="step-title">My Cart</span>
-          </div>
-          <div class="step">
-            <span class="step-number">2</span>
-            <span class="step-title">Checkout</span>
-          </div>
-          <div class="step">
-            <span class="step-number">3</span>
-            <span class="step-title">Order Complete</span>
-          </div>
+          <div class="step active"><span class="step-number">1</span><span class="step-title">My Cart</span></div>
+          <div class="step"><span class="step-number">2</span><span class="step-title">Checkout</span></div>
+          <div class="step"><span class="step-number">3</span><span class="step-title">Order Complete</span></div>
         </div>
 
-        <!-- Empty Cart -->
+        <!-- Empty State -->
         <div v-if="cartItems.length === 0" class="empty-cart-state">
-          <div class="empty-icon">
-            <i class="fa-solid fa-cart-shopping"></i>
-          </div>
+          <div class="empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
           <h2>Your cart is empty</h2>
           <p>Looks like you haven't added anything to your cart yet</p>
           <router-link to="/product" class="btn-continue">Continue Shopping</router-link>
@@ -38,53 +26,46 @@
           <div class="cart-table-section">
             <table class="cart-table">
               <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Product Name</th>
-                  <th>Unit Price</th>
-                  <th>Quantity</th>
-                  <th>Line Total</th>
-                  <th></th>
-                </tr>
+              <tr>
+                <th>Image</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
               </thead>
               <tbody>
-                <tr v-for="item in cartItems" :key="item.id">
-                  <td data-label="Image">
-                    <div class="product-image">
-                      <img :src="item.image" :alt="item.name" />
+              <tr v-for="item in cartItems" :key="item.id" class="cart-row">
+                <td data-label="Image">
+                  <div class="product-image">
+                    <img :src="getThumb(item)" :alt="item.productName" />
+                  </div>
+                </td>
+                <td data-label="Product">
+                  <div class="product-info">
+                    <h3 class="product-name">{{ item.productName }}</h3>
+                    <p class="variant-name">{{ getShortVariantName(item.variantName) }}</p>
+                    <div class="options-list" v-if="item.cartItemOptions?.length">
+                      <small v-for="opt in item.cartItemOptions" :key="opt.id">
+                        {{ opt.optionName }}: <strong>{{ opt.valueLabel }}</strong>
+                      </small>
                     </div>
-                  </td>
-                  <td data-label="Product">
-                    <div class="product-name">
-                      <h3>{{ item.name }}</h3>
-                      <p class="product-color">Color: White</p>
-                    </div>
-                  </td>
-                  <td data-label="Unit Price">
-                    <div class="unit-price">${{ item.price }}</div>
-                  </td>
-                  <td data-label="Quantity">
-                    <div class="quantity-controls">
-                      <button @click="decreaseQuantity(item.id)" class="qty-btn">
-                        <i class="fa-solid fa-minus"></i>
-                      </button>
-                      <input type="text" :value="item.quantity" readonly class="qty-input" />
-                      <button @click="increaseQuantity(item.id)" class="qty-btn">
-                        <i class="fa-solid fa-plus"></i>
-                      </button>
-                    </div>
-                  </td>
-                  <td data-label="Line Total">
-                    <div class="line-total">
-                      ${{ (parseFloat(item.price) * item.quantity).toFixed(2) }}
-                    </div>
-                  </td>
-                  <td>
-                    <button class="remove-btn" @click="removeItem(item.id)">
-                      <i class="fa-solid fa-xmark"></i>
-                    </button>
-                  </td>
-                </tr>
+                  </div>
+                </td>
+                <td data-label="Price">
+                  <div class="unit-price">{{ formatPrice(item.unitPrice) }}</div>
+                </td>
+                <td data-label="Qty">
+                  <div class="quantity-display">{{ item.qty }}</div>
+                </td>
+                <td data-label="Total">
+                  <div class="line-total">{{ formatPrice(item.lineTotal) }}</div>
+                </td>
+                <td>
+                  <!-- Placeholder cho tương lai (xóa item) -->
+                </td>
+              </tr>
               </tbody>
             </table>
           </div>
@@ -94,11 +75,16 @@
             <h3>Cart Summary</h3>
             <div class="summary-row total">
               <span>Total</span>
-              <span class="total-amount">${{ total.toFixed(2) }}</span>
+              <span class="total-amount">{{ formatPrice(total) }}</span>
             </div>
-            <button class="btn-checkout" @click="proceedToCheckout">
-              Proceed to Checkout
-            </button>
+            <div class="summary-actions">
+              <button class="btn-clear-cart" @click="handleClear">
+                <i class="fa-solid fa-trash-can"></i> Clear Cart
+              </button>
+              <button class="btn-checkout" @click="proceed">
+                Proceed to Checkout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -109,78 +95,66 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useCartStore } from '@/User/stores/cartStore.js';
+import { useToast } from '@/User/components/Toast/useToast.js';
 import Header1 from '@/User/components/Header/Header1.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 
 const router = useRouter();
+const cartStore = useCartStore();
+const { add: toast } = useToast();
 
 const isLoading = ref(true);
 const cartItems = ref([]);
+const total = ref(0);
 
-// Load cart
-const loadCart = () => {
-  const saved = localStorage.getItem('userCart');
-  if (saved) {
-    cartItems.value = JSON.parse(saved);
+// Format price
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+    .format(price || 0)
+    .replace('₫', 'đ');
+};
+
+// Rút gọn tên biến thể: bỏ tên sản phẩm
+const getShortVariantName = (fullName) => {
+  if (!fullName) return '';
+  const productName = cartStore.cartItems[0]?.productName || '';
+  return fullName.replace(productName, '').trim().replace(/^[-–—]\s*/, '');
+};
+
+const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg';
+
+const proceed = () => router.push('/checkout');
+
+const handleClear = async () => {
+  if (!confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) return;
+  try {
+    await cartStore.clear();
+    toast('Giỏ hàng đã được xóa!', 'success');
+  } catch (err) {
+    toast('Không thể xóa giỏ hàng', 'error');
   }
 };
 
-// Save cart
-const saveCart = () => {
-  localStorage.setItem('userCart', JSON.stringify(cartItems.value));
-  window.dispatchEvent(new Event('cartChanged'));
-};
-
-// Calculations
-const subtotal = computed(() => {
-  return cartItems.value.reduce((total, item) => {
-    return total + (parseFloat(item.price) * item.quantity);
-  }, 0);
-});
-
-const total = computed(() => subtotal.value);
-
-// Quantity controls
-const increaseQuantity = (id) => {
-  const item = cartItems.value.find(item => item.id === id);
-  if (item) {
-    item.quantity++;
-    saveCart();
+onMounted(async () => {
+  try {
+    const data = await cartStore.fetchCart();
+    cartItems.value = data.cartItems || [];
+    total.value = data.total || 0;
+  } catch (err) {
+    toast('Không thể tải giỏ hàng', 'error');
+  } finally {
+    setTimeout(() => isLoading.value = false, 600);
   }
-};
 
-const decreaseQuantity = (id) => {
-  const item = cartItems.value.find(item => item.id === id);
-  if (item && item.quantity > 1) {
-    item.quantity--;
-    saveCart();
-  }
-};
-
-// Remove item
-const removeItem = (id) => {
-  cartItems.value = cartItems.value.filter(item => item.id !== id);
-  saveCart();
-};
-
-// Proceed to checkout
-const proceedToCheckout = () => {
-  if (cartItems.value.length === 0) {
-    alert('Your cart is empty!');
-    return;
-  }
-  router.push('/checkout');
-};
-
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1000);
-  loadCart();
-  window.addEventListener('cartChanged', loadCart);
+  const updateCart = () => {
+    cartItems.value = cartStore.cartItems;
+    total.value = cartStore.total;
+  };
+  window.addEventListener('cartUpdated', updateCart);
 });
 </script>
 

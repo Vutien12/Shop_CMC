@@ -1,0 +1,106 @@
+// src/User/stores/cartStore.js
+import { ref, computed } from 'vue';
+import { defineStore } from 'pinia';
+import {
+  getCart,
+  addToCart,
+  clearCart,
+  updateCartItemQty,
+  removeCartItem
+} from '@/api/cartApi.js';
+
+const CACHE_DURATION = 5 * 60 * 1000;
+
+export const useCartStore = defineStore('cart', () => {
+  const cart = ref(null);
+  const isLoading = ref(false);
+  const isLoaded = ref(false);
+  const lastFetched = ref(null);
+
+  // 1. fetchCart: CẦN try/catch → fallback an toàn
+  const fetchCart = async (force = false) => {
+    const now = Date.now();
+    if (!force && isLoaded.value && lastFetched.value && now - lastFetched.value < CACHE_DURATION) {
+      return cart.value;
+    }
+
+    isLoading.value = true;
+    try {
+      const res = await getCart();
+      cart.value = res.data.result;
+      isLoaded.value = true;
+      lastFetched.value = now;
+      return cart.value;
+    } catch (error) {
+      // Xử lý lỗi: reset cart, log
+      cart.value = null;
+      isLoaded.value = false;
+      if (import.meta.env.DEV) {
+        console.error('[CartStore] Fetch failed:', error);
+      }
+      throw error; // Vẫn ném lên để component xử lý toast
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // 2. addItem: CẦN try/catch → cập nhật state dù lỗi
+  const addItem = async (payload) => {
+    isLoading.value = true;
+    try {
+      const res = await addToCart(payload);
+      cart.value = res.data.result;
+      lastFetched.value = Date.now();
+      window.dispatchEvent(new Event('cartUpdated'));
+      return cart.value;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[CartStore] Add item failed:', error);
+      }
+      throw error;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // 3. updateQuantity: KHÔNG cần try/catch → component xử lý
+  const updateQuantity = async (cartItemId, qty) => {
+    if (qty < 1) return;
+    const res = await updateCartItemQty(cartItemId, qty);
+    cart.value = res.data.result;
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  // 4. removeItem: KHÔNG cần try/catch
+  const removeItem = async (cartItemId) => {
+    const res = await removeCartItem(cartItemId);
+    cart.value = res.data.result;
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  // 5. clear: KHÔNG cần try/catch → component confirm rồi
+  const clear = async () => {
+    await clearCart();
+    cart.value = { cartItems: [], total: 0 };
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  // Computed
+  const cartItems = computed(() => cart.value?.cartItems || []);
+  const total = computed(() => cart.value?.total || 0);
+  const itemCount = computed(() => cartItems.value.length);
+
+  return {
+    cart,
+    cartItems,
+    total,
+    itemCount,
+    isLoading,
+    isLoaded,
+    fetchCart,
+    addItem,
+    updateQuantity,
+    removeItem,
+    clear,
+  };
+});

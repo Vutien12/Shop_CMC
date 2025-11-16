@@ -4,6 +4,7 @@ import { useOrderStore } from '@/User/stores/orderStore.js';
 import { useWishlistStore } from '@/User/stores/wishlistStore.js';
 import { useAddressStore } from '@/User/stores/addressesStore.js';
 import { useProfileStore } from '@/User/stores/profileStore.js';
+import { useCartStore } from '@/User/stores/cartStore.js';
 
 const stores = {
   '/account': useAccountStore,
@@ -11,6 +12,7 @@ const stores = {
   '/wishlist': useWishlistStore,
   '/addresses': useAddressStore,
   '/profile': useProfileStore,
+  '/cart': useCartStore,
 };
 
 let prefetchTimeout = null;
