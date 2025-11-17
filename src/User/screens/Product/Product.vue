@@ -52,7 +52,7 @@
           </li>
         </ul>
 
-        <!-- Lọc giá -->
+        <!-- Filters Section -->
         <div class="filters-section">
           <h3 class="section-title">Filters</h3>
           <div class="price-filter">
@@ -173,6 +173,7 @@
 
       <!-- Main Content -->
       <div class="main-content">
+        <!-- Header -->
         <div class="content-header">
           <button class="sidebar-toggle-btn" @click="sidebarOpen = true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
