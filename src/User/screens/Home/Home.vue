@@ -307,6 +307,7 @@
       </section>
     </div>
     <Footer />
+    <Chatbot />
   </div>
 </template>
 
@@ -316,6 +317,7 @@ import { useRouter } from 'vue-router'
 import Footer from '../../components/Footer/Footer.vue'
 import Header1 from '../../components/Header/Header1.vue'
 import Loading from '../../components/Loading/Loading.vue'
+import Chatbot from '../../components/Chatbot/Chatbot.vue'
 
 const router = useRouter()
 const isLoading = ref(true)
