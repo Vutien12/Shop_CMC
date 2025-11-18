@@ -2,8 +2,8 @@
 import api from './axiosInstance.js';
 
 // POST: Thêm vào giỏ hàng
-export const addToCart = (cartItems) =>
-  api.post('/carts', { cartItems });
+export const addToCart = (payload) =>
+  api.post('/carts', payload);
 
 // GET: Lấy giỏ hàng
 export const getCart = () =>
@@ -15,7 +15,7 @@ export const updateCartItemQty = (cartItemId, qty) =>
 
 // DELETE: Xóa item theo cartItemId
 export const removeCartItem = (cartItemId) =>
-  api.delete('/carts/item', { data: { cartItemId } });
+  api.delete(`/carts/item/${cartItemId}`);
 
 // DELETE: Xóa toàn bộ giỏ hàng
 export const clearCart = () =>

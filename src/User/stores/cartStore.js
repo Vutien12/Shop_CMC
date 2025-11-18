@@ -71,14 +71,16 @@ export const useCartStore = defineStore('cart', () => {
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  // 4. removeItem: KHÔNG cần try/catch
+  const updateItemQuantity = async (cartItemId, qty) => {
+    await updateQuantity(cartItemId, qty);
+  };
+
   const removeItem = async (cartItemId) => {
     const res = await removeCartItem(cartItemId);
     cart.value = res.data.result;
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  // 5. clear: KHÔNG cần try/catch → component confirm rồi
   const clear = async () => {
     await clearCart();
     cart.value = { cartItems: [], total: 0 };
@@ -100,6 +102,7 @@ export const useCartStore = defineStore('cart', () => {
     fetchCart,
     addItem,
     updateQuantity,
+    updateItemQuantity,
     removeItem,
     clear,
   };

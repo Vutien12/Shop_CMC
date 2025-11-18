@@ -108,13 +108,13 @@ const isOpen = ref(false)
 // DỮ LIỆU TỪ STORE – DÙNG COMPUTED
 const cartItems = computed(() => cartStore.cartItems)
 const total = computed(() => cartStore.total)
-const itemCount = computed(() => cartStore.itemCount)
+const itemCount = computed(() => cartStore.cartItems.reduce((sum, item) => sum + item.qty, 0))
 
 const openCart = async () => {
   isOpen.value = true
   document.body.style.overflow = 'hidden'
   try {
-    await cartStore.fetchCart(true) // force = true → luôn tải mới
+    await cartStore.fetchCart(true)
   } catch (err) {
     toast('Không thể tải giỏ hàng', 'error')
   }

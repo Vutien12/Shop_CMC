@@ -183,62 +183,88 @@
 
 <script>
 import Cart from '../Cart/Cart.vue';
+import { useCartStore } from '@/User/stores/cartStore.js';
+import { useWishlistStore } from '@/User/stores/wishlistStore.js';
+import { useAuth } from '@/User/components/useAuth.js';
 
 export default {
   name: 'HeaderMain',
   components: {
     Cart
   },
+  setup() {
+    const cartStore = useCartStore();
+    const wishlistStore = useWishlistStore();
+    const { handleLogout } = useAuth();
+    return { cartStore, wishlistStore, authLogout: handleLogout };
+  },
   data() {
     return {
       menuOpen: false,
       isLoggedIn: false,
       wishlistCount: 0,
-      cartCount: 0,
       searchQuery: '',
       activeTab: 'menu' // Default tab for mobile menu
     };
   },
+  computed: {
+    cartCount() {
+      return this.cartStore?.itemCount || 0;
+    },
+    wishlistCountComputed() {
+      return this.wishlistStore?.items?.length || 0;
+    }
+  },
+  watch: {
+    wishlistCountComputed: {
+      handler(val) {
+        this.wishlistCount = val;
+      },
+      immediate: true
+    }
+  },
   mounted() {
-    // Kiểm tra trạng thái đăng nhập khi component được mount
     this.checkLoginStatus();
-
-    // Cập nhật số lượng wishlist
-    this.updateWishlistCount();
-
-    // Cập nhật số lượng cart
-    this.updateCartCount();
-
-    // Lắng nghe sự thay đổi trong localStorage
+    if (this.isLoggedIn) {
+      this.refreshWishlistCount(true);
+    } else {
+      this.wishlistCount = 0;
+    }
+    this.updateCartCount(true);
     window.addEventListener('storage', this.checkLoginStatus);
-
-    // Lắng nghe custom event khi đăng nhập/đăng xuất
     window.addEventListener('loginStatusChanged', this.checkLoginStatus);
-
-    // Lắng nghe custom event khi wishlist thay đổi
-    window.addEventListener('wishlistChanged', this.updateWishlistCount);
-
-    // Lắng nghe custom event khi cart thay đổi
-    window.addEventListener('cartChanged', this.updateCartCount);
+    window.addEventListener('wishlistChanged', this.refreshWishlistCount);
+    window.addEventListener('cartUpdated', this.handleCartUpdated);
   },
   beforeUnmount() {
-    // Cleanup listeners
     window.removeEventListener('storage', this.checkLoginStatus);
     window.removeEventListener('loginStatusChanged', this.checkLoginStatus);
-    window.removeEventListener('wishlistChanged', this.updateWishlistCount);
-    window.removeEventListener('cartChanged', this.updateCartCount);
+    window.removeEventListener('wishlistChanged', this.refreshWishlistCount);
+    window.removeEventListener('cartUpdated', this.handleCartUpdated);
   },
   methods: {
     checkLoginStatus() {
       this.isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (this.isLoggedIn) {
+        this.refreshWishlistCount(true);
+      } else {
+        this.wishlistCount = 0;
+      }
     },
     updateWishlistCount() {
-      const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-      this.wishlistCount = wishlist.length;
+      this.wishlistCount = this.wishlistStore.items.length;
     },
-    updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem('userCart') || '[]');
-      this.cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+    async updateCartCount(force = false) {
+      try {
+        await this.cartStore.fetchCart(force);
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.warn('[Header] Failed to refresh cart count', error);
+        }
+      }
+    },
+    handleCartUpdated() {
+      this.updateCartCount();
     },
     openCart() {
       window.dispatchEvent(new Event('openCart'));
@@ -246,19 +272,32 @@ export default {
     closeMenu() {
       this.menuOpen = false;
     },
-    handleLogout() {
-      // Xóa thông tin đăng nhập
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userEmail');
-
-      // Cập nhật trạng thái
-      this.isLoggedIn = false;
-
-      // Dispatch custom event
-      window.dispatchEvent(new Event('loginStatusChanged'));
-
-      // Chuyển về trang login
-      this.$router.push('/login');
+    async refreshWishlistCount(force = false) {
+      if (!this.isLoggedIn) {
+        this.wishlistCount = 0;
+        return;
+      }
+      try {
+        await this.wishlistStore.fetchWishlist(undefined, undefined, force);
+        this.wishlistCount = this.wishlistStore.items.length;
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.warn('[Header] Failed to refresh wishlist', error);
+        }
+      }
+    },
+    async handleLogout() {
+      try {
+        await this.authLogout();
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Logout failed', error);
+        }
+      } finally {
+        this.isLoggedIn = false;
+        window.dispatchEvent(new Event('loginStatusChanged'));
+        this.$router.push('/login');
+      }
     }
   }
 };

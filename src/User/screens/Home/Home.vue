@@ -1,6 +1,6 @@
 <template>
   <div class="home-page">
-    <Header1 />
+    <Header />
     <Loading v-if="isLoading" />
     <div v-else class="home-container">
       <!-- Hero Slider -->
@@ -314,7 +314,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '../../components/Footer/Footer.vue'
-import Header1 from '../../components/Header/Header1.vue'
+import Header from '@/User/components/Header1/Header.vue';
 import Loading from '../../components/Loading/Loading.vue'
 
 const router = useRouter()

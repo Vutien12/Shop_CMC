@@ -1,6 +1,6 @@
 <template>
   <div class="checkout-wrapper">
-    <Header1 />
+    <Header />
 
     <Loading v-if="isLoading" />
 
@@ -305,7 +305,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Header1 from '@/User/components/Header/Header1.vue';
+import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 

@@ -1,6 +1,6 @@
 <template>
   <div class="account-wrapper">
-    <Header1 />
+    <Header />
 
     <!-- Transition chính -->
     <transition name="fade" mode="out-in">
@@ -157,7 +157,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Header1 from '@/User/components/Header/Header1.vue';
+import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import { useAccountStore } from '@/User/stores/accountStore.js';

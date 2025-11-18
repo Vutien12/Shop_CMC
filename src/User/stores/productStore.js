@@ -37,33 +37,11 @@ export const useProductStore = defineStore('product', () => {
     if (categories.value.length > 0) return;
     isLoadingCategories.value = true;
     try {
-      console.log('Fetching categories...');
       const res = await getCategories();
-      console.log('Categories API response:', res.data);
       if (res.data.code !== 200) throw new Error(res.data.message);
 
-      const raw = res.data.result;
-      const map = {};
-      raw.forEach(cat => {
-        map[cat.id] = { ...cat, isOpen: false, subcategories: [] };
-      });
-      raw.forEach(cat => {
-        if (cat.parent && map[cat.parent]) {
-          map[cat.parent].subcategories.push({ id: cat.id, name: cat.name });
-        }
-      });
-
-      const built = Object.values(map)
-        .filter(cat => !cat.parent)
-        .map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          isOpen: false,
-          subcategories: cat.subcategories
-        }));
-
-      categories.value.splice(0, categories.value.length, ...built);
-      console.log('Categories assigned:', categories.value.length);
+      const tree = buildCategoryTree(res.data.result || []);
+      categories.value.splice(0, categories.value.length, ...tree);
     } catch (error) {
       console.error('Lỗi tải danh mục:', error);
     } finally {
@@ -84,7 +62,9 @@ export const useProductStore = defineStore('product', () => {
     try {
       console.log('Fetching products:', { page, size, sortBy: sortBy.value });
       const params = { page, size, sort: sortBy.value };
-      if (selectedCategories.value.length > 0) params.categories = selectedCategories.value.join(',');
+      if (selectedCategories.value.length > 0) {
+        params.categoryIds = selectedCategories.value;
+      }
       if (priceRange.value[0] > 0) params.minPrice = priceRange.value[0];
       if (priceRange.value[1] < 100000000) params.maxPrice = priceRange.value[1];
 
@@ -118,7 +98,7 @@ export const useProductStore = defineStore('product', () => {
 
       updateLatestProducts();
 
-      totalPages.value = data.totalPages;
+      totalPages.value = data.totalPages || 0;
       totalElements.value = data.totalElements;
       currentPage.value = page;
       pageSize.value = size;
@@ -154,12 +134,66 @@ export const useProductStore = defineStore('product', () => {
     fetchProducts(0, pageSize.value, true);
   };
 
+  const buildCategoryTree = (flat = []) => {
+    const map = new Map();
+    flat.forEach((cat) => {
+      map.set(cat.id, {
+        id: cat.id,
+        parentId: cat.parentId,
+        name: cat.name,
+        isActive: cat.isActive,
+        isOpen: false,
+        subcategories: []
+      });
+    });
+
+    const roots = [];
+    map.forEach((cat) => {
+      if (cat.parentId && map.has(cat.parentId)) {
+        map.get(cat.parentId).subcategories.push(cat);
+      } else if (!cat.parentId) {
+        roots.push(cat);
+      }
+    });
+
+    return roots;
+  };
+
+  const findCategoryNode = (id, nodes = []) => {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      const found = findCategoryNode(id, node.subcategories || []);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const toggleCategoryOpen = (catId) => {
+    const node = findCategoryNode(catId, categories.value);
+    if (node) {
+      node.isOpen = !node.isOpen;
+    }
+  };
+
+  const getDescendantIds = (node) => {
+    if (!node) return [];
+    const ids = [node.id];
+    (node.subcategories || []).forEach((child) => {
+      ids.push(...getDescendantIds(child));
+    });
+    return ids;
+  };
+
   const toggleCategory = (catId) => {
-    const idx = selectedCategories.value.indexOf(catId);
-    if (idx > -1) {
-      selectedCategories.value.splice(idx, 1);
+    const node = findCategoryNode(catId, categories.value);
+    const idsToSelect = node ? getDescendantIds(node) : [catId];
+    const current = [...selectedCategories.value].sort().join(',');
+    const incoming = [...idsToSelect].sort().join(',');
+
+    if (current === incoming) {
+      selectedCategories.value = [];
     } else {
-      selectedCategories.value.push(catId);
+      selectedCategories.value = idsToSelect;
     }
     currentPage.value = 0;
     fetchProducts(0, pageSize.value, true);
@@ -207,6 +241,6 @@ export const useProductStore = defineStore('product', () => {
     hasNextPage, hasPrevPage,
     fetchCategories, fetchProducts,
     setSort, setPageSize, setPriceRange,
-    toggleCategory, changePage, toggleLike
+    toggleCategory, toggleCategoryOpen, changePage, toggleLike
   };
 });

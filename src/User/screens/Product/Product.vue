@@ -22,7 +22,7 @@
         <div v-if="isLoadingCategories" class="loading-categories">Loading categories...</div>
         <ul v-else class="category-list">
           <li v-for="cat in categories" :key="cat.id" class="category-item">
-            <div class="category-header" @click="toggleCategory(cat.id)">
+            <div class="category-header" @click="toggleCategoryOpen(cat.id)">
               <svg
                 class="chevron-icon"
                 :class="{ 'chevron-open': cat.isOpen }"
@@ -219,9 +219,9 @@
               <option value="minPrice,desc">Price: High to Low</option>
             </select>
             <select v-model.number="pageSize" @change="setPageSize(pageSize)" class="control-select">
-              <option value="10">10</option>
               <option value="20">20</option>
               <option value="40">40</option>
+              <option value="60">60</option>
             </select>
           </div>
         </div>
@@ -304,26 +304,44 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import Header from '@/User/components/Header/Header1.vue';
+import { storeToRefs } from 'pinia';
+import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import { useProductStore } from '@/User/stores/productStore.js';
 
 const router = useRouter();
 const store = useProductStore();
+const {
+  products,
+  latestProducts,
+  categories,
+  isLoading,
+  isLoadingCategories,
+  totalPages,
+  currentPage,
+  pageSize,
+  sortBy,
+  priceRange,
+  selectedCategories,
+  hasPrevPage,
+  hasNextPage
+} = storeToRefs(store);
+
+const {
+  fetchCategories,
+  fetchProducts,
+  setSort,
+  setPageSize,
+  setPriceRange,
+  toggleCategory,
+  toggleCategoryOpen,
+  changePage,
+  toggleLike
+} = store;
 
 const sidebarOpen = ref(false);
 const viewMode = ref('grid');
-
-const {
-  products, latestProducts, categories,
-  isLoading, isLoadingCategories,
-  totalPages, currentPage, pageSize, sortBy, priceRange, selectedCategories,
-  hasPrevPage, hasNextPage,
-  fetchCategories, fetchProducts,
-  setSort, setPageSize, setPriceRange,
-  toggleCategory, changePage, toggleLike
-} = store;
 
 const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 const formatPriceInput = (price) => new Intl.NumberFormat('vi-VN').format(price);
@@ -338,7 +356,7 @@ const updateMaxPrice = (val) => {
 };
 
 const goToProductDetail = (id) => {
-  router.push({ path: '/productdetail', query: { id } });
+  router.push({ name: 'ProductDetail', params: { id } });
 };
 
 // Watch viewMode để thay đổi class grid/list nếu cần

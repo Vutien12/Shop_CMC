@@ -27,7 +27,7 @@ const routes = [
   { path: '/header1', name: 'Header1', component: Header1 },
   { path: '/footer', name: 'AppFooter', component: Footer },
   { path: '/product', name: 'Product', component: Product },
-  { path: '/productdetail', name: 'ProductDetail', component: ProductDetail },
+  { path: '/productdetail/:id', name: 'ProductDetail', component: ProductDetail },
   { path: '/blog', name: 'Blog', component: Blog },
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },

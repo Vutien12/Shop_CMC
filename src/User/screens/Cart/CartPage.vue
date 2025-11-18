@@ -1,6 +1,6 @@
 <template>
   <div class="cart-page-wrapper">
-    <Header1 />
+    <Header />
     <Loading v-if="isLoading" />
 
     <div v-else class="cart-page">
@@ -57,13 +57,39 @@
                   <div class="unit-price">{{ formatPrice(item.unitPrice) }}</div>
                 </td>
                 <td data-label="Qty">
-                  <div class="quantity-display">{{ item.qty }}</div>
+                  <div class="quantity-controls">
+                    <button
+                      class="qty-btn"
+                      type="button"
+                      @click="changeQuantity(item, -1)"
+                      :disabled="item.qty <= 1 || isItemUpdating(item.id)"
+                    >
+                      <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <div class="qty-input">{{ item.qty }}</div>
+                    <button
+                      class="qty-btn"
+                      type="button"
+                      @click="changeQuantity(item, 1)"
+                      :disabled="isItemUpdating(item.id)"
+                    >
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
                 </td>
                 <td data-label="Total">
                   <div class="line-total">{{ formatPrice(item.lineTotal) }}</div>
                 </td>
                 <td>
-                  <!-- Placeholder cho tương lai (xóa item) -->
+                  <button
+                    class="remove-btn"
+                    type="button"
+                    @click="removeItem(item)"
+                    :disabled="isItemRemoving(item.id)"
+                    title="Remove item"
+                  >
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
                 </td>
               </tr>
               </tbody>
@@ -95,11 +121,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@/User/stores/cartStore.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
-import Header1 from '@/User/components/Header/Header1.vue';
+import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 
@@ -110,6 +136,11 @@ const { add: toast } = useToast();
 const isLoading = ref(true);
 const cartItems = ref([]);
 const total = ref(0);
+const updatingItemId = ref(null);
+const removingItemId = ref(null);
+
+const isItemUpdating = (id) => updatingItemId.value === id;
+const isItemRemoving = (id) => removingItemId.value === id;
 
 // Format price
 const formatPrice = (price) => {
@@ -121,7 +152,7 @@ const formatPrice = (price) => {
 // Rút gọn tên biến thể: bỏ tên sản phẩm
 const getShortVariantName = (fullName) => {
   if (!fullName) return '';
-  const productName = cartStore.cartItems[0]?.productName || '';
+  const productName = cartItems.value[0]?.productName || '';
   return fullName.replace(productName, '').trim().replace(/^[-–—]\s*/, '');
 };
 
@@ -139,6 +170,39 @@ const handleClear = async () => {
   }
 };
 
+const changeQuantity = async (item, delta) => {
+  const newQty = item.qty + delta;
+  if (newQty < 1 || isItemUpdating(item.id)) return;
+  updatingItemId.value = item.id;
+  try {
+    await cartStore.updateQuantity(item.id, newQty);
+    toast('Cập nhật số lượng thành công!', 'success');
+  } catch (err) {
+    toast(err.response?.data?.message || 'Không thể cập nhật số lượng', 'error');
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const removeItem = async (item) => {
+  if (isItemRemoving(item.id)) return;
+  if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+  removingItemId.value = item.id;
+  try {
+    await cartStore.removeItem(item.id);
+    toast('Sản phẩm đã được xóa khỏi giỏ hàng!', 'success');
+  } catch (err) {
+    toast(err.response?.data?.message || 'Không thể xóa sản phẩm', 'error');
+  } finally {
+    removingItemId.value = null;
+  }
+};
+
+const updateCart = () => {
+  cartItems.value = cartStore.cartItems;
+  total.value = cartStore.total;
+};
+
 onMounted(async () => {
   try {
     const data = await cartStore.fetchCart();
@@ -147,14 +211,14 @@ onMounted(async () => {
   } catch (err) {
     toast('Không thể tải giỏ hàng', 'error');
   } finally {
-    setTimeout(() => isLoading.value = false, 600);
+    setTimeout(() => (isLoading.value = false), 600);
   }
 
-  const updateCart = () => {
-    cartItems.value = cartStore.cartItems;
-    total.value = cartStore.total;
-  };
   window.addEventListener('cartUpdated', updateCart);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('cartUpdated', updateCart);
 });
 </script>
 
