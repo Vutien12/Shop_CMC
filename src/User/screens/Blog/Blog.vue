@@ -10,7 +10,12 @@
       </div>
 
       <div class="blog-grid">
-        <div v-for="post in blogPosts" :key="post.id" class="blog-card">
+        <div
+          v-for="post in blogPosts"
+          :key="post.id"
+          class="blog-card"
+          @click="goToBlogDetail(post.id)"
+        >
           <div class="blog-image">
             <img :src="post.thumbnail" :alt="post.title" />
           </div>

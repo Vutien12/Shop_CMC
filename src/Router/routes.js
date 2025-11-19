@@ -18,7 +18,8 @@ import Checkout from "../User/screens/Checkout/Checkout.vue";
 import MyOrder from "../User/components/MyOrder/MyOrder.vue";
 import Review from "../User/screens/Review/Review.vue";
 import Header from "../User/components/Header1/Header.vue";
-import OAuth2 from '@/OAuth2/OAuth2.vue'
+import OAuth2 from '@/OAuth2/OAuth2.vue';
+import Blogdetail from "../User/screens/BlogDetail/Blogdetail.vue";
 
 
 const routes = [
@@ -29,6 +30,7 @@ const routes = [
   { path: '/product', name: 'Product', component: Product },
   { path: '/productdetail/:id', name: 'ProductDetail', component: ProductDetail },
   { path: '/blog', name: 'Blog', component: Blog },
+  { path: '/blogdetail', name: 'Blogdetail', component: Blogdetail },
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
