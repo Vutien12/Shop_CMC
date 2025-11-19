@@ -10,7 +10,12 @@
       </div>
 
       <div class="blog-grid">
-        <div v-for="post in blogPosts" :key="post.id" class="blog-card">
+        <div 
+          v-for="post in blogPosts" 
+          :key="post.id" 
+          class="blog-card"
+          @click="goToBlogDetail(post.id)"
+        >
           <div class="blog-image">
             <img :src="post.image" :alt="post.title" />
           </div>
@@ -24,7 +29,7 @@
               </span>
             </div>
             <h3 class="blog-title">{{ post.title }}</h3>
-            <a href="#" class="read-more">Read Post</a>
+            <a href="#" class="read-more" @click.prevent>Read Post</a>
           </div>
         </div>
       </div>
@@ -143,6 +148,14 @@ export default {
     setTimeout(() => {
       this.isLoading = false;
     }, 1000);
+  },
+  methods: {
+    goToBlogDetail(postId) {
+      this.$router.push({
+        name: 'Blogdetail',
+        query: { id: postId }
+      });
+    }
   }
 };
 </script>
