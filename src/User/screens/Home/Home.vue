@@ -314,10 +314,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import Footer from '../../components/Footer/Footer.vue'
+import Footer from '@/User/components/Footer/Footer.vue'
 import Header from '@/User/components/Header1/Header.vue';
-import Loading from '../../components/Loading/Loading.vue'
-import Chatbot from '../../components/Chatbot/Chatbot.vue'
+import Loading from '@/User/components/Loading/Loading.vue'
+import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 
 const router = useRouter()
 const isLoading = ref(true)

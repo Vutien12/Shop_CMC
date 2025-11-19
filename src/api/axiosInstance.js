@@ -2,9 +2,9 @@ import axios from 'axios';
 import router from '@/Router/routes.js'
 
 const PUBLIC_ENDPOINTS = [
-  '/auth/**',                          // /api/v1/auth/**
-  '/auth/oauth2/callback/google',      // ĐÚNG
-  '/auth/oauth2/callback/facebook',    // ĐÚNG
+  '/auth/**',
+  '/auth/oauth2/callback/google',
+  '/auth/oauth2/callback/facebook',
   '/ws/**',
   '/uploads/**',
   '/products/search',

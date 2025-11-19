@@ -9,7 +9,6 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
-// vite.config.js
   server: {
     proxy: {
       '/api': {
@@ -17,6 +16,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (p) => p.replace(/^\/api/, '/elec/api')
+      },
+      '/ws': {
+        target: 'ws://localhost:8080/elec',
+        ws: true,
+        changeOrigin: true,
+        secure: false
       },
     },
     historyApiFallback: true,

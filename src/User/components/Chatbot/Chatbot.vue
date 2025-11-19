@@ -17,7 +17,7 @@
           </svg>
           <div>
             <h3>Chat Support</h3>
-            <span class="chatbot-status">Online</span>
+            <span class="chatbot-status" :class="connectionStatus">{{ statusLabel }}</span>
           </div>
         </div>
         <button class="chatbot-close" @click="toggleChatbot">
@@ -36,13 +36,22 @@
         </div>
       </div>
 
+      <div class="chatbot-controls">
+        <label>
+          Model
+          <select v-model="selectedModel" class="model-select">
+            <option v-for="model in models" :key="model" :value="model">{{ model }}</option>
+          </select>
+        </label>
+      </div>
+
       <div class="chatbot-input">
         <input
           v-model="inputMessage"
-           @keyup.enter="sendMessage"
-           type="text"
+          @keyup.enter="sendMessage"
+          type="text"
           placeholder="Nhập tin nhắn..."
-         />
+        />
         <button @click="sendMessage" class="send-button">
           <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -54,7 +63,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed, watch, onBeforeUnmount } from 'vue'
+// Removed SockJS import - using native WebSocket for true streaming
 
 const isOpen = ref(false)
 const inputMessage = ref('')
@@ -62,63 +72,199 @@ const messagesContainer = ref(null)
 const messages = ref([
   {
     type: 'bot',
-    text: 'Xin chào! Tôi có thể giúp gì cho bạn?',
+    text: 'Xin chào! Tôi là trợ lý ảo của Shop CMC. Bạn cần tư vấn về sản phẩm nào?',
     time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   }
 ])
 
+// WebSocket state
+const models = ['gemini-2.5-flash', 'command-a-03-2025', 'open-router']
+const selectedModel = ref(models[0])
+const wsRef = ref(null)
+const connectionStatus = ref('offline')
+const reconnectTimer = ref(null)
+
+
+const statusLabel = computed(() => {
+  switch (connectionStatus.value) {
+    case 'connecting':
+      return 'Đang kết nối...'
+    case 'online':
+      return 'Online'
+    default:
+      return 'Offline'
+  }
+})
+
 const toggleChatbot = () => {
   isOpen.value = !isOpen.value
+  if (isOpen.value && connectionStatus.value === 'offline') {
+    connect()
+  }
+}
+
+const appendMessage = (type, text) => {
+  messages.value.push({
+    type,
+    text,
+    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  })
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
+
+const streamingMessageId = ref(null)
+
+const updateLastBotMessage = (text) => {
+  const lastMsg = messages.value[messages.value.length - 1]
+
+  // Check if last message is a streaming response (not welcome/error message)
+  const isStreamingMessage = lastMsg &&
+                             lastMsg.type === 'bot' &&
+                             lastMsg.id === streamingMessageId.value
+
+  if (isStreamingMessage) {
+    // Append to existing streaming message
+    lastMsg.text += text
+  } else {
+    // Create new streaming message
+    const newMsgId = Date.now()
+    streamingMessageId.value = newMsgId
+    messages.value.push({
+      id: newMsgId,
+      type: 'bot',
+      text,
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    })
+  }
+
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
+
+const connect = () => {
+  const token = localStorage.getItem('accessToken')
+  if (!token) {
+    appendMessage('bot', 'Bạn cần đăng nhập để sử dụng chatbot.')
+    return
+  }
+
+  if (wsRef.value) {
+    wsRef.value.close()
+  }
+
+  connectionStatus.value = 'connecting'
+
+  // Native WebSocket for true streaming (no SockJS buffering)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL
+  const wsUrl = baseUrl.replace(/^http/, 'ws') + `/ws/chat?token=${encodeURIComponent(token)}`
+
+  wsRef.value = new WebSocket(wsUrl)
+
+  wsRef.value.onopen = () => {
+    connectionStatus.value = 'online'
+    console.log('[Chatbot] WebSocket connected:', wsUrl)
+    console.log('[Chatbot] Origin:', window.location.origin)
+  }
+
+  wsRef.value.onmessage = (event) => {
+    const data = event.data
+    console.log('%c[Chatbot] MESSAGE', 'background: #4CAF50; color: white; font-weight: bold; padding: 2px 6px', data)
+
+    if (!data) return
+
+    if (data === '[DONE]') {
+      console.log('%c[Chatbot] DONE', 'background: #2196F3; color: white; font-weight: bold; padding: 2px 6px')
+      streamingMessageId.value = null
+      return
+    }
+
+    if (data.startsWith('[ERROR]')) {
+      console.error('%c[Chatbot] ERROR', 'background: #F44336; color: white; font-weight: bold; padding: 2px 6px', data)
+      appendMessage('bot', data.replace('[ERROR]', 'Lỗi: '))
+      return
+    }
+
+    // Stream chunks từ backend
+    updateLastBotMessage(data)
+  }
+
+  wsRef.value.onclose = () => {
+    connectionStatus.value = 'offline'
+    if (isOpen.value) {
+      scheduleReconnect()
+    }
+  }
+
+  wsRef.value.onerror = (err) => {
+    console.error('[Chatbot] WebSocket error', err)
+    console.error('[Chatbot] URL:', wsUrl)
+    console.error('[Chatbot] Origin:', window.location.origin)
+    console.error('[Chatbot] Possible causes:')
+    console.error('  1. Backend not running on localhost:8080')
+    console.error('  2. CORS not configured for', window.location.origin)
+    console.error('  3. Token expired or invalid')
+    appendMessage('bot', 'Có lỗi xảy ra với kết nối chatbot. Đang thử kết nối lại...')
+    wsRef.value?.close()
+  }
+}
+
+const scheduleReconnect = () => {
+  if (reconnectTimer.value) return
+  reconnectTimer.value = setTimeout(() => {
+    reconnectTimer.value = null
+    if (connectionStatus.value === 'offline') {
+      connect()
+    }
+  }, 2000)
 }
 
 const sendMessage = () => {
-  if (inputMessage.value.trim()) {
-    const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  const message = inputMessage.value.trim()
+  if (!message) return
 
-    messages.value.push({
-      type: 'user',
-      text: inputMessage.value,
-      time: currentTime
-    })
+  appendMessage('user', message)
 
-    const userMsg = inputMessage.value.toLowerCase()
-    inputMessage.value = ''
-
-    // Scroll to bottom
-    nextTick(() => {
-      if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-      }
-    })
-
-    // Auto reply
-    setTimeout(() => {
-      let botReply = 'Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi sớm nhất có thể!'
-
-      if (userMsg.includes('giá') || userMsg.includes('bao nhiêu')) {
-        botReply = 'Vui l      òng cho tôi biết sản phẩm bạn quan tâm để tôi có thể cung cấp thông tin giá chính xác nhất.'
-      } else if (userMsg.includes('giao hàng') || userMsg.includes('ship')) {
-        botReply = 'Chúng tôi hỗ trợ giao hàng toàn quốc. Miễn phí ship cho đơn hàng trên 300k!'
-      } else if (userMsg.includes('bảo hành')) {
-        botReply = 'Tất cả sản phẩm đều có chế độ bảo hành chính hãng. Thời gian bảo hành tùy thuộc vào từng loại sản phẩm.'
-      } else if (userMsg.includes('xin chào') || userMsg.includes('hello') || userMsg.includes('hi')) {
-        botReply = 'Xin chào! Rất vui được hỗ trợ bạn. Bạn cần tư vấn về sản phẩm nào?'
-      }
-
-      messages.value.push({
-        type: 'bot',
-        text: botReply,
-        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-      })
-
-      nextTick(() => {
-        if (messagesContainer.value) {
-          messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-        }
-      })
-    }, 1000)
+  // Native WebSocket readyState: WebSocket.OPEN = 1
+  if (!wsRef.value || wsRef.value.readyState !== WebSocket.OPEN) {
+    appendMessage('bot', 'Kết nối chưa sẵn sàng, đang thử kết nối lại...')
+    connect()
+    return
   }
+
+  // Gửi payload theo format backend: {model: string, message: string}
+  const payload = {
+    model: selectedModel.value,
+    message: message
+  }
+
+  console.log('[Chatbot] Sending:', payload)
+  wsRef.value.send(JSON.stringify(payload))
+  inputMessage.value = ''
 }
+
+// Đóng WebSocket khi đóng chatbot
+watch(isOpen, (open) => {
+  if (!open && wsRef.value) {
+    wsRef.value.close()
+  }
+})
+
+// Cleanup khi component unmount
+onBeforeUnmount(() => {
+  if (wsRef.value) {
+    wsRef.value.close()
+  }
+  if (reconnectTimer.value) {
+    clearTimeout(reconnectTimer.value)
+  }
+})
 </script>
 
 <style scoped src="./Chatbot.css"></style>

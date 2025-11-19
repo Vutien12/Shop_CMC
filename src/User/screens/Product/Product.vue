@@ -298,6 +298,7 @@
       </div>
     </div>
     -->
+    <Chatbot />
   </div>
 </template>
 
@@ -309,6 +310,7 @@ import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import { useProductStore } from '@/User/stores/productStore.js';
+import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 
 const router = useRouter();
 const store = useProductStore();

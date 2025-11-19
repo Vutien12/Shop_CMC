@@ -187,6 +187,7 @@
     </transition>
 
     <Footer />
+    <Chatbot />
   </div>
 </template>
 
@@ -202,6 +203,7 @@ import { useToast } from '@/User/components/Toast/useToast.js';
 import { useLazyLoad } from '@/User/components/LazyLoad/useLazyLoad.js';
 import { usePrefetch } from '@/User/stores/usePrefetch.js';
 import { updateProfile, changePassword } from '@/api/accountApi.js';
+import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 
 const router = useRouter();
 const { handleLogout: authLogout } = useAuth();

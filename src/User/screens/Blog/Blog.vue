@@ -37,6 +37,7 @@
     </div>
 
     <Footer />
+    <Chatbot />
   </div>
 </template>
 
@@ -46,6 +47,7 @@ import Header from '@/User/components/Header1/Header.vue';
 import Footer from '../../components/Footer/Footer.vue';
 import Loading from '../../components/Loading/Loading.vue';
 import { searchBlogs } from '@/api/blogApi.js';
+import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 
 const isLoading = ref(true);
 const blogPosts = ref([]);
