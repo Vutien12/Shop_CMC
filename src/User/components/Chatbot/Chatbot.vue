@@ -69,13 +69,7 @@ import { ref, nextTick, computed, watch, onBeforeUnmount } from 'vue'
 const isOpen = ref(false)
 const inputMessage = ref('')
 const messagesContainer = ref(null)
-const messages = ref([
-  {
-    type: 'bot',
-    text: 'Xin chào! Tôi là trợ lý ảo của Shop CMC. Bạn cần tư vấn về sản phẩm nào?',
-    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  }
-])
+const messages = ref([])
 
 // WebSocket state
 const models = ['gemini-2.5-flash', 'command-a-03-2025', 'open-router']
@@ -151,7 +145,10 @@ const updateLastBotMessage = (text) => {
 const connect = () => {
   const token = localStorage.getItem('accessToken')
   if (!token) {
-    appendMessage('bot', 'Bạn cần đăng nhập để sử dụng chatbot.')
+    // Only show login message once - check if messages array is empty
+    if (messages.value.length === 0) {
+      appendMessage('bot', 'Bạn cần đăng nhập để sử dụng chatbot.')
+    }
     return
   }
 
@@ -171,6 +168,11 @@ const connect = () => {
     connectionStatus.value = 'online'
     console.log('[Chatbot] WebSocket connected:', wsUrl)
     console.log('[Chatbot] Origin:', window.location.origin)
+
+    // Show welcome message only after successful connection
+    if (messages.value.length === 0) {
+      appendMessage('bot', 'Xin chào! Tôi là trợ lý ảo của Shop CMC. Bạn cần tư vấn về sản phẩm nào?')
+    }
   }
 
   wsRef.value.onmessage = (event) => {

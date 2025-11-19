@@ -94,12 +94,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 
-const router = useRouter()
 const cartStore = useCartStore()
 const { add: toast } = useToast()
 
@@ -113,9 +111,12 @@ const itemCount = computed(() => cartStore.cartItems.reduce((sum, item) => sum +
 const openCart = async () => {
   isOpen.value = true
   document.body.style.overflow = 'hidden'
+
+  // Lazy load cart only when opening sidebar
   try {
     await cartStore.fetchCart(true)
   } catch (err) {
+    console.error('[Cart] Failed to fetch cart:', err)
     toast('Không thể tải giỏ hàng', 'error')
   }
 }

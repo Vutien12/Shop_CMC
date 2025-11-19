@@ -204,7 +204,7 @@ export default {
       isLoggedIn: false,
       wishlistCount: 0,
       searchQuery: '',
-      activeTab: 'menu' // Default tab for mobile menu
+      activeTab: 'menu'
     };
   },
   computed: {
@@ -255,6 +255,10 @@ export default {
       this.wishlistCount = this.wishlistStore.items.length;
     },
     async updateCartCount(force = false) {
+      // Only fetch cart if user is logged in
+      if (!this.isLoggedIn) {
+        return;
+      }
       try {
         await this.cartStore.fetchCart(force);
       } catch (error) {
@@ -267,6 +271,10 @@ export default {
       this.updateCartCount();
     },
     openCart() {
+      if (!this.isLoggedIn) {
+        this.$router.push('/login');
+        return;
+      }
       window.dispatchEvent(new Event('openCart'));
     },
     closeMenu() {

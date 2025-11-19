@@ -35,10 +35,19 @@ export const useCartStore = defineStore('cart', () => {
       // Xử lý lỗi: reset cart, log
       cart.value = null;
       isLoaded.value = false;
+
+      // If 401 (unauthorized), silently fail - user is not logged in
+      if (error.response?.status === 401) {
+        if (import.meta.env.DEV) {
+          console.warn('[CartStore] User not authenticated, skipping cart fetch');
+        }
+        return null;
+      }
+
       if (import.meta.env.DEV) {
         console.error('[CartStore] Fetch failed:', error);
       }
-      throw error; // Vẫn ném lên để component xử lý toast
+      throw error;
     } finally {
       isLoading.value = false;
     }
