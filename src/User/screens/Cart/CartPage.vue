@@ -160,7 +160,13 @@ const getShortVariantName = (fullName) => {
 
 const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg';
 
-const proceed = () => router.push('/checkout');
+const proceed = () => {
+  if (cartItems.value.length === 0) {
+    toast('Giỏ hàng trống!', 'error');
+    return;
+  }
+  router.push('/checkout');
+};
 
 const handleClear = async () => {
   if (!confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) return;
