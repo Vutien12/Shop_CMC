@@ -30,7 +30,7 @@ const routes = [
   { path: '/product', name: 'Product', component: Product },
   { path: '/productdetail/:id', name: 'ProductDetail', component: ProductDetail },
   { path: '/blog', name: 'Blog', component: Blog },
-  { path: '/blogdetail', name: 'Blogdetail', component: Blogdetail },
+  { path: '/blogdetail/:id', name: 'BlogDetail', component: Blogdetail },
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },

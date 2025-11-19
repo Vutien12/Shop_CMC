@@ -29,7 +29,7 @@
               </span>
             </div>
             <h3 class="blog-title">{{ post.title }}</h3>
-            <a :href="`/blog/${post.id}`" class="read-more">Read Post</a>
+            <a :href="`/blogdetail/${post.id}`" class="read-more">Read Post</a>
           </div>
         </div>
       </div>
