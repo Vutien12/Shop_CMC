@@ -15,6 +15,8 @@ import Address from "../User/screens/Address/Address.vue";
 import Profile from "../User/screens/Profile/Profile.vue";
 import NewAddress from "../User/components/NewAddress/NewAddress.vue";
 import Checkout from "../User/screens/Checkout/Checkout.vue";
+import OrderComplete from "../User/screens/OrderComplete/OrderComplete.vue";
+import PaymentCancel from "@/User/screens/PaymentCancel/PaymentCancel.vue";
 import MyOrder from "../User/components/MyOrder/MyOrder.vue";
 import Review from "../User/screens/Review/Review.vue";
 import Header from "../User/components/Header1/Header.vue";
@@ -45,6 +47,8 @@ const routes = [
   { path: '/new-address', name: 'NewAddress', component: NewAddress, meta: { requiresAuth: true } },
   { path: '/edit-address/:id', name: 'EditAddress', component: NewAddress, meta: { requiresAuth: true } },
   { path: '/checkout', name: 'Checkout', component: Checkout, meta: { requiresAuth: true } },
+  { path: '/order-complete/:id', name: 'OrderComplete', component: OrderComplete, meta: { requiresAuth: true } },
+  { path: '/payment-cancel', name: 'PaymentCancel', component: PaymentCancel, meta: { requiresAuth: true } },
   { path: '/orders', name: 'MyOrder', component: MyOrder, meta: { requiresAuth: true } },
   { path: '/review', name: 'Review', component: Review, meta: { requiresAuth: true } },
   { path: "/:pathMatch(.*)*", redirect: "/" },

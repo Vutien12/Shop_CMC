@@ -796,7 +796,7 @@ export default {
       this.submitError = ''
 
       try {
-        const response = await addCartItems(cartPayload.cartItems)
+        const response = await addCartItems(cartPayload)
         console.log('Cart response:', response.data)
         alert('Đã thêm vào giỏ hàng!')
       } catch (error) {
@@ -859,50 +859,65 @@ export default {
         }
       })
 
-      const cartItemOptions = this.options.map((option) => {
-        if (option.type === 'TEXT') {
-          const textValue = this.selectedOptions[option.id]
-          const textConfig = option.optionValues?.[0]
+      const cartItemOptions = this.options
+        .map((option) => {
+          if (option.type === 'TEXT') {
+            const textValue = this.selectedOptions[option.id]
+            const textConfig = option.optionValues?.[0]
+
+            // For optional TEXT options, only include if user entered value
+            if (!option.isRequired && !textValue) {
+              return null  // Skip optional empty options
+            }
+
+            return {
+              optionId: option.id,
+              optionName: option.name,
+              type: option.type,
+              isRequired: option.isRequired,
+              valueLabel: textValue || '',
+              price: textConfig?.price || 0,
+              priceType: textConfig?.priceType || 'FIXED',
+              cartItemOptionValues: [
+                {
+                  optionValueId: textConfig?.id,
+                  valueLabel: textValue || '',
+                  price: textConfig?.price || 0,
+                  priceType: textConfig?.priceType || 'FIXED',
+                },
+              ],
+            }
+          }
+
+          const selectedId = this.selectedOptions[option.id]
+          const optionValue = option.optionValues.find((ov) => `${ov.id}` === `${selectedId}`)
+
+          // For optional SELECT options, only include if user selected value
+          if (!option.isRequired && !selectedId) {
+            return null  // Skip optional unselected options
+          }
+
           return {
             optionId: option.id,
             optionName: option.name,
             type: option.type,
             isRequired: option.isRequired,
-            valueLabel: textValue || '',
-            price: textConfig?.price || 0,
-            priceType: textConfig?.priceType || 'FIXED',
-            cartItemOptionValues: [
-              {
-                optionValueId: textConfig?.id,
-                valueLabel: textValue || '',
-                price: textConfig?.price || 0,
-                priceType: textConfig?.priceType || 'FIXED',
-              },
-            ],
+            valueLabel: optionValue?.label || '',
+            price: optionValue?.price || 0,
+            priceType: optionValue?.priceType || 'FIXED',
+            cartItemOptionValues: optionValue
+              ? [
+                  {
+                    optionValueId: optionValue.id,
+                    valueLabel: optionValue.label,
+                    price: optionValue.price || 0,
+                    priceType: optionValue.priceType || 'FIXED',
+                  },
+                ]
+              : [],
           }
-        }
-        const selectedId = this.selectedOptions[option.id]
-        const optionValue = option.optionValues.find((ov) => `${ov.id}` === `${selectedId}`)
-        return {
-          optionId: option.id,
-          optionName: option.name,
-          type: option.type,
-          isRequired: option.isRequired,
-          valueLabel: optionValue?.label || '',
-          price: optionValue?.price || 0,
-          priceType: optionValue?.priceType || 'FIXED',
-          cartItemOptionValues: optionValue
-            ? [
-                {
-                  optionValueId: optionValue.id,
-                  valueLabel: optionValue.label,
-                  price: optionValue.price || 0,
-                  priceType: optionValue.priceType || 'FIXED',
-                },
-              ]
-            : [],
-        }
-      })
+        })
+        .filter((option) => option !== null)  // Remove null entries (skipped optional options)
 
       return {
         cartItems: [

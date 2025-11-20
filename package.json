@@ -20,6 +20,7 @@
     "@vueuse/core": "^14.0.0",
     "axios": "^1.13.2",
     "dompurify": "^3.3.0",
+    "i18n-iso-countries": "^7.14.0",
     "jwt-decode": "^2.2.0",
     "pinia": "^3.0.4",
     "sockjs-client": "^1.6.1",

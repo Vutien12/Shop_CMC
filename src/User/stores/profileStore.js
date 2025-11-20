@@ -24,7 +24,8 @@ export const useProfileStore = defineStore('profile', () => {
         email: user.email || '',
         phone: user.phone || '',
         firstName: user.firstName || '',
-        lastName: user.lastName || ''
+        lastName: user.lastName || '',
+        defaultAddress: user.defaultAddress || null
       };
 
       profile.value = data;

@@ -10,12 +10,11 @@ export const useAccountStore = defineStore('account', () => {
   const lastFetched = ref(null);
   const CACHE_DURATION = 2 * 60 * 1000; // 2 phút
   const loadedPages = ref(new Set());
-  const PAGE_KEY = 'dashboard';
 
-  const fetchData = async (force = false) => {
+  const fetchData = async (force = false, includeOrders = true) => {
     const now = Date.now();
+    const PAGE_KEY = includeOrders ? 'dashboard' : 'checkout';
 
-    // Kiểm tra cache theo key
     if (
       !force &&
       loadedPages.value.has(PAGE_KEY) &&
@@ -27,30 +26,34 @@ export const useAccountStore = defineStore('account', () => {
 
     isLoading.value = true;
     try {
-      const [ordersRes, userRes] = await Promise.all([
-        getRecentOrders(),
-        getMyInfo()
-      ]);
+      const userRes = await getMyInfo();
 
-      const orders = (ordersRes.data.result.content || []).map(order => ({
-        id: order.id ?? 'N/A',
-        date: order.createdAt
-          ? new Date(order.createdAt).toLocaleDateString('en-GB', {
-            day: '2-digit', month: 'short', year: 'numeric'
-          })
-          : 'N/A',
-        status: (order.status || '').replace(/_/g, ' '),
-        statusClass: getStatusClass(order.status),
-        total: order.total != null
-          ? new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: order.currency || 'VND'
-          }).format(order.total)
-          : '0 ₫',
-        tracking: Array.isArray(order.transactions) && order.transactions[0]?.transactionId
-          ? `...${order.transactions[0].transactionId.slice(-8)}`
-          : '-'
-      }));
+      let ordersRes = null;
+      if (includeOrders) {
+        ordersRes = await getRecentOrders();
+      }
+
+      const orders = includeOrders && ordersRes
+        ? (ordersRes.data.result.content || []).map(order => ({
+            id: order.id ?? 'N/A',
+            date: order.createdAt
+              ? new Date(order.createdAt).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+              })
+              : 'N/A',
+            status: (order.status || '').replace(/_/g, ' '),
+            statusClass: getStatusClass(order.status),
+            total: order.total != null
+              ? new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: order.currency || 'VND'
+              }).format(order.total)
+              : '0 ₫',
+            tracking: Array.isArray(order.transactions) && order.transactions[0]?.transactionId
+              ? `...${order.transactions[0].transactionId.slice(-8)}`
+              : '-'
+          }))
+        : [];
 
       const user = userRes.data.result || {};
       const addr = user.defaultAddress || {};
@@ -62,7 +65,8 @@ export const useAccountStore = defineStore('account', () => {
         address: addr.addressLine
           ? `${addr.addressLine}${addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}, ${addr.country || ''}`
             .replace(/^,\s*/, '').trim()
-          : 'Chưa có địa chỉ mặc định'
+          : 'Chưa có địa chỉ mặc định',
+        defaultAddress: user.defaultAddress || null
       };
 
       // Cập nhật state + cache

@@ -30,21 +30,20 @@
             <!-- Phone Number Section -->
             <div class="info-section">
               <h3>Phone Number</h3>
-              <div v-if="!usePhoneFromProfile" class="form-group">
+              <div class="form-group">
                 <label>Phone Number <span class="required">*</span></label>
                 <input
                   type="tel"
-                  v-model="manualPhone"
+                  v-model="phoneNumber"
                   placeholder="Enter phone number"
                   required
                   class="form-input"
                 />
               </div>
-              <div class="checkbox-option">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="usePhoneFromProfile" />
-                  <span>Use phone from profile{{ userProfile?.phone ? ': ' + userProfile.phone : '' }}</span>
-                </label>
+              <div v-if="userProfile?.phone" class="use-default-text">
+                <a href="#" @click.prevent="useDefaultPhone" class="use-default-link">
+                  Use default phone number: {{ userProfile.phone }}
+                </a>
               </div>
             </div>
 
@@ -53,35 +52,8 @@
             <!-- Billing Address Options -->
             <div class="info-section">
 
-              <!-- Saved Addresses -->
-              <div v-if="useSavedBillingAddress" class="saved-addresses">
-                <div
-                  v-for="address in addresses"
-                  :key="address.id"
-                  :class="['address-card', { selected: selectedAddressId === address.id }]"
-                  @click="selectAddress(address.id)"
-                >
-                  <input
-                    type="radio"
-                    class="address-radio"
-                    :checked="selectedAddressId === address.id"
-                    @change="selectAddress(address.id)"
-                  />
-                  <div class="address-content">
-                    <h4>{{ address.firstName }} {{ address.lastName }}</h4>
-                    <p class="address-text">
-                      {{ address.addressLine }}<br v-if="address.addressLine" />
-                      <span v-if="address.addressLine2">{{ address.addressLine2 }}<br /></span>
-                      {{ address.city }}, {{ address.stateOrProvince }} {{ address.postalCode }}<br />
-                      {{ address.country }}
-                    </p>
-                  </div>
-                  <span v-if="address.isDefault" class="default-badge">Default</span>
-                </div>
-              </div>
-
               <!-- Manual Billing Address Form -->
-              <div v-if="!useSavedBillingAddress" class="manual-address-form">
+              <div class="manual-address-form">
                 <div class="form-row">
                   <div class="form-group">
                     <label>First Name <span class="required">*</span></label>
@@ -135,73 +107,40 @@
                   </div>
                   <div class="form-group">
                     <label>State / Province <span class="required">*</span></label>
-                    <select v-model="manualBilling.state" required class="form-select">
-                      <option value="">Please Select</option>
-                      <option value="Hà Nội">Hà Nội</option>
-                      <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                      <option value="Đà Nẵng">Đà Nẵng</option>
-                    </select>
+                    <input
+                      type="text"
+                      v-model="manualBilling.state"
+                      placeholder="Enter state or province"
+                      required
+                      class="form-input"
+                    />
                   </div>
                 </div>
               </div>
 
-              <div class="checkbox-option">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="useSavedBillingAddress" />
-                  <span>Select from saved addresses</span>
-                </label>
+              <!-- Use Default Address Link -->
+              <div v-if="userProfile?.defaultAddress" class="use-default-text">
+                <a href="#" @click.prevent="useDefaultBillingAddress" class="use-default-link">
+                  Use default address
+                </a>
               </div>
             </div>
 
             <h2>Shipping Details</h2>
 
-            <!-- Ship to Different Address -->
+            <!-- Shipping Address Section -->
             <div class="info-section">
+              <!-- Checkbox: Use Same Billing Details -->
               <div class="checkbox-option">
                 <label class="checkbox-label">
-                  <input type="checkbox" v-model="shipToDifferent" />
-                  <span>Ship to a different address</span>
+                  <input type="checkbox" v-model="useSameBilling" @change="handleUseSameBilling" />
+                  <span>Use same billing details</span>
                 </label>
               </div>
 
-              <!-- Shipping Address Options (if different) -->
-              <div v-if="shipToDifferent">
-                <div class="checkbox-option">
-                  <label class="checkbox-label">
-                    <input type="checkbox" v-model="useSavedShippingAddress" />
-                    <span>Select from saved addresses</span>
-                  </label>
-                </div>
-
-                <!-- Saved Shipping Addresses -->
-                <div v-if="useSavedShippingAddress" class="saved-addresses">
-                  <div
-                    v-for="address in addresses"
-                    :key="'ship-' + address.id"
-                    :class="['address-card', { selected: selectedShippingAddressId === address.id }]"
-                    @click="selectShippingAddress(address.id)"
-                  >
-                    <input
-                      type="radio"
-                      class="address-radio"
-                      :checked="selectedShippingAddressId === address.id"
-                      @change="selectShippingAddress(address.id)"
-                    />
-                    <div class="address-content">
-                      <h4>{{ address.firstName }} {{ address.lastName }}</h4>
-                      <p class="address-text">
-                        {{ address.addressLine }}<br v-if="address.addressLine" />
-                        <span v-if="address.addressLine2">{{ address.addressLine2 }}<br /></span>
-                        {{ address.city }}, {{ address.stateOrProvince }} {{ address.postalCode }}<br />
-                        {{ address.country }}
-                      </p>
-                    </div>
-                    <span v-if="address.isDefault" class="default-badge">Default</span>
-                  </div>
-                </div>
-
-                <!-- Manual Shipping Address Form -->
-                <div v-if="!useSavedShippingAddress" class="manual-address-form">
+              <!-- Form only shows when NOT using same billing -->
+              <div v-if="!useSameBilling">
+                <div class="manual-address-form">
                   <div class="form-row">
                     <div class="form-group">
                       <label>First Name <span class="required">*</span></label>
@@ -255,14 +194,22 @@
                     </div>
                     <div class="form-group">
                       <label>State / Province <span class="required">*</span></label>
-                      <select v-model="manualShipping.state" required class="form-select">
-                        <option value="">Please Select</option>
-                        <option value="Hà Nội">Hà Nội</option>
-                        <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                        <option value="Đà Nẵng">Đà Nẵng</option>
-                      </select>
+                      <input
+                        type="text"
+                        v-model="manualShipping.state"
+                        placeholder="Enter state or province"
+                        required
+                        class="form-input"
+                      />
                     </div>
                   </div>
+                </div>
+
+                <!-- Use Default Address Link -->
+                <div v-if="userProfile?.defaultAddress" class="use-default-text">
+                  <a href="#" @click.prevent="useDefaultShippingAddress" class="use-default-link">
+                    Use default address
+                  </a>
                 </div>
               </div>
             </div>
@@ -285,7 +232,7 @@
                   <input
                     type="radio"
                     name="payment"
-                    value="COD"
+                    value="cod"
                     v-model="selectedPayment"
                   />
                   <div class="payment-info">
@@ -311,12 +258,12 @@
                   <input
                     type="radio"
                     name="payment"
-                    value="vnpay"
+                    value="card"
                     v-model="selectedPayment"
                   />
                   <div class="payment-info">
-                    <h4>💳 VNPay</h4>
-                    <p>Thanh toán qua ví điện tử VNPay.</p>
+                    <h4>💳 CARD</h4>
+                    <p>Thanh toán qua thẻ.</p>
                   </div>
                 </label>
               </div>
@@ -381,16 +328,59 @@
               <!-- Cart Items -->
               <div class="cart-items">
                 <div v-for="item in cartItems" :key="item.id" class="cart-item">
-                  <div class="item-image">
-                    <img :src="getThumb(item)" :alt="item.productName" />
-                    <span class="item-quantity">{{ item.qty }}</span>
+                  <!-- Product Image & Info -->
+                  <div class="item-main">
+                    <div class="item-image">
+                      <img :src="getThumb(item)" :alt="item.productName" />
+                      <span class="item-qty-badge">{{ item.qty }}</span>
+                    </div>
+
+                    <div class="item-details">
+                      <h4 class="item-name">{{ item.productName }}</h4>
+
+                      <!-- Variations -->
+                      <div v-if="item.cartItemVariations?.length > 0" class="item-specs">
+                        <div v-for="variation in item.cartItemVariations" :key="variation.id" class="spec-row">
+                          <span class="spec-label">{{ variation.variationName }}:</span>
+                          <span class="spec-value">
+                            <span v-if="variation.type === 'COLOR'"
+                              class="color-swatch"
+                              :style="{ backgroundColor: variation.value }"
+                              :title="variation.cartItemVariationValues[0]?.label">
+                            </span>
+                            <span>{{ variation.cartItemVariationValues[0]?.label }}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Options -->
+                      <div v-if="item.cartItemOptions?.length > 0" class="item-options">
+                        <div v-for="option in item.cartItemOptions" :key="option.id" class="option-row">
+                          <span class="option-label">{{ option.optionName }}:</span>
+                          <span class="option-value">
+                            {{ option.valueLabel || option.cartItemOptionValues?.[0]?.optionValue?.label || option.cartItemOptionValues?.[0]?.valueLabel || '-' }}
+                          </span>
+                          <span v-if="option.price > 0" class="option-price">+{{ formatPrice(option.price) }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="item-details">
-                    <h4>{{ item.productName }}</h4>
-                    <p class="item-variant">{{ item.variantName }}</p>
+
+                  <!-- Price -->
+                  <div class="item-pricing">
+                    <div class="unit-price">
+                      <span class="price-label">Unit:</span>
+                      <span class="price-value">{{ formatPrice(item.unitPrice) }}</span>
+                    </div>
+                    <div class="line-total">
+                      <span class="price-label">Total:</span>
+                      <span class="price-value">{{ formatPrice(item.lineTotal) }}</span>
+                    </div>
                   </div>
-                  <div class="item-price">{{ formatPrice(item.lineTotal) }}</div>
                 </div>
+
+                <!-- Divider -->
+                <div class="items-divider"></div>
               </div>
 
               <!-- Coupon Code -->
@@ -441,6 +431,35 @@
             </div>
           </div>
         </div>
+
+    <!-- Payment QR Modal -->
+    <div v-if="showQRModal" class="qr-modal-overlay" @click="closeQRModal">
+      <div class="qr-modal" @click.stop>
+        <div class="qr-modal-header">
+          <h2>Quét mã QR để thanh toán</h2>
+          <button class="btn-close" @click="closeQRModal">&times;</button>
+        </div>
+
+        <div class="qr-modal-body">
+          <p class="qr-instruction">Vui lòng quét mã QR bên dưới bằng ứng dụng ngân hàng hoặc ví điện tử của bạn</p>
+
+          <div class="qr-code-container">
+            <img v-if="qrCodeUrl" :src="qrCodeUrl" :alt="'QR Code for order ' + currentOrderId" class="qr-code-image" />
+            <p v-else class="loading-text">Đang tải mã QR...</p>
+          </div>
+
+          <div class="qr-modal-info">
+            <p><strong>Mã đơn hàng:</strong> #{{ currentOrderId }}</p>
+            <p><strong>Số tiền:</strong> {{ formatPrice(currentOrderTotal) }}</p>
+          </div>
+
+          <div class="qr-modal-footer">
+            <button class="btn-primary" @click="completePayment">Đã thanh toán</button>
+            <button class="btn-secondary" @click="closeQRModal">Hủy</button>
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
 
     <Footer />
@@ -451,8 +470,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/User/stores/cartStore.js'
-import { useAddressStore } from '@/User/stores/addressesStore.js'
-import { useProfileStore } from '@/User/stores/profileStore.js'
+import { useAccountStore } from '@/User/stores/accountStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 import { createOrder } from '@/api/orderApi.js'
 import Header from '@/User/components/Header1/Header.vue'
@@ -461,23 +479,18 @@ import Loading from '@/User/components/Loading/Loading.vue'
 
 const router = useRouter()
 const cartStore = useCartStore()
-const addressStore = useAddressStore()
-const profileStore = useProfileStore() // Used in loadData
+const accountStore = useAccountStore()
 const { add: toast } = useToast()
 
 // Data
 const isLoading = ref(true)
 const cartItems = ref([])
 const cartTotal = ref(0)
-const addresses = ref([])
 
 // Phone
-const usePhoneFromProfile = ref(true)
-const manualPhone = ref('')
+const phoneNumber = ref('')
 
 // Billing Address
-const useSavedBillingAddress = ref(true)
-const selectedAddressId = ref(null)
 const manualBilling = ref({
   firstName: '',
   lastName: '',
@@ -490,9 +503,7 @@ const manualBilling = ref({
 })
 
 // Shipping Address
-const shipToDifferent = ref(false)
-const useSavedShippingAddress = ref(true)
-const selectedShippingAddressId = ref(null)
+const useSameBilling = ref(false)
 const manualShipping = ref({
   firstName: '',
   lastName: '',
@@ -514,6 +525,11 @@ const selectedShipping = ref('free')
 const isProcessing = ref(false)
 const userProfile = ref(null)
 
+// QR Modal
+const showQRModal = ref(false)
+const qrCodeUrl = ref('')
+const currentOrderId = ref(null)
+const currentOrderTotal = ref(0)
 
 // Computed
 const subtotal = computed(() => cartTotal.value || 0)
@@ -530,12 +546,49 @@ const formatPrice = (price) => {
 const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg'
 
 // Methods
-const selectAddress = (id) => {
-  selectedAddressId.value = id
+const useDefaultPhone = () => {
+  if (userProfile.value?.phone) {
+    phoneNumber.value = userProfile.value.phone
+  }
 }
 
-const selectShippingAddress = (id) => {
-  selectedShippingAddressId.value = id
+const useDefaultBillingAddress = () => {
+  if (userProfile.value?.defaultAddress) {
+    const addr = userProfile.value.defaultAddress
+    manualBilling.value = {
+      firstName: addr.firstName || '',
+      lastName: addr.lastName || '',
+      address1: addr.addressLine || '',
+      address2: addr.addressLine2 || '',
+      city: addr.city || '',
+      state: addr.stateOrProvince || '',
+      zip: addr.postalCode || '',
+      country: addr.country || 'Vietnam'
+    }
+  }
+}
+
+const useDefaultShippingAddress = () => {
+  if (userProfile.value?.defaultAddress) {
+    const addr = userProfile.value.defaultAddress
+    manualShipping.value = {
+      firstName: addr.firstName || '',
+      lastName: addr.lastName || '',
+      address1: addr.addressLine || '',
+      address2: addr.addressLine2 || '',
+      city: addr.city || '',
+      state: addr.stateOrProvince || '',
+      zip: addr.postalCode || '',
+      country: addr.country || 'Vietnam'
+    }
+  }
+}
+
+const handleUseSameBilling = () => {
+  if (useSameBilling.value) {
+    // Copy billing address to shipping
+    manualShipping.value = { ...manualBilling.value }
+  }
 }
 
 const updateShippingCost = (cost) => {
@@ -569,38 +622,25 @@ const processPayment = async () => {
   }
 
   // Validate billing address
-  if (useSavedBillingAddress.value && !selectedAddressId.value) {
-    toast('Vui lòng chọn địa chỉ thanh toán', 'error')
+  if (!manualBilling.value.firstName || !manualBilling.value.lastName ||
+      !manualBilling.value.address1 || !manualBilling.value.city ||
+      !manualBilling.value.zip || !manualBilling.value.country || !manualBilling.value.state) {
+    toast('Vui lòng điền đầy đủ thông tin địa chỉ thanh toán', 'error')
     return
   }
 
-  if (!useSavedBillingAddress.value) {
-    if (!manualBilling.value.firstName || !manualBilling.value.lastName ||
-        !manualBilling.value.address1 || !manualBilling.value.city ||
-        !manualBilling.value.zip || !manualBilling.value.country || !manualBilling.value.state) {
-      toast('Vui lòng điền đầy đủ thông tin địa chỉ thanh toán', 'error')
+  // Validate shipping address if NOT using same billing
+  if (!useSameBilling.value) {
+    if (!manualShipping.value.firstName || !manualShipping.value.lastName ||
+        !manualShipping.value.address1 || !manualShipping.value.city ||
+        !manualShipping.value.zip || !manualShipping.value.country || !manualShipping.value.state) {
+      toast('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng', 'error')
       return
-    }
-  }
-
-  // Validate shipping address if different
-  if (shipToDifferent.value) {
-    if (useSavedShippingAddress.value && !selectedShippingAddressId.value) {
-      toast('Vui lòng chọn địa chỉ giao hàng', 'error')
-      return
-    }
-    if (!useSavedShippingAddress.value) {
-      if (!manualShipping.value.firstName || !manualShipping.value.lastName ||
-          !manualShipping.value.address1 || !manualShipping.value.city ||
-          !manualShipping.value.zip || !manualShipping.value.country || !manualShipping.value.state) {
-        toast('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng', 'error')
-        return
-      }
     }
   }
 
   // Validate phone
-  if (!usePhoneFromProfile.value && !manualPhone.value) {
+  if (!phoneNumber.value) {
     toast('Vui lòng nhập số điện thoại', 'error')
     return
   }
@@ -609,62 +649,26 @@ const processPayment = async () => {
 
   try {
     // Get phone number
-    const customerPhone = usePhoneFromProfile.value ? userProfile.value.phone : manualPhone.value
+    const customerPhone = phoneNumber.value
 
     // Get billing address
-    let billingData
-    if (useSavedBillingAddress.value) {
-      const savedBilling = addresses.value.find(addr => addr.id === selectedAddressId.value)
-      if (!savedBilling) {
-        toast('Không tìm thấy địa chỉ thanh toán', 'error')
-        return
-      }
-      billingData = {
-        firstName: savedBilling.firstName,
-        lastName: savedBilling.lastName,
-        address1: savedBilling.addressLine,
-        address2: savedBilling.addressLine2 || '',
-        city: savedBilling.city,
-        state: savedBilling.stateOrProvince,
-        zip: savedBilling.postalCode,
-        country: savedBilling.country
-      }
-    } else {
-      billingData = { ...manualBilling.value }
-    }
+    const billingData = { ...manualBilling.value }
 
     // Get shipping address
     let shippingData
-    if (shipToDifferent.value) {
-      if (useSavedShippingAddress.value) {
-        const savedShipping = addresses.value.find(addr => addr.id === selectedShippingAddressId.value)
-        if (!savedShipping) {
-          toast('Không tìm thấy địa chỉ giao hàng', 'error')
-          return
-        }
-        shippingData = {
-          firstName: savedShipping.firstName,
-          lastName: savedShipping.lastName,
-          address1: savedShipping.addressLine,
-          address2: savedShipping.addressLine2 || '',
-          city: savedShipping.city,
-          state: savedShipping.stateOrProvince,
-          zip: savedShipping.postalCode,
-          country: savedShipping.country
-        }
-      } else {
-        shippingData = { ...manualShipping.value }
-      }
-    } else {
+    if (useSameBilling.value) {
       // Shipping same as billing
       shippingData = { ...billingData }
+    } else {
+      // Use manual shipping address
+      shippingData = { ...manualShipping.value }
     }
 
     // Map payment method
     const paymentMethodMap = {
-      'cod': 'CASH',
-      'bank_transfer': 'BANK_TRANSFER',
-      'vnpay': 'DEBIT_CARD'
+      'cod': 'COD',  // Changed from 'CASH' to 'COD' - backend expects COD
+      'bank_transfer': 'VIETQR',
+      'card': 'DEBIT_CARD'
     }
 
     // Map shipping method
@@ -705,15 +709,48 @@ const processPayment = async () => {
     }
 
     // Place order via API
-    await createOrder(orderPayload)
+    const response = await createOrder(orderPayload)
+    const orderData = response.data.result
+    const orderId = orderData.id
+    const paymentMethod = orderData.paymentMethod
 
     // Clear cart after successful order
     await cartStore.fetchCart(true)
 
     toast('Đặt hàng thành công!', 'success')
 
-    // Redirect to orders list
-    router.push('/profile/orders')
+    // Handle payment based on method
+    if (paymentMethod === 'VIETQR') {
+      // Show QR code modal
+      showPaymentQR(orderData)
+    } else if (paymentMethod === 'DEBIT_CARD') {
+      // Redirect to Stripe checkout using checkoutUrl
+      if (orderData.checkoutUrl) {
+        console.log('[Checkout] DEBIT_CARD redirecting to Stripe:', {
+          orderId: orderData.id,
+          paymentProvider: orderData.paymentProvider
+        })
+        window.location.href = orderData.checkoutUrl
+      } else {
+        // Fallback: build from sessionId if available
+        if (orderData.sessionId) {
+          console.log('[Checkout] Using sessionId fallback')
+          window.location.href = `https://checkout.stripe.com/pay/${orderData.sessionId}`
+        } else {
+          console.warn('[Checkout] No checkoutUrl or sessionId in response')
+          toast('Không thể tạo phiên thanh toán. Vui lòng thử lại!', 'error')
+          setTimeout(() => {
+            router.push(`/order-complete/${orderId}`)
+          }, 500)
+        }
+      }
+    } else {
+      // COD - direct to order complete
+      setTimeout(() => {
+        router.push(`/order-complete/${orderId}`)
+      }, 500)
+    }
+
   } catch (error) {
     console.error('[Checkout] Order failed:', error)
     toast(error.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại!', 'error')
@@ -722,26 +759,60 @@ const processPayment = async () => {
   }
 }
 
+// QR Modal Functions
+const showPaymentQR = (orderData) => {
+  qrCodeUrl.value = orderData.checkoutUrl
+  currentOrderId.value = orderData.id
+  currentOrderTotal.value = orderData.total
+  showQRModal.value = true
+}
+
+const closeQRModal = () => {
+  showQRModal.value = false
+  qrCodeUrl.value = ''
+  currentOrderId.value = null
+  currentOrderTotal.value = 0
+}
+
+const completePayment = () => {
+  const orderId = currentOrderId.value
+  closeQRModal()
+  setTimeout(() => {
+    router.push(`/order-complete/${orderId}`)
+  }, 300)
+}
+
+
 // Load data
 const loadData = async () => {
   isLoading.value = true
   try {
-    // Load user profile
-    userProfile.value = await profileStore.fetchProfile(true)
+    // Load only user data, skip orders (not needed in checkout)
+    const { userInfo } = await accountStore.fetchData(true, false)
+
+    // Map userInfo to userProfile format
+    userProfile.value = {
+      email: userInfo?.email || '',
+      phone: userInfo?.phone || '',
+      firstName: userInfo?.name?.split(' ')[0] || '',
+      lastName: userInfo?.name?.split(' ').slice(1).join(' ') || '',
+      defaultAddress: userInfo?.defaultAddress || null
+    }
+    console.log('[Checkout] User profile loaded:', userProfile.value)
+    console.log('[Checkout] Default address:', userProfile.value?.defaultAddress)
 
     // Load cart
     const cart = await cartStore.fetchCart(true)
     if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
       toast('Giỏ hàng trống! Chuyển về trang giỏ hàng...', 'info')
-      router.push('/cart')
+      await router.push('/cart')
       return
     }
     cartItems.value = cart.cartItems
     cartTotal.value = cart.total
 
-    // Load addresses
-    await addressStore.fetchAddresses(0, 20, true) // page=0, size=20, force=true
-    addresses.value = addressStore.addresses
+    // Do NOT auto-fill - let forms stay empty
+    // User can click links/checkboxes to fill if needed
   } catch (error) {
     console.error('[Checkout] Load data failed:', error)
     toast('Không thể tải dữ liệu. Vui lòng thử lại!', 'error')

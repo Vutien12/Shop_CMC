@@ -187,11 +187,14 @@ const infoTarget = ref(null);
 
 // Nhận giá trị trả về từ useLazyLoad
 const { isVisible: ordersVisible } = useLazyLoad(async () => {
-  if (recentOrders.value.length) return;
+  // Data đã được load ở onMounted, chỉ cần set loading state
   ordersLoading.value = true;
   try {
-    const data = await accountStore.fetchData();
-    recentOrders.value = data.recentOrders;
+    // Nếu cache còn, trả về ngay; nếu không thì fetch
+    if (recentOrders.value.length === 0) {
+      const data = await accountStore.fetchData(false, true);
+      recentOrders.value = data.recentOrders;
+    }
   } catch {
     toast('Không thể tải đơn hàng. Vui lòng thử lại.', 'error');
   } finally {
@@ -200,11 +203,14 @@ const { isVisible: ordersVisible } = useLazyLoad(async () => {
 }, ordersTarget);
 
 const { isVisible: infoVisible } = useLazyLoad(async () => {
-  if (userInfo.value.name) return;
+  // Data đã được load ở onMounted, chỉ cần set loading state
   infoLoading.value = true;
   try {
-    const data = await accountStore.fetchData();
-    userInfo.value = data.userInfo;
+    // Nếu cache còn, trả về ngay; nếu không thì fetch
+    if (!userInfo.value.name) {
+      const data = await accountStore.fetchData(false, true);
+      userInfo.value = data.userInfo;
+    }
   } catch {
     toast('Không thể tải thông tin tài khoản.', 'error');
   } finally {
@@ -221,7 +227,8 @@ const handleLogout = async () => {
 // Initial load (cache)
 onMounted(async () => {
   try {
-    const data = await accountStore.fetchData();
+    // For dashboard: load both user info and orders
+    const data = await accountStore.fetchData(false, true);
     recentOrders.value = data.recentOrders;
     userInfo.value = data.userInfo;
   } catch (error) {
