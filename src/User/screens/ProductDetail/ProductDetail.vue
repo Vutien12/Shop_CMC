@@ -1,6 +1,6 @@
 <template>
   <div class="product-detail-container">
-    <Header />
+    <Header/>
 
     <Loading v-if="isLoading" text="Loading product..." />
 
@@ -450,7 +450,6 @@
         </div>
       </div>
     </div>
-
     <Footer v-if="product" />
     <Chatbot />
   </div>

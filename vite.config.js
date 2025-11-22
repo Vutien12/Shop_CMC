@@ -9,13 +9,24 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+// vite.config.js
   server: {
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (p) => p.replace(/^\/api/, '/elec/api')
+        rewrite: (p) => p.replace(/^\/api/, '/elec/api'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Thêm headers để backend tin tưởng request
+            proxyReq.setHeader('Origin', 'http://localhost:8080');
+            proxyReq.setHeader('Referer', 'http://localhost:8080/');
+
+            // Log để debug
+            console.log('[Vite Proxy]', req.method, req.url, '→', proxyReq.path);
+          });
+        },
       },
       '/ws': {
         target: 'ws://localhost:8080/elec',

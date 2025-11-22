@@ -1,0 +1,152 @@
+.alert {
+  border: none;
+  color: #555555;
+  font-size: 14px;
+  display: flex;
+  border-radius: 8px;
+  padding: 18px 16px;
+  position: relative;
+}
+.alert > svg {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  margin-top: -2px;
+}
+.alert .close {
+  right: 16px;
+  outline: 0;
+  text-shadow: none;
+  font-weight: normal;
+  transition: 150ms ease-in-out;
+  border: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 17px;
+  min-width: 24px;
+  height: 24px;
+  cursor: pointer;
+  border-radius: 6px;
+  opacity: 1;
+}
+.alert .close > svg {
+  height: 18px;
+  width: 18px;
+}
+.alert .close > svg path {
+  stroke: #37bc9b;
+}
+.alert .alert-text {
+  display: block;
+}
+
+.alert-icon {
+  float: left;
+  width: 30px;
+  height: 30px;
+  display: table;
+  border-radius: 50%;
+  text-align: center;
+}
+.alert-icon > i {
+  font-size: 18px;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.alert-success {
+  background: rgb(210.52, 243.88, 228.312);
+  border: 1px solid rgb(153.4, 229.6, 194.04);
+}
+.alert-success > svg path {
+  fill: #2b957a;
+}
+.alert-success .close {
+  background: rgb(185.3, 238, 214.2);
+  transition: 0.2s;
+}
+.alert-success .close:hover {
+  background: rgb(168.9, 234, 204.6);
+}
+.alert-success .close svg path {
+  stroke: #2b957a;
+}
+.alert-success .alert-text {
+  color: #2b957a;
+}
+.alert-success .alert-icon {
+  background: #c5e6e2;
+}
+.alert-success .alert-icon > i {
+  color: #2b957a;
+}
+
+.alert-danger {
+  background: rgb(255, 228.3666666667, 226.8);
+  border: 1px solid rgb(255, 197.3741935484, 193.4);
+}
+.alert-danger > svg path {
+  fill: #ff5748;
+}
+.alert-danger .close {
+  background: rgb(255, 211.6870967742, 208.7);
+  transition: 0.2s;
+}
+.alert-danger .close:hover {
+  background: rgb(255, 202.1451612903, 198.5);
+}
+.alert-danger .close svg path {
+  stroke: #ff5748;
+}
+.alert-danger .alert-text {
+  color: #ff5748;
+}
+
+.alert-info {
+  background: rgb(206.1379310345, 226.8103448276, 249.3620689655);
+  border: 1px solid rgb(160.4137931034, 200.4310344828, 244.0862068966);
+}
+.alert-info > svg path {
+  fill: rgb(0, 99.2642857143, 213.8);
+}
+.alert-info .close {
+  background: #b7d9ff;
+  transition: 0.2s;
+}
+.alert-info .close:hover {
+  background: rgb(162.6, 206.2333333333, 255);
+}
+.alert-info .close svg path {
+  stroke: rgb(0, 99.2642857143, 213.8);
+}
+.alert-info span {
+  color: rgb(0, 99.2642857143, 213.8);
+}
+
+.alert-warning {
+  background: #fcf2e5;
+  border: 1px solid rgb(245.1413793103, 212.2793103448, 169.5586206897);
+}
+.alert-warning > svg path {
+  fill: #df7900;
+}
+.alert-warning .close {
+  background: #f9e4c8;
+  transition: 0.2s;
+}
+.alert-warning .close:hover {
+  background: rgb(246.993442623, 218.9704918033, 181.606557377);
+}
+.alert-warning .close svg path {
+  stroke: #df7900;
+}
+.alert-warning span {
+  color: #df7900;
+}
+
+.alert-dismissible {
+  padding-right: 0px;
+}

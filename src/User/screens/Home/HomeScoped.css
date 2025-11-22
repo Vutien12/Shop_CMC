@@ -1,0 +1,19 @@
+/* CSS wrapper - wrap tất cả styles của Home.css với .home-page */
+.home-page * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home-page body {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  max-width: 100%;
+}
+
+/* Import các styles từ Home.css và wrap với .home-page */
+/* Bạn cần prefix tất cả selector trong Home.css với .home-page */
+
+/* Hoặc sử dụng approach khác: chỉ import Home.css bình thường 
+   nhưng đảm bảo nó chỉ load khi Home component được mount */
