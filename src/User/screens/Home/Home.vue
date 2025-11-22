@@ -1,6 +1,6 @@
 <template>
   <div class="home-page">
-    <Header1 />
+    <Header />
     <Main :products="products" />
     <Footer />
     <Chatbot />
@@ -10,9 +10,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Footer from '../../components/Footer/Footer.vue'
-import Header1 from '../../components/Header1/Header.vue'
 import Header from '@/User/components/Header1/Header.vue';
-import Loading from '@/User/components/Loading/Loading.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import Main from './Main.vue'
 
