@@ -1,0 +1,708 @@
+<template>
+  <div class="account-wrapper">
+    <Header1 />
+
+    <!-- Loading toàn trang -->
+    <transition name="fade" mode="out-in">
+      <div v-if="isLoading" class="loading-wrapper">
+        <Loading />
+      </div>
+
+      <div v-else class="account-page">
+        <!-- Sidebar -->
+        <aside class="account-sidebar">
+          <nav class="sidebar-nav">
+            <router-link to="/account" @mouseenter="prefetch('/account')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-solid fa-gauge"></i>
+              <span>Dashboard</span>
+            </router-link>
+            <router-link to="/orders" @mouseenter="prefetch('orders')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span>My Orders</span>
+            </router-link>
+            <router-link to="/wishlist" class="nav-item">
+              <i class="fa-regular fa-heart"></i>
+              <span>My Wishlist</span>
+            </router-link>
+            <router-link to="/addresses" @mouseenter="prefetch('/addresses')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-regular fa-address-book"></i>
+              <span>My Addresses</span>
+            </router-link>
+            <router-link to="/profile" @mouseenter="prefetch('/profile')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-regular fa-user"></i>
+              <span>My Profile</span>
+            </router-link>
+            <a href="#" class="nav-item" @click.prevent="handleLogout">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Logout</span>
+            </a>
+          </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="account-main">
+          <div class="breadcrumb">
+            <router-link to="/">Home</router-link>
+            <i class="fa-solid fa-chevron-right"></i>
+            <router-link to="/account">My Account</router-link>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>My Wishlist</span>
+          </div>
+
+          <!-- Lazy Load Wishlist -->
+          <div ref="wishlistTarget">
+            <section v-if="wishlistVisible" class="wishlist-section">
+              <div class="section-header">
+                <h2>My Wishlist</h2>
+              </div>
+
+              <!-- Skeleton -->
+              <div v-if="wishlistLoading" class="skeleton-table">
+                <div class="skeleton-row" v-for="n in 5" :key="n">
+                  <div class="skeleton-cell img"></div>
+                  <div class="skeleton-cell"></div>
+                  <div class="skeleton-cell short"></div>
+                  <div class="skeleton-cell short"></div>
+                  <div class="skeleton-cell short"></div>
+                  <div class="skeleton-cell short"></div>
+                  <div class="skeleton-cell action"></div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-if="wishlistItems.length === 0" class="empty-state">
+                <i class="fa-regular fa-heart" style="font-size:48px;color:#ff0000;"></i>
+                <h3>Your wishlist is empty</h3>
+                <p>Add items you love to your wishlist!</p>
+                <router-link to="/product" class="btn-browse">Browse Products</router-link>
+              </div>
+
+              <!-- Table -->
+              <div v-else class="wishlist-table-wrapper">
+                <table class="wishlist-table">
+                  <thead>
+                  <tr>
+                    <th>Thumbnail</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Sku</th>
+                    <th>Status</th>
+                    <th>Added at</th>
+                    <th class="text-center">Action</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="(item, i) in wishlistItems" :key="item.id" class="wishlist-row fade-in"
+                      :style="{ animationDelay: `${i * 0.1}s` }">
+                    <!-- Thumbnail -->
+                    <td>
+                      <div class="thumbnail">
+                        <img :src="item.productImage" :alt="item.productName" />
+                      </div>
+                    </td>
+
+                    <!-- Product Name + Variant + Info Changed -->
+                    <td>
+                      <div class="product-info">
+                        <div class="product-name-main">{{ item.productName }}</div>
+                        <div v-if="item.variantDisplay" class="product-variant">{{ item.variantDisplay }}</div>
+                        <div v-if="item.status === 'INFO_CHANGED'" class="info-changed-banner">
+                          <i class="fa-solid fa-exclamation-circle"></i>
+                          <span>This product has changed since you last added it.</span>
+                          <button @click="updateItem(item.id)" class="btn-sync-mini">
+                            <i class="fa-solid fa-sync-alt"></i> Update
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Price -->
+                    <td>
+                      <div class="price" :title="formatPrice(item.rawPrice, item.currency)">
+                        {{ formatPrice(item.rawPrice, item.currency) }}
+                      </div>
+                    </td>
+
+                    <!-- SKU -->
+                    <td>
+                      <div class="sku-wrapper" :title="item.productSku">
+                        <code class="sku">{{ item.productSku || '-' }}</code>
+                      </div>
+                    </td>
+
+                    <!-- Status -->
+                    <td>
+                      <div class="status-cell">
+                          <span class="status-badge" :class="getStatusClass(item.status)">
+                            {{ getStatusLabel(item.status) }}
+                          </span>
+                        <span v-if="item.status === 'OUT_OF_STOCK'" class="status-hint">Hết hàng tạm thời</span>
+                        <span v-if="item.status === 'INACTIVE'" class="status-hint">Tạm ẩn</span>
+                        <span v-if="item.status === 'DELETED'" class="status-hint">Đã xóa</span>
+                      </div>
+                    </td>
+
+                    <!-- Added At -->
+                    <td>
+                      <div class="added-at">
+                        <i class="fa-regular fa-clock"></i>
+                        {{ item.addedAt }}
+                      </div>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="action-col">
+                      <div class="action-buttons">
+                        <button
+                          class="action-btn cart-btn"
+                          @click="addToCart(item)"
+                          :disabled="isCartDisabled(item.status)"
+                          :title="getCartTooltip(item.status)"
+                        >
+                          <i class="fa-solid fa-cart-shopping"></i>
+                        </button>
+                        <button class="action-btn remove-btn" @click="removeItem(item.id)" title="Xóa">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div v-if="totalPages > 1" class="pagination">
+                  <button @click="changePage(currentPage - 1)" :disabled="currentPage === 0" class="page-btn prev">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <span class="page-info">
+                    Trang {{ currentPage + 1 }} / {{ totalPages }}
+                  </span>
+                  <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages - 1" class="page-btn next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </transition>
+
+    <Footer />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import Header1 from '@/User/components/Header/Header1.vue';
+import Footer from '@/User/components/Footer/Footer.vue';
+import Loading from '@/User/components/Loading/Loading.vue';
+import { useWishlistStore } from '@/User/stores/wishlistStore.js';
+import { useAuth } from '@/User/components/useAuth.js';
+import { useToast } from '@/User/components/Toast/useToast.js';
+import { useLazyLoad } from '@/User/components/LazyLoad/useLazyLoad.js';
+import { usePrefetch } from '@/User/stores/usePrefetch.js';
+import { removeFromWishlist, updateWishlistItem } from '@/api/accountApi.js';
+
+const router = useRouter();
+const { handleLogout: authLogout } = useAuth();
+const { add: toast } = useToast();
+const wishlistStore = useWishlistStore();
+const { prefetch, cancel } = usePrefetch();
+
+// State
+const isLoading = ref(true);
+const wishlistItems = ref([]);
+const totalPages = ref(0);
+const currentPage = ref(0);
+const wishlistLoading = ref(false);
+
+// Lazy load
+const wishlistTarget = ref(null);
+const { isVisible: wishlistVisible } = useLazyLoad(async () => {
+  if (wishlistItems.value.length) return;
+  wishlistLoading.value = true;
+  try {
+    const data = await wishlistStore.fetchWishlist(0);
+    wishlistItems.value = data.items;
+    totalPages.value = data.totalPages;
+    currentPage.value = 0;
+  } catch {
+    toast('Không thể tải wishlist.', 'error');
+  } finally {
+    wishlistLoading.value = false;
+  }
+}, wishlistTarget);
+
+// Pagination
+const changePage = async (page) => {
+  if (page < 0 || page >= totalPages.value) return;
+  wishlistLoading.value = true;
+  try {
+    const data = await wishlistStore.fetchWishlist(page, undefined, true);
+    wishlistItems.value = data.items;
+    totalPages.value = data.totalPages;
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch {
+    toast('Không thể tải trang.', 'error');
+  } finally {
+    wishlistLoading.value = false;
+  }
+};
+
+// Remove
+const removeItem = async (wishlistId) => {
+  try {
+    await removeFromWishlist(wishlistId);
+    wishlistStore.removeItemLocally(wishlistId);
+    wishlistItems.value = wishlistStore.items;
+    toast('Đã xóa khỏi wishlist', 'success');
+    window.dispatchEvent(new Event('wishlistChanged'));
+  } catch {
+    toast('Xóa thất bại', 'error');
+  }
+};
+
+// Update
+const updateItem = async (wishlistId) => {
+  try {
+    const res = await updateWishlistItem(wishlistId);
+    const updated = res.data.result;
+
+    const parts = updated.productName.split(' - ');
+    const productName = parts[0];
+    const variantDisplay = parts.length > 1 ? parts.slice(1).join(' - ') : '';
+
+    const formatted = {
+      id: updated.id,
+      variantId: updated.variantId,
+      productName,
+      variantDisplay,
+      productSku: updated.productSku,
+      productPrice: updated.productPrice,
+      currency: updated.currency || 'VND',
+      productImage: updated.productImage || '/images/placeholder.jpg',
+      status: 'AVAILABLE',
+      addedAt: new Date(updated.addedAt).toLocaleDateString('vi-VN'),
+      rawPrice: updated.productPrice,
+    };
+
+    wishlistStore.updateItemLocally(wishlistId, formatted);
+    wishlistItems.value = wishlistStore.items;
+    toast('Đã cập nhật thông tin sản phẩm!', 'success');
+  } catch {
+    toast('Cập nhật thất bại', 'error');
+  }
+};
+
+// Logout
+const handleLogout = async () => {
+  await authLogout();
+  await router.push('/login');
+};
+
+// Helpers
+const formatPrice = (price, currency = 'VND') => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(price);
+};
+
+const getStatusLabel = (status) => {
+  const map = {
+    AVAILABLE: 'Available',
+    OUT_OF_STOCK: 'Out of stock',
+    INACTIVE: 'Inactive',
+    DELETED: 'Discontinued',
+    INFO_CHANGED: 'Changed'
+  };
+  return map[status] || 'Unknown';
+};
+
+const getStatusClass = (status) => {
+  const map = {
+    AVAILABLE: 'available',
+    OUT_OF_STOCK: 'out-of-stock',
+    INACTIVE: 'inactive',
+    DELETED: 'deleted',
+    INFO_CHANGED: 'info-changed'
+  };
+  return map[status] || '';
+};
+
+const isCartDisabled = (status) => {
+  return ['OUT_OF_STOCK', 'INACTIVE', 'DELETED'].includes(status);
+};
+
+const getCartTooltip = (status) => {
+  if (status === 'OUT_OF_STOCK') return 'Sản phẩm hiện đã hết hàng';
+  if (status === 'INACTIVE') return 'Sản phẩm tạm thời không bán';
+  if (status === 'DELETED') return 'Sản phẩm đã ngừng kinh doanh';
+  return 'Thêm vào giỏ hàng';
+};
+
+// Initial load
+onMounted(async () => {
+  try {
+    const cached = wishlistStore.items.length > 0;
+    if (cached) {
+      wishlistItems.value = wishlistStore.items;
+      totalPages.value = wishlistStore.totalPages;
+      currentPage.value = wishlistStore.currentPage;
+    } else {
+      const data = await wishlistStore.fetchWishlist();
+      wishlistItems.value = data.items;
+      totalPages.value = data.totalPages;
+    }
+  } catch (error) {
+    if (error.response?.status === 401) {
+      toast('Phiên đăng nhập hết hạn.', 'error');
+      await handleLogout();
+    }
+  } finally {
+    setTimeout(() => { isLoading.value = false; }, 600);
+  }
+});
+</script>
+
+<style src="./Wishlist.css" scoped></style>
+<style scoped>
+/* === GIAO DIỆN CHUYÊN NGHIỆP, TRỰC QUAN === */
+
+.wishlist-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  font-size: 13px;
+}
+
+.wishlist-table thead th {
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.wishlist-row {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+}
+
+.wishlist-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.wishlist-row td {
+  padding: 14px 10px;
+  vertical-align: top;
+}
+
+/* Thumbnail */
+.thumbnail {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Product Info */
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-name-main {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.product-variant {
+  font-size: 12px;
+  color: #7f8c8d;
+  line-height: 1.4;
+}
+
+.info-changed-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #d97706;
+  background: #fffbeb;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #fde68a;
+  margin-top: 6px;
+}
+
+.info-changed-banner i {
+  font-size: 12px;
+}
+
+.btn-sync-mini {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.btn-sync-mini:hover {
+  background: #d97706;
+}
+
+/* Price */
+.price {
+  font-weight: 600;
+  color: #e74c3c;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* SKU */
+.sku-wrapper {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.sku {
+  font-family: 'Courier New', monospace;
+  background: #f1f3f4;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #5f6368;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status */
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.available { background: #d4edda; color: #155724; }
+.status-badge.out-of-stock { background: #f8d7da; color: #721c24; }
+.status-badge.inactive { background: #ffd8b1; color: #e65100; }
+.status-badge.deleted { background: #e2e3e5; color: #6c757d; }
+.status-badge.info-changed { background: #fff3cd; color: #856404; }
+
+.status-hint {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+}
+
+/* Added At */
+.added-at {
+  font-size: 13px;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.added-at i {
+  font-size: 12px;
+  color: #95a5a6;
+}
+
+/* Action */
+.action-col {
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.cart-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.cart-btn:hover:not(:disabled) {
+  background: #1976d2;
+  color: white;
+}
+
+.remove-btn {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.remove-btn:hover {
+  background: #c62828;
+  color: white;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  font-size: 14px;
+}
+
+.page-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #0066ff;
+  color: white;
+  border-color: #0066ff;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 500;
+  color: #555;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .wishlist-table thead {
+    display: none;
+  }
+  .wishlist-row {
+    display: block;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .wishlist-row td {
+    display: block;
+    text-align: right;
+    padding: 6px 0;
+    border: none;
+  }
+  .wishlist-row td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  .action-col {
+    text-align: right;
+  }
+  .product-name-main { font-size: 13px; }
+  .product-variant { font-size: 11.5px; }
+  .price { font-size: 13px; max-width: 100px; }
+}
+
+/* Reuse từ /account */
+.fade-enter-active, .fade-leave-active { transition: all 0.5s ease; }
+.fade-enter-from { opacity: 0; transform: translateY(10px); }
+
+.loading-wrapper { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
+
+/* Skeleton */
+.skeleton-table { pointer-events: none; }
+.skeleton-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.skeleton-cell {
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  flex: 1;
+}
+.skeleton-cell.short { flex: 0.5; }
+.skeleton-cell.action { flex: 0.3; }
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Row animation */
+.fade-in {
+  animation: fadeInRow 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInRow {
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

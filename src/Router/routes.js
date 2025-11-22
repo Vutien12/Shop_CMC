@@ -1,0 +1,191 @@
+import { createWebHistory, createRouter } from "vue-router";
+import Home from "../User/screens/Home/Home.vue";
+import Header1 from "../User/components/Header/Header1.vue";
+import Footer from "../User/components/Footer/Footer.vue";
+import Product from "../User/screens/Product/Product.vue";
+import ProductDetail from "../User/screens/ProductDetail/ProductDetail.vue";
+import Blog from "../User/screens/Blog/Blog.vue";
+import Login from "../User/screens/Login/Login.vue";
+import SignUp from "../User/screens/SignUp/SignUp.vue";
+import Forgotpass from "../User/screens/ForgotPassword/Forgotpass.vue";
+import UserAccount from "../User/screens/Account/UserAccount.vue";
+import Wishlist from "../User/components/Wishlist/Wishlist.vue";
+import CartPage from "../User/screens/Cart/CartPage.vue";
+import Address from "../User/screens/Address/Address.vue";
+import Profile from "../User/screens/Profile/Profile.vue";
+import NewAddress from "../User/components/NewAddress/NewAddress.vue";
+import Checkout from "../User/screens/Checkout/Checkout.vue";
+import MyOrder from "../User/components/MyOrder/MyOrder.vue";
+import Review from "../User/screens/Review/Review.vue";
+import Header from "../User/components/Header1/Header.vue";
+import OAuth2 from '@/OAuth2/OAuth2.vue'
+//Addmin
+import Layout from "../Admin/view/layout.vue";
+import ProductIndex from "../Product/views/admin/products/partials/index.vue";
+import ProductCreate from "../Product/views/admin/products/partials/create.vue";
+import ProductEdit from "../Product/views/admin/products/partials/edit.vue";
+import VariationIndex from "../Variation/index.vue";
+import VariationCreate from "../Variation/create.vue";
+import VariationEdit from "../Variation/edit.vue";
+import OptionIndex from "../Option/indext.vue";
+import OptionCreate from "../Option/create.vue";
+import OrderIndex from "../Order/indext.vue";
+import BrandIndex from "../Brand/views/admin/brands/index.vue";
+import BrandCreate from "../Brand/views/admin/brands/create.vue";
+import BrandEdit from "../Brand/views/admin/brands/edit.vue";
+import CategoryIndex from "../Category/index.vue";
+import MediaIndex from "../Media/indext.vue";
+import Dashboard from "../Dashboar/index.vue";
+import CouponCreate from "../Coupons/create.vue";
+import CouponIndex from "../Coupons/indext.vue";
+
+const routes = [
+  { path: '/', name: 'Home', component: Home },
+  { path: '/home', redirect: '/' },
+  { path: '/header1', name: 'Header1', component: Header1 },
+  { path: '/footer', name: 'AppFooter', component: Footer },
+  { path: '/product', name: 'Product', component: Product },
+  { path: '/productdetail', name: 'ProductDetail', component: ProductDetail },
+  { path: '/blog', name: 'Blog', component: Blog },
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/signup', name: 'SignUp', component: SignUp },
+  { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
+  { path: "/oauth2/callback/:provider", name: "OAuth2Callback", component: OAuth2 },
+  { path: '/header', name: 'Header', component: Header},
+  // === PRIVATE ROUTES ===
+  { path: '/account', name: 'Account', component: UserAccount, meta: { requiresAuth: true } },
+  { path: '/wishlist', name: 'Wishlist', component: Wishlist, meta: { requiresAuth: true } },
+  { path: '/cart', name: 'CartPage', component: CartPage, meta: { requiresAuth: true } },
+  { path: '/addresses', name: 'Address', component: Address, meta: { requiresAuth: true } },
+  { path: '/profile', name: 'Profile', component: Profile, meta: { requiresAuth: true } },
+  { path: '/new-address', name: 'NewAddress', component: NewAddress, meta: { requiresAuth: true } },
+  { path: '/edit-address/:id', name: 'EditAddress', component: NewAddress, meta: { requiresAuth: true } },
+  { path: '/checkout', name: 'Checkout', component: Checkout, meta: { requiresAuth: true } },
+  { path: '/orders', name: 'MyOrder', component: MyOrder, meta: { requiresAuth: true } },
+  { path: '/review', name: 'Review', component: Review, meta: { requiresAuth: true } },
+  { path: "/:pathMatch(.*)*", redirect: "/" },
+
+  // Admin Routes
+  {
+        path: '/admin',
+        component: Layout,
+        children: [
+            {
+                name: 'admin.dashboard',
+                component: Dashboard,
+                path: '',
+            },
+            {
+                name: 'admin.products.index',
+                component: ProductIndex,
+                path: 'products',
+            },
+            {
+                name: 'admin.products.create',
+                component: ProductCreate,
+                path: 'products/create',
+            },
+            {
+                name: 'admin.products.edit',
+                component: ProductEdit,
+                path: 'products/:id/edit',
+            },
+            {
+                name: 'admin.variations.index',
+                component: VariationIndex,
+                path: 'variations',
+            },
+            {
+                name: 'admin.variations.create',
+                component: VariationCreate,
+                path: 'variations/create',
+            },
+            {
+                name: 'admin.variations.edit',
+                component: VariationEdit,
+                path: 'variations/:id/edit',
+            },
+            {
+                name: 'admin.options.index',
+                component: OptionIndex,
+                path: 'options',
+            },
+            {
+                name: 'admin.options.create',
+                component: OptionCreate,
+                path: 'options/create',
+            },
+            {
+                name: 'admin.options.edit',
+                component: OptionCreate,
+                path: 'options/:id/edit',
+            },
+            {
+                name: 'admin.orders.index',
+                component: OrderIndex,
+                path: 'orders',
+            },
+            {
+                name: 'admin.brands.index',
+                component: BrandIndex,
+                path: 'brands',
+            },
+            {
+                name: 'admin.brands.create',
+                component: BrandCreate,
+                path: 'brands/create',
+            },
+            {
+                name: 'admin.brands.edit',
+                component: BrandEdit,
+                path: 'brands/:id/edit',
+            },
+            {
+                name: 'admin.coupons.index',
+                component: CouponIndex,
+                path: 'coupons',
+            },
+            {
+                name: 'admin.coupons.create',
+                component: CouponCreate,
+                path: 'coupons/create',
+            },
+            {
+                name: 'admin.coupons.edit',
+                component: CouponCreate,
+                path: 'coupons/:id/edit',
+            },
+            {
+                name: 'admin.categories.index',
+                component: CategoryIndex,
+                path: 'categories',
+            },
+            {
+                name: 'admin.media.index',
+                component: MediaIndex,
+                path: 'media',
+            },
+        ]
+    },
+];
+const router = createRouter ({
+    history:createWebHistory(),
+    routes
+});
+
+// Navigation Guard
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('accessToken');
+  if (to.meta.requiresAuth && !token) {
+    return next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    });
+  }
+  if (to.name === 'Login' && token) {
+    return next({ path: '/' });
+  }
+  next();
+});
+
+export default router;
