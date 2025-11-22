@@ -30,19 +30,10 @@
       <div class="chatbot-messages" ref="messagesContainer">
         <div v-for="(message, index) in messages" :key="index" :class="['message', message.type]">
           <div class="message-content">
-            <p>{{ message.text }}</p>
+            <div v-html="formatMessage(message.text)"></div>
             <span class="message-time">{{ message.time }}</span>
           </div>
         </div>
-      </div>
-
-      <div class="chatbot-controls">
-        <label>
-          Model
-          <select v-model="selectedModel" class="model-select">
-            <option v-for="model in models" :key="model" :value="model">{{ model }}</option>
-          </select>
-        </label>
       </div>
 
       <div class="chatbot-input">
@@ -89,6 +80,28 @@ const statusLabel = computed(() => {
       return 'Offline'
   }
 })
+
+const formatMessage = (text) => {
+  let html = text
+
+  // Chuyển **text** thành <strong>
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+
+  // Xóa dấu * ở đầu dòng (không tạo <li>)
+  html = html.replace(/^\* /gm, '')
+
+  // Chuyển các dòng thành <p>
+  html = html.split('\n').map(line => {
+    line = line.trim()
+    if (!line) return '<br>'
+    return '<p>' + line + '</p>'
+  }).join('')
+
+  // Dọn dẹp <p> trống
+  html = html.replace(/<p><\/p>/g, '')
+
+  return html
+}
 
 const toggleChatbot = () => {
   isOpen.value = !isOpen.value

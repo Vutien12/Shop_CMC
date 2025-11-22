@@ -22,6 +22,7 @@ import Review from "../User/screens/Review/Review.vue";
 import Header from "../User/components/Header1/Header.vue";
 import OAuth2 from '@/OAuth2/OAuth2.vue';
 import Blogdetail from "../User/screens/BlogDetail/Blogdetail.vue";
+import Orderdetail from "../User/components/Orderdetail/Orderdetail.vue";
 
 
 const routes = [
@@ -38,6 +39,7 @@ const routes = [
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
   { path: "/oauth2/callback/:provider", name: "OAuth2Callback", component: OAuth2 },
   { path: '/header', name: 'Header', component: Header},
+
   // === PRIVATE ROUTES ===
   { path: '/account', name: 'Account', component: UserAccount, meta: { requiresAuth: true } },
   { path: '/wishlist', name: 'Wishlist', component: Wishlist, meta: { requiresAuth: true } },
@@ -51,6 +53,7 @@ const routes = [
   { path: '/payment-cancel', name: 'PaymentCancel', component: PaymentCancel, meta: { requiresAuth: true } },
   { path: '/orders', name: 'MyOrder', component: MyOrder, meta: { requiresAuth: true } },
   { path: '/review', name: 'Review', component: Review, meta: { requiresAuth: true } },
+  { path: '/orderdetail/:id', name: 'Orderdetail', component: Orderdetail, meta: { requiresAuth: true } },
   { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 const router = createRouter ({

@@ -6,7 +6,7 @@
     <!-- Top Bar -->
     <div class="top-bar">
       <div class="container">
-        <span class="welcome-message">Welcome to FleetCart store</span>
+
         <div class="top-links">
           <a href="#" class="top-link">
             <i class="fa-regular fa-envelope"></i>
