@@ -10,9 +10,9 @@
         <!-- Custom cell for Logo column with image -->
         <template #cell-logo="{ value }">
             <div v-if="value" class="logo-container">
-                <img 
-                    :src="value" 
-                    :alt="'Brand logo'" 
+                <img
+                    :src="value"
+                    :alt="'Brand logo'"
                     class="brand-logo"
                 />
             </div>
@@ -21,7 +21,7 @@
 
         <!-- Custom cell for Name column with link -->
         <template #cell-name="{ row, value }">
-            <router-link 
+            <router-link
                 :to="{ name: 'admin.brands.edit', params: { id: row.id } }"
                 class="name-link"
             >
@@ -39,6 +39,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { getBrands, deleteBrand, deleteManyBrands } from '@/api/brandApi';
 
 export default {
     name: 'BrandPage',
@@ -47,7 +48,8 @@ export default {
     },
     setup() {
         const brands = ref([]);
-        
+        const loading = ref(false);
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'logo', label: 'Logo', sortable: false, width: '100px' },
@@ -55,20 +57,49 @@ export default {
             { key: 'updated_at', label: 'Updated', sortable: true, width: '150px' }
         ];
 
-        const loadBrands = () => {
-            // Mock data - replace with actual API call
-            brands.value = [
-                { id: 1, name: 'Nike', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Logo_NIKE.svg/200px-Logo_NIKE.svg.png', updated_at: '2024-10-20T10:00:00' },
-                { id: 2, name: 'Adidas', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Adidas_Logo.svg/200px-Adidas_Logo.svg.png', updated_at: '2024-10-19T15:30:00' },
-                { id: 3, name: 'Puma', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/da/Puma_complete_logo.svg/200px-Puma_complete_logo.svg.png', updated_at: '2024-10-18T08:45:00' }
-            ];
+        const loadBrands = async () => {
+            try {
+                loading.value = true;
+                const response = await getBrands();
+
+                if (response.code === 200) {
+                    // Map API response to component format
+                    brands.value = response.result.map(brand => ({
+                        id: brand.id,
+                        name: brand.name,
+                        logo: brand.fileLogo || null, // fileLogo is already a string URL
+                        updated_at: brand.createdAt, // Use createdAt as updated_at
+                        isActive: brand.isActive
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to load brands:', error);
+                alert('Failed to load brands. Please try again.');
+            } finally {
+                loading.value = false;
+            }
         };
 
-        const handleDelete = (selectedIds) => {
+        const handleDelete = async (selectedIds) => {
             if (confirm(`Are you sure you want to delete ${selectedIds.length} brand(s)?`)) {
-                brands.value = brands.value.filter(
-                    b => !selectedIds.includes(b.id)
-                );
+                try {
+                    loading.value = true;
+
+                    if (selectedIds.length === 1) {
+                        await deleteBrand(selectedIds[0]);
+                    } else {
+                        await deleteManyBrands(selectedIds);
+                    }
+
+                    // Reload brands after deletion
+                    await loadBrands();
+                    alert('Brand(s) deleted successfully!');
+                } catch (error) {
+                    console.error('Failed to delete brands:', error);
+                    alert('Failed to delete brands. Please try again.');
+                } finally {
+                    loading.value = false;
+                }
             }
         };
 
@@ -83,10 +114,10 @@ export default {
             if (diffYears >= 1) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
             if (diffMonths >= 1) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
             if (diffDays >= 1) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            
+
             const diffHours = Math.floor(diffMs / 3600000);
             if (diffHours >= 1) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            
+
             const diffMins = Math.floor(diffMs / 60000);
             return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
         };
@@ -98,6 +129,7 @@ export default {
         return {
             brands,
             columns,
+            loading,
             handleDelete,
             formatDate
         };

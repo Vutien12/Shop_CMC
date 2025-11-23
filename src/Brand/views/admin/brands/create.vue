@@ -47,10 +47,10 @@
                                                 Name<span class="m-l-5 text-red">*</span>
                                             </label>
                                             <div class="col-md-9">
-                                                <input 
-                                                    name="name" 
-                                                    class="form-control" 
-                                                    id="name" 
+                                                <input
+                                                    name="name"
+                                                    class="form-control"
+                                                    id="name"
                                                     v-model="form.name"
                                                     type="text"
                                                     @input="clearError('name')"
@@ -63,10 +63,10 @@
                                             <label for="is_active" class="col-md-3 control-label text-left">Status</label>
                                             <div class="col-md-9">
                                                 <div class="checkbox">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        name="is_active" 
-                                                        id="is_active" 
+                                                    <input
+                                                        type="checkbox"
+                                                        name="is_active"
+                                                        id="is_active"
                                                         v-model="form.is_active"
                                                         value="1"
                                                     >
@@ -81,12 +81,12 @@
                             <!-- Images Tab -->
                             <div class="tab-pane fade" :class="{ 'in active': activeTab === 'images' }" id="images">
                                 <h4 class="tab-content-title">Images</h4>
-                                
+
                                 <!-- Logo Upload -->
                                 <div class="single-image-wrapper">
                                     <h4>Logo</h4>
 
-                                    <button type="button" class="image-picker btn btn-default" @click="openFileManager('logo')">
+                                    <button type="button" class="image-picker btn btn-default" @click="openFileManager()">
                                         <i class="fa fa-folder-open m-r-5"></i>Browse
                                     </button>
 
@@ -96,31 +96,6 @@
                                         <div v-if="logoPreview" class="image-holder">
                                             <img :src="logoPreview" alt="Logo preview">
                                             <button type="button" class="btn-remove-image" @click="removeLogo">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <div v-else class="image-holder placeholder">
-                                            <i class="fa fa-picture-o"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="media-picker-divider"></div>
-
-                                <!-- Banner Upload -->
-                                <div class="single-image-wrapper">
-                                    <h4>Banner</h4>
-
-                                    <button type="button" class="image-picker btn btn-default" @click="openFileManager('banner')">
-                                        <i class="fa fa-folder-open m-r-5"></i>Browse
-                                    </button>
-
-                                    <div class="clearfix"></div>
-
-                                    <div class="single-image image-holder-wrapper clearfix">
-                                        <div v-if="bannerPreview" class="image-holder">
-                                            <img :src="bannerPreview" alt="Banner preview">
-                                            <button type="button" class="btn-remove-image" @click="removeBanner">
                                                 <i class="fa fa-times"></i>
                                             </button>
                                         </div>
@@ -141,11 +116,11 @@
                                                 Meta Title
                                             </label>
                                             <div class="col-md-9">
-                                                <input 
-                                                    type="text" 
-                                                    name="meta[meta_title]" 
-                                                    class="form-control" 
-                                                    id="meta-title" 
+                                                <input
+                                                    type="text"
+                                                    name="meta[meta_title]"
+                                                    class="form-control"
+                                                    id="meta-title"
                                                     v-model="form.meta_title"
                                                 >
                                             </div>
@@ -156,11 +131,11 @@
                                                 Meta Description
                                             </label>
                                             <div class="col-md-9">
-                                                <textarea 
-                                                    name="meta[meta_description]" 
-                                                    class="form-control" 
-                                                    id="meta-description" 
-                                                    rows="10" 
+                                                <textarea
+                                                    name="meta[meta_description]"
+                                                    class="form-control"
+                                                    id="meta-description"
+                                                    rows="10"
                                                     cols="10"
                                                     v-model="form.meta_description"
                                                 ></textarea>
@@ -185,8 +160,8 @@
         </form>
 
         <!-- File Manager Modal -->
-        <SelectImage 
-            :isOpen="isFileManagerOpen" 
+        <SelectImage
+            :isOpen="isFileManagerOpen"
             @close="closeFileManager"
             @select="handleImageSelect"
         />
@@ -197,20 +172,19 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import SelectImage from '../../../../Media/SelectImage.vue';
+import { createBrand, attachFileToBrand } from '@/api/brandApi';
 
 const router = useRouter();
 const activeTab = ref('general');
 const loading = ref(false);
 const logoPreview = ref(null);
-const bannerPreview = ref(null);
 const isFileManagerOpen = ref(false);
-const currentImageField = ref(null); // Track which field is being edited: 'logo' or 'banner'
+const selectedLogoFileId = ref(null); // Store selected logo file ID
 
 const form = reactive({
     name: '',
     is_active: false,
     logo: null,
-    banner: null,
     meta_title: '',
     meta_description: ''
 });
@@ -226,32 +200,22 @@ const clearError = (field) => {
 const removeLogo = () => {
     form.logo = null;
     logoPreview.value = null;
-};
-
-const removeBanner = () => {
-    form.banner = null;
-    bannerPreview.value = null;
+    selectedLogoFileId.value = null;
 };
 
 // File Manager Functions
-const openFileManager = (field) => {
-    currentImageField.value = field;
+const openFileManager = () => {
     isFileManagerOpen.value = true;
 };
 
 const closeFileManager = () => {
     isFileManagerOpen.value = false;
-    currentImageField.value = null;
 };
 
 const handleImageSelect = (media) => {
-    if (currentImageField.value === 'logo') {
-        form.logo = media.thumbnail;
-        logoPreview.value = media.thumbnail;
-    } else if (currentImageField.value === 'banner') {
-        form.banner = media.thumbnail;
-        bannerPreview.value = media.thumbnail;
-    }
+    form.logo = media.path;
+    logoPreview.value = media.path;
+    selectedLogoFileId.value = media.id;
 };
 
 const save = async () => {
@@ -268,16 +232,33 @@ const save = async () => {
     loading.value = true;
 
     try {
-        // TODO: API call to save brand
-        console.log('Saving brand:', form);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        alert('Brand created successfully!');
-        
-        // Navigate to brands list
-        router.push({ name: 'admin.brands.index' });
+        // Create brand data
+        const brandData = {
+            name: form.name,
+            isActive: form.is_active,
+            fileLogo: null
+        };
+
+        // Call API to create brand
+        const response = await createBrand(brandData);
+
+        if (response.code === 200 && response.result) {
+            const brandId = response.result.id;
+
+            // Attach logo if selected
+            if (selectedLogoFileId.value) {
+                await attachFileToBrand({
+                    fileId: selectedLogoFileId.value,
+                    entityId: brandId,
+                    entityType: 'brand',
+                    zone: 'logo'
+                });
+            }
+            alert('Brand created successfully!');
+
+            // Navigate to brands list
+            await router.push({ name: 'admin.brands.index' });
+        }
     } catch (error) {
         console.error('Error saving brand:', error);
         alert('Error saving brand. Please try again.');

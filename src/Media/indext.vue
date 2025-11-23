@@ -2,8 +2,8 @@
     <section class="content">
         <div class="box m-b-0">
             <div class="box-body">
-                <div 
-                    class="dropzone dz-clickable" 
+                <div
+                    class="dropzone dz-clickable"
                     @click="$refs.fileInput.click()"
                     @drop.prevent="handleDrop"
                     @dragover.prevent
@@ -11,10 +11,10 @@
                     <div class="dz-message needsclick">
                         Drop files here or click to upload
                     </div>
-                    <input 
+                    <input
                         ref="fileInput"
-                        type="file" 
-                        multiple 
+                        type="file"
+                        multiple
                         accept="image/*"
                         @change="handleFileUpload"
                         style="display: none"
@@ -29,18 +29,17 @@
                                 <div class="dt-layout-cell dt-layout-start col-sm-6">
                                     <div class="dt-length">
                                         <label>
-                                            Show 
-                                            <select v-model="perPage" class="form-control input-sm">
+                                            Show
+                                            <select v-model="perPage" class="form-control input-sm" @change="loadFiles">
                                                 <option value="10">10</option>
                                                 <option value="20">20</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                                <option value="200">200</option>
+                                                <option value="40">40</option>
+                                                <option value="60">60</option>
                                             </select>
                                             entries
                                         </label>
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             class="btn btn-default btn-delete"
                                             :disabled="selectedItems.length === 0"
                                             @click="handleDelete"
@@ -57,10 +56,11 @@
                                 </div>
                                 <div class="dt-layout-cell dt-layout-end col-sm-6">
                                     <div class="dt-search">
-                                        <input 
-                                            type="search" 
+                                        <input
+                                            type="search"
                                             v-model="searchQuery"
-                                            class="form-control input-sm search-input" 
+                                            @input="handleSearch"
+                                            class="form-control input-sm search-input"
                                             placeholder="Search here..."
                                         >
                                     </div>
@@ -75,8 +75,8 @@
                                             <tr>
                                                 <th style="width: 3%;">
                                                     <div class="checkbox">
-                                                        <input 
-                                                            type="checkbox" 
+                                                        <input
+                                                            type="checkbox"
                                                             id="select-all"
                                                             v-model="selectAll"
                                                             @change="toggleSelectAll"
@@ -87,15 +87,18 @@
                                                 <th style="width: 5%;">ID</th>
                                                 <th style="width: 10%;">Thumbnail</th>
                                                 <th>Filename</th>
-                                                <th>Created</th>
+                                                <th style="width: 8%;">Extension</th>
+                                                <th style="width: 10%;">Disk</th>
+                                                <th style="width: 10%;">Size</th>
+                                                <th style="width: 12%;">Created</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="media in filteredMedia" :key="media.id">
                                                 <td>
                                                     <div class="checkbox">
-                                                        <input 
-                                                            type="checkbox" 
+                                                        <input
+                                                            type="checkbox"
                                                             :id="`media-${media.id}`"
                                                             :value="media"
                                                             v-model="selectedItems"
@@ -106,13 +109,16 @@
                                                 <td>{{ media.id }}</td>
                                                 <td>
                                                     <div class="thumbnail-holder">
-                                                        <img :src="media.thumbnail" :alt="media.filename">
+                                                        <img :src="media.path" :alt="media.filename">
                                                     </div>
                                                 </td>
                                                 <td>{{ media.filename }}</td>
+                                                <td>{{ media.extension }}</td>
+                                                <td>{{ media.disk }}</td>
+                                                <td>{{ media.size }}</td>
                                                 <td>
-                                                    <span :title="media.created_full">
-                                                        {{ media.created_relative }}
+                                                    <span :title="formatFullDate(media.createdAt)">
+                                                        {{ formatRelativeDate(media.createdAt) }}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -125,32 +131,32 @@
                             <div class="row dt-layout-row">
                                 <div class="dt-layout-cell dt-layout-start col-sm-6">
                                     <div class="dt-info">
-                                        Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ filteredMedia.length }} entries
+                                        Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalElements }} entries
                                     </div>
                                 </div>
                                 <div class="dt-layout-cell dt-layout-end col-sm-6">
                                     <div class="dt-paging">
                                         <nav>
                                             <ul class="pagination">
-                                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                                    <a class="page-link" @click.prevent="currentPage = 1">«</a>
+                                                <li class="page-item" :class="{ disabled: currentPage === 0 }">
+                                                    <a class="page-link" @click.prevent="currentPage = 0; loadFiles()">«</a>
                                                 </li>
-                                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                                    <a class="page-link" @click.prevent="currentPage--">‹</a>
+                                                <li class="page-item" :class="{ disabled: currentPage === 0 }">
+                                                    <a class="page-link" @click.prevent="currentPage > 0 && (currentPage--, loadFiles())">‹</a>
                                                 </li>
-                                                <li 
-                                                    v-for="page in visiblePages" 
+                                                <li
+                                                    v-for="page in visiblePages"
                                                     :key="page"
-                                                    class="page-item" 
+                                                    class="page-item"
                                                     :class="{ active: currentPage === page }"
                                                 >
-                                                    <a class="page-link" @click.prevent="currentPage = page">{{ page }}</a>
+                                                    <a class="page-link" @click.prevent="currentPage = page; loadFiles()">{{ page + 1 }}</a>
                                                 </li>
-                                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                                    <a class="page-link" @click.prevent="currentPage++">›</a>
+                                                <li class="page-item" :class="{ disabled: currentPage >= totalPages - 1 }">
+                                                    <a class="page-link" @click.prevent="currentPage < totalPages - 1 && (currentPage++, loadFiles())">›</a>
                                                 </li>
-                                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                                    <a class="page-link" @click.prevent="currentPage = totalPages">»</a>
+                                                <li class="page-item" :class="{ disabled: currentPage >= totalPages - 1 }">
+                                                    <a class="page-link" @click.prevent="currentPage = totalPages - 1; loadFiles()">»</a>
                                                 </li>
                                             </ul>
                                         </nav>
@@ -166,7 +172,9 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { uploadFile, searchFiles, deleteFiles } from '@/api/fileApi';
+import { DEFAULT_PAGE_SIZE } from '@/Config/search';
 
 export default {
     name: 'MediaIndex',
@@ -175,70 +183,62 @@ export default {
         const selectedItems = ref([]);
         const selectAll = ref(false);
         const searchQuery = ref('');
-        const perPage = ref(10);
-        const currentPage = ref(1);
+        const perPage = ref(DEFAULT_PAGE_SIZE.files);
+        const currentPage = ref(0);
+        const mediaFiles = ref([]);
+        const totalElements = ref(0);
+        const loading = ref(false);
 
-        const mediaFiles = ref([
-            {
-                id: 1623,
-                thumbnail: 'https://asia.fleetcart.envaysoft.com/storage/media/XqtxU5HyiFzl91YJ9oqQtHd9GtzETGGXYuSW7REV.svg',
-                filename: 'Favicon.svg',
-                created_relative: '5 months ago',
-                created_full: 'May 22, 2025'
-            },
-            {
-                id: 1622,
-                thumbnail: 'https://asia.fleetcart.envaysoft.com/storage/media/9o41CXJZp3ar77ZUhOfzO1uIZLlqrT3Z4cQmgjOv.svg',
-                filename: 'Header Logo RTL.svg',
-                created_relative: '5 months ago',
-                created_full: 'May 22, 2025'
-            },
-            {
-                id: 1621,
-                thumbnail: 'https://asia.fleetcart.envaysoft.com/storage/media/ZUbiGSwHsOoIOEMKbqLjth8BitJ3K9pEgJxCKvVR.svg',
-                filename: 'Header Logo.svg',
-                created_relative: '5 months ago',
-                created_full: 'May 22, 2025'
+        // Load files from API
+        const loadFiles = async () => {
+            try {
+                loading.value = true;
+                const response = await searchFiles({
+                    page: currentPage.value,
+                    size: perPage.value,
+                    sort: 'createdAt,desc',
+                    search: searchQuery.value
+                });
+
+                if (response.code === 200 && response.result) {
+                    mediaFiles.value = response.result.content;
+                    totalElements.value = response.result.totalElements;
+                }
+            } catch (error) {
+                console.error('Failed to load files:', error);
+                alert('Failed to load files. Please try again.');
+            } finally {
+                loading.value = false;
             }
-        ]);
+        };
 
         const filteredMedia = computed(() => {
-            let filtered = mediaFiles.value;
-            
-            if (searchQuery.value) {
-                filtered = filtered.filter(media => 
-                    media.filename.toLowerCase().includes(searchQuery.value.toLowerCase())
-                );
-            }
-            
-            const start = (currentPage.value - 1) * perPage.value;
-            const end = start + perPage.value;
-            return filtered.slice(start, end);
+            return mediaFiles.value;
         });
 
         const totalPages = computed(() => {
-            return Math.ceil(mediaFiles.value.length / perPage.value);
+            return Math.ceil(totalElements.value / perPage.value);
         });
 
         const startIndex = computed(() => {
-            return (currentPage.value - 1) * perPage.value;
+            return currentPage.value * perPage.value;
         });
 
         const endIndex = computed(() => {
             const end = startIndex.value + perPage.value;
-            return Math.min(end, mediaFiles.value.length);
+            return Math.min(end, totalElements.value);
         });
 
         const visiblePages = computed(() => {
             const pages = [];
             const maxVisible = 5;
-            let start = Math.max(1, currentPage.value - 2);
-            let end = Math.min(totalPages.value, start + maxVisible - 1);
-            
+            let start = Math.max(0, currentPage.value - 2);
+            let end = Math.min(totalPages.value - 1, start + maxVisible - 1);
+
             if (end - start < maxVisible - 1) {
-                start = Math.max(1, end - maxVisible + 1);
+                start = Math.max(0, end - maxVisible + 1);
             }
-            
+
             for (let i = start; i <= end; i++) {
                 pages.push(i);
             }
@@ -253,43 +253,111 @@ export default {
             }
         };
 
-        const handleFileUpload = (event) => {
+        const handleFileUpload = async (event) => {
             const files = Array.from(event.target.files);
-            uploadFiles(files);
+            await uploadFilesToServer(files);
         };
 
-        const handleDrop = (event) => {
+        const handleDrop = async (event) => {
             const files = Array.from(event.dataTransfer.files);
-            uploadFiles(files);
+            await uploadFilesToServer(files);
         };
 
-        const uploadFiles = (files) => {
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newMedia = {
-                        id: Date.now() + Math.random(),
-                        thumbnail: e.target.result,
-                        filename: file.name,
-                        created_relative: 'Just now',
-                        created_full: new Date().toLocaleString()
+        const uploadFilesToServer = async (files) => {
+            const userId = localStorage.getItem('userId') || 1;
+
+            for (const file of files) {
+                try {
+                    const fileRequest = {
+                        userId: parseInt(userId),
+                        filename: file.name.split('.')[0],
+                        disk: 'cloudinary',
+                        extension: file.name.split('.').pop(),
+                        mime: file.type,
+                        size: `${(file.size / 1024).toFixed(3)} KB`
                     };
-                    mediaFiles.value.unshift(newMedia);
-                };
-                reader.readAsDataURL(file);
+
+                    await uploadFile(file, fileRequest);
+                } catch (error) {
+                    console.error(`Failed to upload ${file.name}:`, error);
+                    alert(`Failed to upload ${file.name}. Please try again.`);
+                }
+            }
+
+            // Reload files after upload
+            await loadFiles();
+            // Clear file input
+            if (fileInput.value) {
+                fileInput.value.value = '';
+            }
+        };
+
+        const handleDelete = async () => {
+            if (!selectedItems.value.length) return;
+
+            if (confirm(`Delete ${selectedItems.value.length} selected item(s)?`)) {
+                try {
+                    const selectedIds = selectedItems.value.map(item => item.id);
+                    await deleteFiles(selectedIds);
+
+                    selectedItems.value = [];
+                    selectAll.value = false;
+
+                    // Reload files
+                    await loadFiles();
+                } catch (error) {
+                    console.error('Failed to delete files:', error);
+                    alert('Failed to delete files. Please try again.');
+                }
+            }
+        };
+
+        const formatRelativeDate = (dateString) => {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffMonths = Math.floor(diffDays / 30);
+            const diffYears = Math.floor(diffDays / 365);
+
+            if (diffYears > 0) {
+                return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+            } else if (diffMonths > 0) {
+                return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+            } else if (diffDays > 0) {
+                return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            } else {
+                return 'Today';
+            }
+        };
+
+        const formatFullDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         };
 
-        const handleDelete = () => {
-            if (confirm(`Delete ${selectedItems.value.length} selected item(s)?`)) {
-                const selectedIds = selectedItems.value.map(item => item.id);
-                mediaFiles.value = mediaFiles.value.filter(
-                    item => !selectedIds.includes(item.id)
-                );
-                selectedItems.value = [];
-                selectAll.value = false;
+        // Watch for search query changes
+        const searchTimeout = ref(null);
+        const handleSearch = () => {
+            if (searchTimeout.value) {
+                clearTimeout(searchTimeout.value);
             }
+            searchTimeout.value = setTimeout(() => {
+                currentPage.value = 0;
+                loadFiles();
+            }, 300);
         };
+
+        // Load files on mount
+        onMounted(() => {
+            loadFiles();
+        });
 
         return {
             fileInput,
@@ -304,10 +372,16 @@ export default {
             startIndex,
             endIndex,
             visiblePages,
+            loading,
+            totalElements,
             toggleSelectAll,
             handleFileUpload,
             handleDrop,
-            handleDelete
+            handleDelete,
+            loadFiles,
+            formatRelativeDate,
+            formatFullDate,
+            handleSearch
         };
     }
 };

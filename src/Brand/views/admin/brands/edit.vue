@@ -47,10 +47,10 @@
                                                 Name<span class="m-l-5 text-red">*</span>
                                             </label>
                                             <div class="col-md-9">
-                                                <input 
-                                                    name="name" 
-                                                    class="form-control" 
-                                                    id="name" 
+                                                <input
+                                                    name="name"
+                                                    class="form-control"
+                                                    id="name"
                                                     v-model="form.name"
                                                     type="text"
                                                     @input="clearError('name')"
@@ -63,10 +63,10 @@
                                             <label for="is_active" class="col-md-3 control-label text-left">Status</label>
                                             <div class="col-md-9">
                                                 <div class="checkbox">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        name="is_active" 
-                                                        id="is_active" 
+                                                    <input
+                                                        type="checkbox"
+                                                        name="is_active"
+                                                        id="is_active"
                                                         v-model="form.is_active"
                                                         value="1"
                                                     >
@@ -81,12 +81,12 @@
                             <!-- Images Tab -->
                             <div class="tab-pane fade" :class="{ 'in active': activeTab === 'images' }" id="images">
                                 <h4 class="tab-content-title">Images</h4>
-                                
+
                                 <!-- Logo Upload -->
                                 <div class="single-image-wrapper">
                                     <h4>Logo</h4>
 
-                                    <button type="button" class="image-picker btn btn-default" @click="$refs.logoInput.click()">
+                                    <button type="button" class="image-picker btn btn-default" @click="openFileManager()">
                                         <i class="fa fa-folder-open m-r-5"></i>Browse
                                     </button>
 
@@ -103,47 +103,6 @@
                                             <i class="fa fa-picture-o"></i>
                                         </div>
                                     </div>
-
-                                    <input 
-                                        ref="logoInput"
-                                        type="file" 
-                                        accept="image/*" 
-                                        @change="handleLogoChange"
-                                        style="display: none"
-                                    >
-                                </div>
-
-                                <div class="media-picker-divider"></div>
-
-                                <!-- Banner Upload -->
-                                <div class="single-image-wrapper">
-                                    <h4>Banner</h4>
-
-                                    <button type="button" class="image-picker btn btn-default" @click="$refs.bannerInput.click()">
-                                        <i class="fa fa-folder-open m-r-5"></i>Browse
-                                    </button>
-
-                                    <div class="clearfix"></div>
-
-                                    <div class="single-image image-holder-wrapper clearfix">
-                                        <div v-if="bannerPreview" class="image-holder">
-                                            <img :src="bannerPreview" alt="Banner preview">
-                                            <button type="button" class="btn-remove-image" @click="removeBanner">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <div v-else class="image-holder placeholder">
-                                            <i class="fa fa-picture-o"></i>
-                                        </div>
-                                    </div>
-
-                                    <input 
-                                        ref="bannerInput"
-                                        type="file" 
-                                        accept="image/*" 
-                                        @change="handleBannerChange"
-                                        style="display: none"
-                                    >
                                 </div>
                             </div>
 
@@ -157,11 +116,11 @@
                                                 Meta Title
                                             </label>
                                             <div class="col-md-9">
-                                                <input 
-                                                    type="text" 
-                                                    name="meta[meta_title]" 
-                                                    class="form-control" 
-                                                    id="meta-title" 
+                                                <input
+                                                    type="text"
+                                                    name="meta[meta_title]"
+                                                    class="form-control"
+                                                    id="meta-title"
                                                     v-model="form.meta_title"
                                                 >
                                             </div>
@@ -172,11 +131,11 @@
                                                 Meta Description
                                             </label>
                                             <div class="col-md-9">
-                                                <textarea 
-                                                    name="meta[meta_description]" 
-                                                    class="form-control" 
-                                                    id="meta-description" 
-                                                    rows="10" 
+                                                <textarea
+                                                    name="meta[meta_description]"
+                                                    class="form-control"
+                                                    id="meta-description"
+                                                    rows="10"
                                                     cols="10"
                                                     v-model="form.meta_description"
                                                 ></textarea>
@@ -200,24 +159,35 @@
             </div>
         </form>
     </section>
+
+    <!-- File Manager Modal -->
+    <SelectImage
+        :isOpen="isFileManagerOpen"
+        @close="closeFileManager"
+        @select="handleImageSelect"
+    />
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import SelectImage from '../../../../Media/SelectImage.vue';
+import { getBrandById, updateBrand, attachFileToBrand, getBrandFiles, deleteEntityFile } from '@/api/brandApi';
 
 const router = useRouter();
 const route = useRoute();
 const activeTab = ref('general');
 const loading = ref(false);
 const logoPreview = ref(null);
-const bannerPreview = ref(null);
+const isFileManagerOpen = ref(false);
+const selectedLogoFileId = ref(null);
+const existingLogoEntityFileId = ref(null);
+const shouldRemoveLogo = ref(false);
 
 const form = reactive({
     name: '',
     is_active: false,
     logo: null,
-    banner: null,
     meta_title: '',
     meta_description: ''
 });
@@ -230,68 +200,85 @@ const clearError = (field) => {
     errors[field] = '';
 };
 
-const handleLogoChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        form.logo = file;
-        
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            logoPreview.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+const openFileManager = () => {
+    isFileManagerOpen.value = true;
 };
 
-const handleBannerChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        form.banner = file;
-        
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            bannerPreview.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+const closeFileManager = () => {
+    isFileManagerOpen.value = false;
+};
+
+const handleImageSelect = (media) => {
+    console.log('BrandEdit: Logo selected', {
+        mediaId: media.id,
+        mediaPath: media.path,
+        mediaFilename: media.filename
+    });
+
+    form.logo = media.path;
+    logoPreview.value = media.path;
+    selectedLogoFileId.value = media.id;
+    shouldRemoveLogo.value = false; // Reset removal flag
 };
 
 const removeLogo = () => {
+    // Mark for removal on save
+    shouldRemoveLogo.value = true;
     form.logo = null;
     logoPreview.value = null;
+    selectedLogoFileId.value = null;
 };
 
-const removeBanner = () => {
-    form.banner = null;
-    bannerPreview.value = null;
-};
 
 const loadBrand = async () => {
     const brandId = route.params.id;
-    
-    // TODO: Replace with actual API call
-    // Mock data for demonstration
-    const brand = {
-        id: brandId,
-        name: 'Nike',
-        is_active: true,
-        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Logo_NIKE.svg/200px-Logo_NIKE.svg.png',
-        banner: null,
-        meta_title: 'Nike - Just Do It',
-        meta_description: 'Nike is a global sports brand'
-    };
-    
-    // Load into form
-    form.name = brand.name;
-    form.is_active = brand.is_active;
-    form.meta_title = brand.meta_title;
-    form.meta_description = brand.meta_description;
-    
-    // Set preview images
-    if (brand.logo) logoPreview.value = brand.logo;
-    if (brand.banner) bannerPreview.value = brand.banner;
+
+    try {
+        loading.value = true;
+
+        // Load brand data
+        const response = await getBrandById(brandId);
+
+        if (response.code === 200 && response.result) {
+            const brand = response.result;
+
+            // Load into form
+            form.name = brand.name;
+            form.is_active = brand.isActive;
+            form.meta_title = brand.meta_title || '';
+            form.meta_description = brand.meta_description || '';
+
+            // Reset removal flag
+            shouldRemoveLogo.value = false;
+
+            // Reset selected file ID (only set when user selects NEW image)
+            selectedLogoFileId.value = null;
+
+            // Load logo if exists in brand
+            if (brand.fileLogo) {
+                logoPreview.value = brand.fileLogo; // fileLogo is already a string URL
+                form.logo = brand.fileLogo;
+            }
+
+            // Load entity files (logo)
+            try {
+                const logoFiles = await getBrandFiles(brandId, 'brand', 'logo');
+                if (logoFiles.code === 200 && logoFiles.result?.length > 0) {
+                    const logoFile = logoFiles.result[0];
+                    existingLogoEntityFileId.value = logoFile.id;
+                    logoPreview.value = logoFile.path || logoPreview.value;
+                    // Don't set selectedLogoFileId - only for NEW selections
+                }
+            } catch (error) {
+                console.error('Failed to load entity files:', error);
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load brand:', error);
+        alert('Failed to load brand data. Please try again.');
+    } finally {
+        loading.value = false;
+    }
 };
 
 const update = async () => {
@@ -308,14 +295,63 @@ const update = async () => {
     loading.value = true;
 
     try {
-        // TODO: API call to update brand
-        console.log('Updating brand:', form);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        const brandId = route.params.id;
+
+        // Debug: Log all state before update
+        console.log('BrandEdit: Update starting with state:', {
+            brandId,
+            selectedLogoFileId: selectedLogoFileId.value,
+            existingLogoEntityFileId: existingLogoEntityFileId.value,
+            shouldRemoveLogo: shouldRemoveLogo.value
+        });
+
+        // Update brand data
+        const brandData = {
+            name: form.name,
+            isActive: form.is_active,
+            fileLogo: null
+        };
+
+        await updateBrand(brandId, brandData);
+
+        // Handle LOGO changes
+        if (shouldRemoveLogo.value && existingLogoEntityFileId.value) {
+            // User wants to remove logo
+            try {
+                await deleteEntityFile(existingLogoEntityFileId.value);
+                console.log('Logo removed successfully');
+            } catch (error) {
+                console.error('Failed to delete logo:', error);
+                // Continue even if delete fails (might already be deleted)
+            }
+        } else if (selectedLogoFileId.value) {
+            // User selected a new logo
+            // Delete old logo entity file if exists
+            if (existingLogoEntityFileId.value) {
+                try {
+                    await deleteEntityFile(existingLogoEntityFileId.value);
+                    console.log('Old logo deleted');
+                } catch (error) {
+                    console.error('Failed to delete old logo:', error);
+                    // Continue even if delete fails
+                }
+            }
+
+            // Attach new logo
+            const logoData = {
+                fileId: selectedLogoFileId.value,
+                entityId: brandId,
+                entityType: 'brand',
+                zone: 'logo'
+            };
+            console.log('BrandEdit: Attaching logo with data:', logoData);
+            await attachFileToBrand(logoData);
+            console.log('New logo attached');
+        }
+
+
         alert('Brand updated successfully!');
-        
+
         // Navigate to brands list
         router.push({ name: 'admin.brands.index' });
     } catch (error) {

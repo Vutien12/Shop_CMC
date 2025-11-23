@@ -51,15 +51,6 @@
                                             </div>
                                         </div>
                                         <div class="form-group row">
-                                            <label class="col-md-2 control-label">Searchable</label>
-                                            <div class="col-md-10">
-                                                <div class="checkbox-wrapper">
-                                                    <input type="checkbox" id="is_searchable" v-model="form.is_searchable">
-                                                    <label for="is_searchable">Show this category in search box category list</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
                                             <label class="col-md-2 control-label">Status</label>
                                             <div class="col-md-10">
                                                 <div class="checkbox-wrapper">
@@ -70,13 +61,15 @@
                                         </div>
                                     </div>
                                     <div v-show="activeTab === 'image'">
-                                        <ImageUploader 
-                                            title="Logo" 
-                                            v-model="form.logo" 
+                                        <ImageUploader
+                                            title="Logo"
+                                            v-model="form.logo"
+                                            @update:fileId="form.logoFileId = $event"
                                         />
-                                        <ImageUploader 
-                                            title="Banner" 
-                                            v-model="form.banner" 
+                                        <ImageUploader
+                                            title="Banner"
+                                            v-model="form.banner"
+                                            @update:fileId="form.bannerFileId = $event"
                                         />
                                     </div>
                                     <div v-show="activeTab === 'seo'">
@@ -109,6 +102,8 @@ import $ from 'jquery';
 import 'jstree';
 import 'jstree/dist/themes/default/style.min.css';
 import ImageUploader from './components/ImageUploader.vue';
+import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi';
+import { attachFileToBrand, getBrandFiles, deleteEntityFile } from '@/api/brandApi';
 
 export default {
     name: 'CategoryPage',
@@ -121,61 +116,161 @@ export default {
         const activeTab = ref('general');
         const loading = ref(false);
         const saving = ref(false);
+        const categories = ref([]);
 
         const form = ref({
             id: null,
             name: '',
-            is_searchable: false,
             is_active: false,
             logo: null,
             banner: null,
+            logoFileId: null,
+            bannerFileId: null,
+            existingLogoEntityFileId: null,
+            existingBannerEntityFileId: null,
             slug: ''
         });
 
         const isNewCategory = computed(() => !form.value.id);
 
-        const treeData = [
-            {
-                id: '181',
-                text: 'Electronics',
-                state: { opened: true },
-                children: [
-                    { id: '183', text: 'Mobiles', children: [{ id: '192', text: 'Smartphones' }] },
-                    { id: '185', text: 'Mobile Accessories' }
-                ]
-            },
-            { id: '12', text: "Men's Fashion" }
-        ];
+        // Convert flat category list to tree structure
+        const buildTree = (categories) => {
+            const map = {};
+            const roots = [];
 
-        const initializeTree = () => {
+            // Create map of all categories
+            categories.forEach(cat => {
+                map[cat.id] = {
+                    id: String(cat.id),
+                    text: cat.name,
+                    state: { opened: true },
+                    children: [],
+                    data: cat
+                };
+            });
+
+            // Build tree structure
+            categories.forEach(cat => {
+                if (cat.parentId === null) {
+                    roots.push(map[cat.id]);
+                } else if (map[cat.parentId]) {
+                    map[cat.parentId].children.push(map[cat.id]);
+                }
+            });
+
+            return roots;
+        };
+
+        const loadCategories = async () => {
+            try {
+                loading.value = true;
+                const response = await getCategories();
+
+                if (response.code === 200) {
+                    categories.value = response.result;
+                    const treeData = buildTree(response.result);
+
+                    // Destroy and reinitialize tree
+                    if (categoryTree.value) {
+                        $(categoryTree.value).jstree('destroy');
+                    }
+                    initializeTree(treeData);
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                alert('Failed to load categories. Please try again.');
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const initializeTree = (treeData) => {
             if (!categoryTree.value) return;
             $(categoryTree.value).jstree({
                 core: { data: treeData, check_callback: true }
-            }).on('select_node.jstree', (e, data) => {
+            }).on('select_node.jstree', async (e, data) => {
                 selectedNode.value = data.node;
-                form.value = {
-                    id: data.node.id,
-                    name: data.node.text,
-                    is_searchable: false,
-                    is_active: true,
-                    logo: null,
-                    banner: null,
-                    slug: data.node.text.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-                };
+                const categoryId = parseInt(data.node.id);
+
+                // Load full category data
+                try {
+                    const response = await getCategoryById(categoryId);
+                    if (response.code === 200) {
+                        const cat = response.result;
+                        form.value = {
+                            id: cat.id,
+                            name: cat.name,
+                            is_active: cat.isActive,
+                            logo: null,
+                            banner: null,
+                            logoFileId: null,
+                            bannerFileId: null,
+                            existingLogoEntityFileId: null,
+                            existingBannerEntityFileId: null,
+                            slug: cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                        };
+
+                        // Load entity files (logo and banner)
+                        try {
+                            const logoFiles = await getBrandFiles(categoryId, 'category', 'logo');
+                            if (logoFiles.code === 200 && logoFiles.result?.length > 0) {
+                                const logoFile = logoFiles.result[0];
+                                form.value.existingLogoEntityFileId = logoFile.id;
+                                form.value.logo = logoFile.path;
+                            }
+
+                            const bannerFiles = await getBrandFiles(categoryId, 'category', 'banner');
+                            if (bannerFiles.code === 200 && bannerFiles.result?.length > 0) {
+                                const bannerFile = bannerFiles.result[0];
+                                form.value.existingBannerEntityFileId = bannerFile.id;
+                                form.value.banner = bannerFile.path;
+                            }
+                        } catch (error) {
+                            console.error('Failed to load entity files:', error);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load category:', error);
+                }
+
                 activeTab.value = 'general';
             });
         };
 
         const addRootCategory = () => {
             selectedNode.value = null;
-            form.value = { id: null, name: '', is_searchable: false, is_active: false, logo: null, banner: null, slug: '' };
+            form.value = {
+                id: null,
+                name: '',
+                is_active: true,
+                logo: null,
+                banner: null,
+                logoFileId: null,
+                bannerFileId: null,
+                existingLogoEntityFileId: null,
+                existingBannerEntityFileId: null,
+                parentId: null,
+                slug: ''
+            };
             activeTab.value = 'general';
             if (categoryTree.value) $(categoryTree.value).jstree('deselect_all');
         };
 
         const addSubcategory = () => {
             if (!selectedNode.value) return;
-            form.value = { id: null, name: '', parent_id: selectedNode.value.id, is_searchable: false, is_active: false, logo: null, banner: null, slug: '' };
+            form.value = {
+                id: null,
+                name: '',
+                is_active: true,
+                logo: null,
+                banner: null,
+                logoFileId: null,
+                bannerFileId: null,
+                existingLogoEntityFileId: null,
+                existingBannerEntityFileId: null,
+                parentId: parseInt(selectedNode.value.id),
+                slug: ''
+            };
             activeTab.value = 'general';
         };
 
@@ -187,28 +282,157 @@ export default {
             if (categoryTree.value) $(categoryTree.value).jstree('open_all');
         };
 
-        const handleSubmit = () => {
+        const handleSubmit = async () => {
+            if (!form.value.name.trim()) {
+                alert('Category name is required');
+                return;
+            }
+
             saving.value = true;
-            setTimeout(() => {
-                console.log('Saving:', form.value);
-                saving.value = false;
-                if (form.value.id && selectedNode.value) {
-                    $(categoryTree.value).jstree('rename_node', selectedNode.value, form.value.name);
+
+            try {
+                const categoryData = {
+                    parentId: form.value.parentId || null,
+                    name: form.value.name,
+                    isActive: form.value.is_active
+                };
+
+                if (form.value.id) {
+                    // Update existing category
+                    await updateCategory(form.value.id, categoryData);
+
+                    // Handle logo changes
+                    if (form.value.logoFileId) {
+                        // Delete old logo if exists
+                        if (form.value.existingLogoEntityFileId) {
+                            try {
+                                await deleteEntityFile(form.value.existingLogoEntityFileId);
+                            } catch (error) {
+                                console.error('Failed to delete old logo:', error);
+                            }
+                        }
+
+                        // Attach new logo
+                        await attachFileToBrand({
+                            fileId: form.value.logoFileId,
+                            entityId: form.value.id,
+                            entityType: 'category',
+                            zone: 'logo'
+                        });
+                    } else if (!form.value.logo && form.value.existingLogoEntityFileId) {
+                        // Logo was removed
+                        try {
+                            await deleteEntityFile(form.value.existingLogoEntityFileId);
+                        } catch (error) {
+                            console.error('Failed to delete logo:', error);
+                        }
+                    }
+
+                    // Handle banner changes
+                    if (form.value.bannerFileId) {
+                        // Delete old banner if exists
+                        if (form.value.existingBannerEntityFileId) {
+                            try {
+                                await deleteEntityFile(form.value.existingBannerEntityFileId);
+                            } catch (error) {
+                                console.error('Failed to delete old banner:', error);
+                            }
+                        }
+
+                        // Attach new banner
+                        await attachFileToBrand({
+                            fileId: form.value.bannerFileId,
+                            entityId: form.value.id,
+                            entityType: 'category',
+                            zone: 'banner'
+                        });
+                    } else if (!form.value.banner && form.value.existingBannerEntityFileId) {
+                        // Banner was removed
+                        try {
+                            await deleteEntityFile(form.value.existingBannerEntityFileId);
+                        } catch (error) {
+                            console.error('Failed to delete banner:', error);
+                        }
+                    }
+
+                    // Update tree node name
+                    if (selectedNode.value) {
+                        $(categoryTree.value).jstree('rename_node', selectedNode.value, form.value.name);
+                    }
+
+                    alert('Category updated successfully!');
+                } else {
+                    // Create new category
+                    const response = await createCategory(categoryData);
+
+                    if (response.code === 200 && response.result) {
+                        const categoryId = response.result.id;
+
+                        // Attach logo if selected
+                        if (form.value.logoFileId) {
+                            await attachFileToBrand({
+                                fileId: form.value.logoFileId,
+                                entityId: categoryId,
+                                entityType: 'category',
+                                zone: 'logo'
+                            });
+                        }
+
+                        // Attach banner if selected
+                        if (form.value.bannerFileId) {
+                            await attachFileToBrand({
+                                fileId: form.value.bannerFileId,
+                                entityId: categoryId,
+                                entityType: 'category',
+                                zone: 'banner'
+                            });
+                        }
+
+                        alert('Category created successfully!');
+
+                        // Reload categories to update tree
+                        await loadCategories();
+                    }
                 }
-            }, 1000);
+            } catch (error) {
+                console.error('Failed to save category:', error);
+                alert('Failed to save category. Please try again.');
+            } finally {
+                saving.value = false;
+            }
         };
 
-        const handleDelete = () => {
-            if (confirm('Delete category?')) {
-                if (selectedNode.value && categoryTree.value) {
-                    $(categoryTree.value).jstree('delete_node', selectedNode.value);
+        const handleDelete = async () => {
+            if (!form.value.id) return;
+
+            if (confirm('Are you sure you want to delete this category?')) {
+                try {
+                    saving.value = true;
+                    await deleteCategory(form.value.id);
+
+                    // Delete from tree
+                    if (selectedNode.value && categoryTree.value) {
+                        $(categoryTree.value).jstree('delete_node', selectedNode.value);
+                    }
+
+                    alert('Category deleted successfully!');
                     addRootCategory();
+                } catch (error) {
+                    console.error('Failed to delete category:', error);
+                    alert('Failed to delete category. Please try again.');
+                } finally {
+                    saving.value = false;
                 }
             }
         };
 
-        onMounted(() => { initializeTree(); });
-        onBeforeUnmount(() => { if (categoryTree.value) $(categoryTree.value).jstree('destroy'); });
+        onMounted(() => {
+            loadCategories();
+        });
+
+        onBeforeUnmount(() => {
+            if (categoryTree.value) $(categoryTree.value).jstree('destroy');
+        });
 
         return {
             categoryTree,
@@ -218,6 +442,7 @@ export default {
             saving,
             form,
             isNewCategory,
+            loadCategories,
             addRootCategory,
             addSubcategory,
             collapseAll,

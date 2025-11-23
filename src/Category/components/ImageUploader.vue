@@ -1,38 +1,51 @@
 <template>
     <div class="single-image-wrapper">
         <h4>{{ title }}</h4>
-        <button 
-            type="button" 
-            class="image-picker btn btn-default" 
-            @click="$refs.fileInput.click()"
+        <button
+            type="button"
+            class="image-picker btn btn-default"
+            @click="openFileManager"
         >
             <i class="fa fa-folder-open m-r-5"></i>Browse
         </button>
         <div class="clearfix"></div>
         <div class="single-image image-holder-wrapper clearfix">
-            <div 
-                class="image-holder" 
+            <div
+                class="image-holder"
                 :class="{ placeholder: !modelValue }"
             >
                 <i v-if="!modelValue" class="fa fa-picture-o"></i>
-                <img v-else :src="modelValue" :alt="title">
+                <template v-else>
+                    <img :src="modelValue" :alt="title">
+                    <button
+                        type="button"
+                        class="btn-remove-image"
+                        @click="removeImage"
+                    >
+                        <i class="fa fa-times"></i>
+                    </button>
+                </template>
             </div>
         </div>
-        <input 
-            ref="fileInput"
-            type="file" 
-            @change="handleFileChange" 
-            accept="image/*" 
-            style="display: none"
-        >
     </div>
+
+    <!-- File Manager Modal -->
+    <SelectImage
+        :isOpen="isFileManagerOpen"
+        @close="closeFileManager"
+        @select="handleImageSelect"
+    />
 </template>
 
 <script>
 import { ref } from 'vue';
+import SelectImage from '../../Media/SelectImage.vue';
 
 export default {
     name: 'ImageUploader',
+    components: {
+        SelectImage
+    },
     props: {
         title: {
             type: String,
@@ -43,24 +56,34 @@ export default {
             default: null
         }
     },
-    emits: ['update:modelValue'],
+    emits: ['update:modelValue', 'update:fileId'],
     setup(props, { emit }) {
-        const fileInput = ref(null);
+        const isFileManagerOpen = ref(false);
 
-        const handleFileChange = (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    emit('update:modelValue', e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
+        const openFileManager = () => {
+            isFileManagerOpen.value = true;
+        };
+
+        const closeFileManager = () => {
+            isFileManagerOpen.value = false;
+        };
+
+        const handleImageSelect = (media) => {
+            emit('update:modelValue', media.path);
+            emit('update:fileId', media.id);
+        };
+
+        const removeImage = () => {
+            emit('update:modelValue', null);
+            emit('update:fileId', null);
         };
 
         return {
-            fileInput,
-            handleFileChange
+            isFileManagerOpen,
+            openFileManager,
+            closeFileManager,
+            handleImageSelect,
+            removeImage
         };
     }
 };
@@ -117,5 +140,28 @@ export default {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+.btn-remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.btn-remove-image:hover {
+    background: rgba(255, 0, 0, 1);
 }
 </style>
