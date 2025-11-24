@@ -16,7 +16,7 @@
     <div class="products-section" style="margin-top: 40px">
       <div class="products-grid">
         <product-card
-          v-for="product in getProductsByCategory(category)"
+          v-for="product in getProductsByCategory(category).slice(0, 6)"
           :key="product.id"
           :product="product"
         />

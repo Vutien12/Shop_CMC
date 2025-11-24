@@ -2,7 +2,7 @@
   <div class="containerx">
     <div class="products-section" style="margin-top: 40px">
       <div class="products-grid">
-        <ProductCard v-for="p in shirts" :key="p.id" :product="p" />
+        <ProductCard v-for="p in shirts.slice(0, 6)" :key="p.id" :product="p" />
       </div>
     </div>
   </div>
@@ -19,7 +19,7 @@
   <div class="containerx">
     <div class="products-section" style="margin-top: 40px">
       <div class="products-grid">
-        <ProductCard v-for="p in shirts" :key="p.id" :product="p" />
+        <ProductCard v-for="p in shirts.slice(0, 6)" :key="p.id" :product="p" />
       </div>
     </div>
 

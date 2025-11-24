@@ -1,190 +1,257 @@
 <template>
-  <div id="fleetcart-store" :class="{ 'menu-open': menuOpen }">
-    <!-- Mobile Menu Overlay -->
-    <div class="menu-overlay" @click="menuOpen = false" v-if="menuOpen"></div>
-
-    <!-- Top Bar -->
-    <div class="top-bar">
+  <header class="header-main">
+    <!-- Top Section: Logo, Search, Icons -->
+    <div class="header-top">
       <div class="container">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" @click="toggleMobileMenu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
 
-        <div class="top-links">
-          <a href="#" class="top-link">
-            <i class="fa-regular fa-envelope"></i>
-            <span>Contact</span>
-          </a>
-          <div class="dropdown">
-            <span class="dropdown-trigger">
-              <i class="fa-solid fa-globe"></i>
-              <span>English</span>
-              <i class="fa-solid fa-chevron-down"></i>
-            </span>
-          </div>
-          <div class="dropdown">
-            <span class="dropdown-trigger">
-              <i class="fa-solid fa-dollar-sign"></i>
-              <span>USD</span>
-              <i class="fa-solid fa-chevron-down"></i>
-            </span>
-          </div>
-          <!-- Login/Logout Link -->
-          <router-link v-if="!isLoggedIn" to="/login" class="top-link">
-            <i class="fa-regular fa-user"></i>
-            <span>Login</span>
+        <!-- Logo -->
+        <div class="logo-section">
+          <router-link to="/" class="logo-link">
+            <div class="logo-icon">
+              <i class="material-icons">shopping_cart</i>
+            </div>
+            <span class="logo-text">FleetCart</span>
           </router-link>
-          <router-link v-else to="/account" class="top-link">
-            <i class="fa-regular fa-user"></i>
-            <span>Account</span>
+        </div>
+
+        <!-- Mobile Search Button -->
+        <button class="mobile-search-btn">
+          <i class="material-icons">search</i>
+        </button>
+
+        <!-- Search Bar -->
+        <div class="search-section">
+          <div class="search-wrapper">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search for products"
+              v-model="searchQuery"
+              @keyup.enter="handleSearch"
+            />
+            <button class="search-btn" @click="handleSearch">
+              <i class="material-icons">search</i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Icons -->
+        <div class="actions-section">
+          <!-- Cart -->
+          <router-link to="/cart" class="action-icon action-btn">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="action-text">Giỏ hàng</span>
+            <span class="badge" v-if="cartCount > 0">{{ cartCount }}</span>
           </router-link>
+
+          <!-- User Account -->
+          <div class="action-icon action-btn user-menu" @click="toggleUserMenu">
+            <i class="fa-regular fa-user"></i>
+            <span class="action-text">Đăng nhập</span>
+            <span class="badge" v-if="isLoggedIn">1</span>
+
+            <!-- Dropdown Menu -->
+            <div class="dropdown-menu" v-if="showUserMenu">
+              <template v-if="isLoggedIn">
+                <router-link to="/profile" class="dropdown-item">
+                  <i class="material-icons">account_circle</i>
+                  <span>My Account</span>
+                </router-link>
+                <router-link to="/orders" class="dropdown-item">
+                  <i class="material-icons">inventory_2</i>
+                  <span>My Orders</span>
+                </router-link>
+                <button @click="handleLogout" class="dropdown-item">
+                  <i class="material-icons">logout</i>
+                  <span>Logout</span>
+                </button>
+              </template>
+              <template v-else>
+                <router-link to="/login" class="dropdown-item">
+                  <i class="material-icons">login</i>
+                  <span>Login</span>
+                </router-link>
+                <router-link to="/signup" class="dropdown-item">
+                  <i class="material-icons">person_add</i>
+                  <span>Sign Up</span>
+                </router-link>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Main Header -->
-    <header class="header-main">
+    <!-- Bottom Navigation Bar -->
+    <div class="header-bottom desktop-only">
       <div class="container">
-        <!-- Logo -->
-        <div class="logo">
-          <div class="logo-icon">
-            <img src="../../../assets/sidebar-logo-mini copy.svg" alt="FleetCart Logo" />
-          </div>
-          <span class="logo-text">FleetCart</span>
+        <div class="nav-wrapper">
+          <button class="all-categories-btn">
+            <span>ALL CATEGORIES</span>
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <nav class="bottom-nav">
+            <router-link to="/" class="nav-item">Home</router-link>
+            <router-link to="/shop" class="nav-item">Shop</router-link>
+            <router-link to="/blog" class="nav-item">Blog</router-link>
+            <router-link to="/about" class="nav-item">About</router-link>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar" :class="{ active: showMobileMenu }">
+      <div class="mobile-sidebar-overlay" @click="toggleMobileMenu"></div>
+      <div class="mobile-sidebar-content">
+        <!-- Mobile Tabs -->
+        <div class="mobile-tabs">
+          <button
+            class="mobile-tab"
+            :class="{ active: activeTab === 'categories' }"
+            @click="activeTab = 'categories'"
+          >
+            Categories
+          </button>
+          <button
+            class="mobile-tab"
+            :class="{ active: activeTab === 'menu' }"
+            @click="activeTab = 'menu'"
+          >
+            Menu
+          </button>
+          <button
+            class="mobile-tab"
+            :class="{ active: activeTab === 'more' }"
+            @click="activeTab = 'more'"
+          >
+            More
+          </button>
+          <button class="mobile-close-btn" @click="toggleMobileMenu">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
 
-        <!-- Mobile Menu Toggle Button -->
-        <button class="mobile-menu-toggle" @click="menuOpen = !menuOpen">
-          <i class="fa-solid fa-bars" v-if="!menuOpen"></i>
-          <i class="fa-solid fa-xmark" v-else></i>
-        </button>
-
-        <!-- Mobile Menu Container -->
-        <div class="mobile-menu-container">
-          <!-- Search Bar -->
-          <div class="search-bar">
-            <input type="text" placeholder="Search for products" />
-            <div class="category-dropdown">
-              <span>All Categories</span>
-              <i class="fa-solid fa-chevron-down"></i>
-            </div>
-            <button class="search-btn">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </div>
-
-          <!-- Utility Icons -->
-          <div class="utility-icons">
-            <router-link to="/wishlist" class="icon-link">
-              <i class="fa-regular fa-heart"></i>
-              <span class="badge">{{ wishlistCount }}</span>
+        <!-- Tab Content -->
+        <div class="mobile-tab-content">
+          <!-- Categories Tab -->
+          <div class="tab-panel" v-if="activeTab === 'categories'">
+            <router-link to="/shop?category=electronics" class="mobile-menu-item" @click="toggleMobileMenu">
+              <i class="fa-solid fa-laptop"></i>
+              <span>Electronics</span>
             </router-link>
-            <a href="#" class="icon-link compare-icon">
-              <i class="fa-solid fa-repeat"></i>
-              <span class="badge">0</span>
-            </a>
-            <a href="#" class="icon-link" @click.prevent="openCart">
-              <i class="fa-solid fa-cart-shopping"></i>
-              <span class="badge">{{ cartCount }}</span>
-            </a>
+            <router-link to="/shop?category=fashion" class="mobile-menu-item" @click="toggleMobileMenu">
+              <i class="fa-solid fa-shirt"></i>
+              <span>Fashion</span>
+            </router-link>
+            <router-link to="/shop?category=sports" class="mobile-menu-item" @click="toggleMobileMenu">
+              <i class="fa-solid fa-basketball"></i>
+              <span>Sports</span>
+            </router-link>
+          </div>
+
+          <!-- Menu Tab -->
+          <div class="tab-panel" v-if="activeTab === 'menu'">
+            <router-link to="/shop" class="mobile-menu-item" @click="toggleMobileMenu">
+              <span>Shop</span>
+            </router-link>
+            <router-link to="/blog" class="mobile-menu-item" @click="toggleMobileMenu">
+              <span>Blog</span>
+            </router-link>
+            <router-link to="/buy-now" class="mobile-menu-item" @click="toggleMobileMenu">
+              <span>Buy Now!</span>
+            </router-link>
+          </div>
+
+          <!-- More Tab -->
+          <div class="tab-panel" v-if="activeTab === 'more'">
+            <router-link to="/about" class="mobile-menu-item" @click="toggleMobileMenu">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>About</span>
+            </router-link>
+            <router-link to="/contact" class="mobile-menu-item" @click="toggleMobileMenu">
+              <i class="fa-solid fa-envelope"></i>
+              <span>Contact</span>
+            </router-link>
           </div>
         </div>
       </div>
-    </header>
-
-    <!-- Navigation Bar -->
-    <nav class="navigation-bar">
-      <div class="container">
-        <button class="all-categories-btn">
-          <span>ALL CATEGORIES</span>
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <div class="nav-links">
-          <router-link to="/product" class="nav-link">Shop</router-link>
-          <router-link to="/blog" class="nav-link">Blog</router-link>
-          <a href="#" class="nav-link">Buy Now!</a>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Cart Sidebar Component -->
-    <Cart />
-  </div>
+    </div>
+  </header>
 </template>
 
-<script>
-import Cart from '../Cart/Cart.vue';
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCartStore } from '@/User/stores/cartStore';
+import { useAuth } from '@/User/components/useAuth';
 
-export default {
-  name: 'HeaderMain',
-  components: {
-    Cart
-  },
-  data() {
-    return {
-      menuOpen: false,
-      isLoggedIn: false,
-      wishlistCount: 0,
-      cartCount: 0,
-    };
-  },
-  mounted() {
-    // Kiểm tra trạng thái đăng nhập khi component được mount
-    this.checkLoginStatus();
+const router = useRouter();
+const cartStore = useCartStore();
+const { logout } = useAuth();
 
-    // Cập nhật số lượng wishlist
-    this.updateWishlistCount();
+// State
+const searchQuery = ref('');
+const showUserMenu = ref(false);
+const isLoggedIn = ref(false);
+const showMobileMenu = ref(false);
+const activeTab = ref('menu');
 
-    // Cập nhật số lượng cart
-    this.updateCartCount();
+// Computed
+const cartCount = computed(() => cartStore.items?.length || 0);
 
-    // Lắng nghe sự thay đổi trong localStorage
-    window.addEventListener('storage', this.checkLoginStatus);
-
-    // Lắng nghe custom event khi đăng nhập/đăng xuất
-    window.addEventListener('loginStatusChanged', this.checkLoginStatus);
-
-    // Lắng nghe custom event khi wishlist thay đổi
-    window.addEventListener('wishlistChanged', this.updateWishlistCount);
-
-    // Lắng nghe custom event khi cart thay đổi
-    window.addEventListener('cartChanged', this.updateCartCount);
-  },
-  beforeUnmount() {
-    // Cleanup listeners
-    window.removeEventListener('storage', this.checkLoginStatus);
-    window.removeEventListener('loginStatusChanged', this.checkLoginStatus);
-    window.removeEventListener('wishlistChanged', this.updateWishlistCount);
-    window.removeEventListener('cartChanged', this.updateCartCount);
-  },
-  methods: {
-    checkLoginStatus() {
-      this.isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    },
-    updateWishlistCount() {
-      const wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-      this.wishlistCount = wishlist.length;
-    },
-    updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem('userCart') || '[]');
-      this.cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-    },
-    openCart() {
-      window.dispatchEvent(new Event('openCart'));
-    },
-    handleLogout() {
-      // Xóa thông tin đăng nhập
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userEmail');
-
-      // Cập nhật trạng thái
-      this.isLoggedIn = false;
-
-      // Dispatch custom event
-      window.dispatchEvent(new Event('loginStatusChanged'));
-
-      // Chuyển về trang login
-      this.$router.push('/login');
-    }
+// Methods
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.push({
+      path: '/shop',
+      query: { q: searchQuery.value }
+    });
   }
 };
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value;
+};
+
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value;
+  if (showMobileMenu.value) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+};
+
+const handleLogout = () => {
+  logout();
+  showUserMenu.value = false;
+  router.push('/login');
+};
+
+const handleClickOutside = (event) => {
+  if (!event.target.closest('.user-menu')) {
+    showUserMenu.value = false;
+  }
+};
+
+// Lifecycle
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+  // Check login status
+  const token = localStorage.getItem('token');
+  isLoggedIn.value = !!token;
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
-<style src="./Header.css"></style>
+<style scoped>
+@import './Header.css';
+</style>
