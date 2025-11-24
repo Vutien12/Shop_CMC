@@ -24,6 +24,24 @@ import OAuth2 from '@/OAuth2/OAuth2.vue';
 import Blogdetail from "../User/screens/BlogDetail/Blogdetail.vue";
 import Orderdetail from "../User/components/Orderdetail/Orderdetail.vue";
 
+import Layout from "../Admin/view/layout.vue";
+import ProductIndex from "../Product/views/admin/products/partials/index.vue";
+import ProductCreate from "../Product/views/admin/products/partials/create.vue";
+import ProductEdit from "../Product/views/admin/products/partials/edit.vue";
+import VariationIndex from "../Variation/index.vue";
+import VariationCreate from "../Variation/create.vue";
+import VariationEdit from "../Variation/edit.vue";
+import OptionIndex from "../Option/indext.vue";
+import OptionCreate from "../Option/create.vue";
+import OrderIndex from "../Order/indext.vue";
+import BrandIndex from "../Brand/views/admin/brands/index.vue";
+import BrandCreate from "../Brand/views/admin/brands/create.vue";
+import BrandEdit from "../Brand/views/admin/brands/edit.vue";
+import CategoryIndex from "../Category/index.vue";
+import MediaIndex from "../Media/indext.vue";
+import Dashboard from "../Dashboar/index.vue";
+import CouponCreate from "../Coupons/create.vue";
+import CouponIndex from "../Coupons/indext.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -55,6 +73,109 @@ const routes = [
   { path: '/review', name: 'Review', component: Review, meta: { requiresAuth: true } },
   { path: '/orderdetail/:id', name: 'Orderdetail', component: Orderdetail, meta: { requiresAuth: true } },
   { path: "/:pathMatch(.*)*", redirect: "/" },
+
+  // Admin Routes
+  {
+        path: '/admin',
+        component: Layout,
+        children: [
+            {
+                name: 'admin.dashboard',
+                component: Dashboard,
+                path: '',
+            },
+            {
+                name: 'admin.products.index',
+                component: ProductIndex,
+                path: 'products',
+            },
+            {
+                name: 'admin.products.create',
+                component: ProductCreate,
+                path: 'products/create',
+            },
+            {
+                name: 'admin.products.edit',
+                component: ProductEdit,
+                path: 'products/:id/edit',
+            },
+            {
+                name: 'admin.variations.index',
+                component: VariationIndex,
+                path: 'variations',
+            },
+            {
+                name: 'admin.variations.create',
+                component: VariationCreate,
+                path: 'variations/create',
+            },
+            {
+                name: 'admin.variations.edit',
+                component: VariationEdit,
+                path: 'variations/:id/edit',
+            },
+            {
+                name: 'admin.options.index',
+                component: OptionIndex,
+                path: 'options',
+            },
+            {
+                name: 'admin.options.create',
+                component: OptionCreate,
+                path: 'options/create',
+            },
+            {
+                name: 'admin.options.edit',
+                component: OptionCreate,
+                path: 'options/:id/edit',
+            },
+            {
+                name: 'admin.orders.index',
+                component: OrderIndex,
+                path: 'orders',
+            },
+            {
+                name: 'admin.brands.index',
+                component: BrandIndex,
+                path: 'brands',
+            },
+            {
+                name: 'admin.brands.create',
+                component: BrandCreate,
+                path: 'brands/create',
+            },
+            {
+                name: 'admin.brands.edit',
+                component: BrandEdit,
+                path: 'brands/:id/edit',
+            },
+            {
+                name: 'admin.coupons.index',
+                component: CouponIndex,
+                path: 'coupons',
+            },
+            {
+                name: 'admin.coupons.create',
+                component: CouponCreate,
+                path: 'coupons/create',
+            },
+            {
+                name: 'admin.coupons.edit',
+                component: CouponCreate,
+                path: 'coupons/:id/edit',
+            },
+            {
+                name: 'admin.categories.index',
+                component: CategoryIndex,
+                path: 'categories',
+            },
+            {
+                name: 'admin.media.index',
+                component: MediaIndex,
+                path: 'media',
+            },
+        ]
+    },
 ];
 const router = createRouter ({
     history:createWebHistory(),

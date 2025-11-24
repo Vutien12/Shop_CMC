@@ -1,0 +1,98 @@
+/* 
+ * Admin Scoped CSS Wrapper
+ * Tất cả CSS admin sẽ chỉ áp dụng bên trong .admin-scope
+ * Không ảnh hưởng đến User folder
+ */
+
+.admin-scope {
+  /* Import tất cả CSS admin vào đây */
+}
+
+/* Wrap tất cả selector của main.css vào trong .admin-scope */
+.admin-scope .wrapper {
+  position: relative;
+  width: 100%;
+  flex-grow: 1;
+  background: #f1f1f1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: 150ms ease-in-out;
+}
+
+.admin-scope .content-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 57px;
+  background: #f1f1f1;
+  transition: 0.3s ease-in-out;
+}
+
+.admin-scope .main-header {
+  position: relative;
+  height: 56px;
+  width: 250px;
+  display: flex;
+  align-items: center;
+  background: #222530;
+  transition: 150ms ease-in-out;
+  z-index: 1050;
+}
+
+.admin-scope .main-sidebar {
+  position: relative;
+  display: inline-block;
+  flex-grow: 0;
+  padding: 0;
+  width: 250px;
+  background: #222530;
+  transition: 150ms ease-in-out;
+  z-index: 15;
+}
+
+.admin-scope .sidebar-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.admin-scope .navbar {
+  position: relative;
+  background: #ffffff;
+  border-bottom: 1px solid #d5dce6;
+  margin-bottom: 0;
+  padding: 0;
+  height: 61px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-scope .main-footer {
+  position: fixed;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 19px 20px 18px;
+  background: #ffffff;
+  border-top: 1px solid #d5dce6;
+  transition: 0.3s ease-in-out;
+  z-index: 10;
+}
+
+.admin-scope .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  display: none;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: 0;
+}
+
+/* Import các file CSS khác của admin nhưng scope vào .admin-scope */
