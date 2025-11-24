@@ -142,6 +142,12 @@
             <span>Coupons</span>
           </router-link>
         </li>
+        <li class="treeview" :class="activeMenu('blogs')">
+          <router-link :to="{ name: 'admin.blogs.index' }">
+            <i class="fa fa-pencil-square-o"></i>
+            <span>Blogs</span>
+          </router-link>
+        </li>
       </ul>
     </section>
   </aside>

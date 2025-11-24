@@ -18,7 +18,7 @@
         </template>
 
         <!-- Custom cell for Created column with formatted date -->
-        <template #cell-created_at="{ value }">
+        <template #cell-updated_at="{ value }">
             {{ formatDate(value) }}
         </template>
     </DataTable>
@@ -27,6 +27,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { getOptions, deleteOption, deleteManyOptions } from '@/api/optionAPi';
 
 export default {
     name: 'OptionPage',
@@ -40,23 +41,44 @@ export default {
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
             { key: 'type', label: 'Type', sortable: true, width: '150px' },
-            { key: 'created_at', label: 'Created', sortable: true, width: '150px' }
+            { key: 'values_count', label: 'Values', sortable: true, width: '100px' },
+            { key: 'updated_at', label: 'Updated', sortable: true, width: '150px' }
         ];
 
-        const loadOptions = () => {
-            // Mock data - replace with actual API call
-            options.value = [
-                { id: 1, name: 'Size', type: 'Dropdown', created_at: '2024-10-18T08:45:00' },
-                { id: 2, name: 'Color', type: 'Radio', created_at: '2024-10-19T15:30:00' },
-                { id: 3, name: 'Material', type: 'Checkbox', created_at: '2024-10-20T10:00:00' }
-            ];
+        const loadOptions = async () => {
+            try {
+                const response = await getOptions();
+                if (response.code === 200 && response.result) {
+                    options.value = response.result.map(opt => ({
+                        id: opt.id,
+                        name: opt.name,
+                        type: opt.type,
+                        values_count: opt.optionValues?.length || 0,
+                        updated_at: opt.updatedAt || opt.createdAt
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading options:', error);
+            }
         };
 
-        const handleDelete = (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} option(s)?`)) {
-                options.value = options.value.filter(
-                    opt => !selectedIds.includes(opt.id)
-                );
+        const handleDelete = async (selectedIds) => {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} option(s)?`)) {
+                return;
+            }
+
+            try {
+                if (selectedIds.length === 1) {
+                    await deleteOption(selectedIds[0]);
+                } else {
+                    await deleteManyOptions(selectedIds);
+                }
+                
+                await loadOptions();
+                alert('Option(s) deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting options:', error);
+                alert('Error deleting option(s). Please try again.');
             }
         };
 

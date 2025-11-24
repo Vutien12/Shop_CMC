@@ -22,9 +22,6 @@
                                             <li :class="{ active: activeTab === 'images' }">
                                                 <a href="#images" @click.prevent="activeTab = 'images'">Images</a>
                                             </li>
-                                            <li :class="{ active: activeTab === 'seo' }">
-                                                <a href="#seo" @click.prevent="activeTab = 'seo'">SEO</a>
-                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -106,45 +103,6 @@
                                 </div>
                             </div>
 
-                            <!-- SEO Tab -->
-                            <div class="tab-pane fade" :class="{ 'in active': activeTab === 'seo' }" id="seo">
-                                <h4 class="tab-content-title">SEO</h4>
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="meta-title" class="col-md-3 control-label text-left">
-                                                Meta Title
-                                            </label>
-                                            <div class="col-md-9">
-                                                <input
-                                                    type="text"
-                                                    name="meta[meta_title]"
-                                                    class="form-control"
-                                                    id="meta-title"
-                                                    v-model="form.meta_title"
-                                                >
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="meta-description" class="col-md-3 control-label text-left">
-                                                Meta Description
-                                            </label>
-                                            <div class="col-md-9">
-                                                <textarea
-                                                    name="meta[meta_description]"
-                                                    class="form-control"
-                                                    id="meta-description"
-                                                    rows="10"
-                                                    cols="10"
-                                                    v-model="form.meta_description"
-                                                ></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Form Footer -->
                             <div class="form-group">
                                 <div class="col-md-10 col-md-offset-2">
@@ -187,9 +145,7 @@ const shouldRemoveLogo = ref(false);
 const form = reactive({
     name: '',
     is_active: false,
-    logo: null,
-    meta_title: '',
-    meta_description: ''
+    logo: null
 });
 
 const errors = reactive({
@@ -245,8 +201,6 @@ const loadBrand = async () => {
             // Load into form
             form.name = brand.name;
             form.is_active = brand.isActive;
-            form.meta_title = brand.meta_title || '';
-            form.meta_description = brand.meta_description || '';
 
             // Reset removal flag
             shouldRemoveLogo.value = false;

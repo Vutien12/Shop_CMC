@@ -30,10 +30,10 @@ import ProductCreate from "../Product/views/admin/products/partials/create.vue";
 import ProductEdit from "../Product/views/admin/products/partials/edit.vue";
 import VariationIndex from "../Variation/index.vue";
 import VariationCreate from "../Variation/create.vue";
-import VariationEdit from "../Variation/edit.vue";
 import OptionIndex from "../Option/indext.vue";
 import OptionCreate from "../Option/create.vue";
 import OrderIndex from "../Order/indext.vue";
+import OrderDetail from "../Order/detail.vue";
 import BrandIndex from "../Brand/views/admin/brands/index.vue";
 import BrandCreate from "../Brand/views/admin/brands/create.vue";
 import BrandEdit from "../Brand/views/admin/brands/edit.vue";
@@ -42,6 +42,8 @@ import MediaIndex from "../Media/indext.vue";
 import Dashboard from "../Dashboar/index.vue";
 import CouponCreate from "../Coupons/create.vue";
 import CouponIndex from "../Coupons/indext.vue";
+import BlogIndex from "../Blog/index.vue";
+import BlogCreate from "../Blog/create.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -111,7 +113,7 @@ const routes = [
             },
             {
                 name: 'admin.variations.edit',
-                component: VariationEdit,
+                component: VariationCreate,
                 path: 'variations/:id/edit',
             },
             {
@@ -133,6 +135,11 @@ const routes = [
                 name: 'admin.orders.index',
                 component: OrderIndex,
                 path: 'orders',
+            },
+            {
+                name: 'admin.orders.detail',
+                component: OrderDetail,
+                path: 'orders/:id',
             },
             {
                 name: 'admin.brands.index',
@@ -173,6 +180,21 @@ const routes = [
                 name: 'admin.media.index',
                 component: MediaIndex,
                 path: 'media',
+            },
+            {
+                name: 'admin.blogs.index',
+                component: BlogIndex,
+                path: 'blogs',
+            },
+            {
+                name: 'admin.blogs.create',
+                component: BlogCreate,
+                path: 'blogs/create',
+            },
+            {
+                name: 'admin.blogs.edit',
+                component: BlogCreate,
+                path: 'blogs/:id/edit',
             },
         ]
     },

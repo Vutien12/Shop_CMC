@@ -98,7 +98,8 @@
                         <tr 
                             v-for="row in paginatedData" 
                             :key="row[rowKey]"
-                            class="table-row"
+                            :class="['table-row', { 'clickable-row': rowClickable }]"
+                            @click="handleRowClick(row)"
                         >
                             <td v-if="selectable">
                                 <input 
@@ -191,6 +192,7 @@ import { useRouter } from 'vue-router';
 
 export default {
     name: 'DataTable',
+    emits: ['delete', 'row-click'],
     props: {
         title: {
             type: String,
@@ -229,6 +231,10 @@ export default {
             type: String,
             default: 'No data available in table'
         },
+        rowClickable: {
+            type: Boolean,
+            default: false
+        },
         defaultSortBy: {
             type: String,
             default: 'id'
@@ -242,7 +248,7 @@ export default {
             default: 20
         }
     },
-    emits: ['delete', 'sort', 'search', 'page-change'],
+    emits: ['delete', 'sort', 'search', 'page-change', 'row-click'],
     setup(props, { emit }) {
         const localSelectedIds = ref([]);
         const localSearchQuery = ref('');
@@ -383,6 +389,12 @@ export default {
             emit('delete', localSelectedIds.value);
         };
 
+        const handleRowClick = (row) => {
+            if (props.rowClickable) {
+                emit('row-click', row);
+            }
+        };
+
         const formatCellValue = (row, column) => {
             const value = row[column.key];
             if (column.format && typeof column.format === 'function') {
@@ -431,6 +443,7 @@ export default {
             handlePerPageChange,
             changePage,
             handleDelete,
+            handleRowClick,
             formatCellValue
             , goToCreate
         };
@@ -666,6 +679,14 @@ export default {
 
 .data-table tbody tr:hover {
     background: #f9fafb;
+}
+
+.data-table tbody tr.clickable-row {
+    cursor: pointer;
+}
+
+.data-table tbody tr.clickable-row:hover {
+    background: #f3f4f6;
 }
 
 .data-table td {

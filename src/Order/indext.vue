@@ -5,7 +5,9 @@
         :columns="columns"
         :create-route="null"
         create-button-text="Create Order"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
         <!-- Custom cell for Customer Name column with link -->
         <template #cell-customer_name="{ row, value }">
@@ -35,6 +37,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 
 export default {
@@ -43,6 +46,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const orders = ref([]);
         
         const columns = [
@@ -116,6 +120,10 @@ export default {
             }
         };
 
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.orders.detail', params: { id: row.id } });
+        };
+
         const formatCurrency = (amount) => {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -150,6 +158,7 @@ export default {
             orders,
             columns,
             handleDelete,
+            handleRowClick,
             formatCurrency,
             formatDate
         };

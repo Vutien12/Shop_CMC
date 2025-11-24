@@ -1,6 +1,6 @@
 <template>
   <section class="content-header clearfix">
-    <h3>Create Variation</h3>
+    <h3>{{ isEditMode ? 'Edit' : 'Create' }} Variation</h3>
 
     <ol class="breadcrumb">
       <li>
@@ -13,14 +13,19 @@
       </li>
 
       <li><a href="#" @click.prevent="$router.push({ name: 'admin.variations.index' })">Variations</a></li>
-      <li class="active">Create Variation</li>
+      <li class="active">{{ isEditMode ? 'Edit' : 'Create' }} Variation</li>
     </ol>
   </section>
 
   <section class="content">
     <div class="box">
       <div class="box-body">
-        <form class="form" @submit.prevent="saveForm">
+        <div v-if="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading variation...</p>
+        </div>
+        
+        <form v-else class="form" @submit.prevent="saveForm">
           <!-- General -->
           <div class="row has-variation-type">
             <div class="col-lg-2 col-sm-2">
@@ -158,7 +163,10 @@
           <!-- Save -->
           <div class="row">
             <div class="col-lg-7 col-lg-offset-2 col-md-12 text-right">
-              <button type="submit" class="btn btn-primary">Save</button>
+              <button type="submit" class="btn btn-primary" :disabled="formSubmitting">
+                <span v-if="!formSubmitting">Save</span>
+                <span v-else>Saving...</span>
+              </button>
             </div>
           </div>
         </form>
@@ -168,7 +176,17 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { createVariation, getVariationById, updateVariation } from '@/api/variationApi';
+
+const router = useRouter();
+const route = useRoute();
+const formSubmitting = ref(false);
+const loading = ref(false);
+
+// Kiểm tra có phải edit mode không
+const isEditMode = computed(() => !!route.params.id);
 
 const form = reactive({
   name: "",
@@ -225,7 +243,11 @@ const addRow = () => {
 
 // Xóa dòng
 const removeRow = (index) => {
-  form.values.splice(index, 1);
+  if (form.values.length > 1) {
+    form.values.splice(index, 1);
+  } else {
+    alert('At least one value is required');
+  }
 };
 
 // Xử lý upload ảnh
@@ -234,11 +256,124 @@ const onFileChange = (event, index) => {
   if (file) form.values[index].image = file;
 };
 
-// Giả lập lưu form
-const saveForm = () => {
-  console.log("Dữ liệu form:", form);
-  alert("Form saved! (xem console để kiểm tra dữ liệu)");
+// Load variation data nếu đang edit
+const loadVariation = async () => {
+  if (!isEditMode.value) {
+    loading.value = false;
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const variationId = route.params.id;
+    console.log('Loading variation:', variationId);
+    
+    const response = await getVariationById(variationId);
+    
+    if (response.code === 200 && response.result) {
+      const data = response.result;
+      
+      // Populate form với data từ API
+      form.name = data.name;
+      form.type = data.type.toLowerCase();
+      
+      // Map variationValues
+      form.values = data.variationValues.map((v, index) => ({
+        id: v.id || Date.now() + index,
+        label: v.label,
+        color: (data.type.toLowerCase() === 'color') ? v.value : '',
+        image: null
+      }));
+    } else {
+      alert('Failed to load variation');
+      router.push({ name: 'admin.variations.index' });
+    }
+  } catch (error) {
+    console.error('Error loading variation:', error);
+    alert('Error loading variation. Redirecting to list...');
+    router.push({ name: 'admin.variations.index' });
+  } finally {
+    loading.value = false;
+  }
 };
+
+// Lưu form - gọi API thực tế
+const saveForm = async () => {
+  // Validate form
+  if (!form.name.trim()) {
+    alert('Please enter variation name');
+    return;
+  }
+  
+  if (!form.type) {
+    alert('Please select variation type');
+    return;
+  }
+  
+  if (form.values.length === 0 || !form.values.some(v => v.label.trim())) {
+    alert('Please add at least one value with a label');
+    return;
+  }
+
+  formSubmitting.value = true;
+  
+  try {
+    // Chuẩn bị dữ liệu theo format API
+    const variationType = form.type.charAt(0).toUpperCase() + form.type.slice(1); // Text, Color, Image
+    
+    // Xử lý variationValues dựa trên type
+    const variationValues = form.values
+      .filter(v => v.label.trim()) // Chỉ lấy values có label
+      .map(v => {
+        console.log('Processing value:', v); // Debug log
+        
+        // Nếu type là Color, value là mã màu
+        if (form.type === 'color') {
+          return {
+            label: v.label,
+            value: v.color || '#000000' // value là mã màu hex
+          };
+        }
+        
+        // Nếu type là Text hoặc Image, value là slug từ label
+        return {
+          label: v.label,
+          value: v.label.toLowerCase().replace(/\s+/g, '_')
+        };
+      });
+
+    const variationData = {
+      name: form.name,
+      type: variationType,
+      isGlobal: true,
+      variationValues: variationValues
+    };
+
+    console.log('Creating variation:', variationData);
+    
+    // Gọi API create hoặc update tùy theo mode
+    const response = isEditMode.value 
+      ? await updateVariation(route.params.id, variationData)
+      : await createVariation(variationData);
+    
+    if (response.code === 200) {
+      alert(`Variation ${isEditMode.value ? 'updated' : 'created'} successfully!`);
+      router.push({ name: 'admin.variations.index' });
+    } else {
+      alert(`Failed to ${isEditMode.value ? 'update' : 'create'} variation: ` + (response.message || 'Unknown error'));
+    }
+  } catch (error) {
+    console.error(`Error ${isEditMode.value ? 'updating' : 'creating'} variation:`, error);
+    alert(`Error ${isEditMode.value ? 'updating' : 'creating'} variation. Please try again.`);
+  } finally {
+    formSubmitting.value = false;
+  }
+};
+
+// Load data khi component mount
+onMounted(() => {
+  loadVariation();
+});
 </script>
 
 <style scoped>
@@ -255,6 +390,30 @@ const saveForm = () => {
 .btn-default {
   background-color: #f5f5f5;
   border: 1px solid #ccc;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0071a1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Breadcrumb styles */

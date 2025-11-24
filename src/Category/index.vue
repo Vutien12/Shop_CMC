@@ -25,67 +25,47 @@
                     <div class="box-body clearfix">
                         <div class="tab-wrapper">
                             <ul class="nav nav-tabs">
-                                <li :class="{ active: activeTab === 'general' }">
-                                    <a @click.prevent="activeTab = 'general'" href="#">General</a>
-                                </li>
-                                <li :class="{ active: activeTab === 'image' }">
-                                    <a @click.prevent="activeTab = 'image'" href="#">Image</a>
-                                </li>
-                                <li :class="{ active: activeTab === 'seo', hide: isNewCategory }">
-                                    <a @click.prevent="activeTab = 'seo'" href="#">SEO</a>
+                                <li class="active">
+                                    <a href="#">General</a>
                                 </li>
                             </ul>
                             <form @submit.prevent="handleSubmit">
                                 <div class="tab-content">
-                                    <div v-show="activeTab === 'general'">
-                                        <div v-if="!isNewCategory" class="form-group row">
-                                            <label class="col-md-2 control-label">ID</label>
-                                            <div class="col-md-10">
-                                                <input type="text" class="form-control" v-model="form.id" disabled>
-                                            </div>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" v-model="form.name">
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-md-2 control-label">Name <span class="text-red">*</span></label>
-                                            <div class="col-md-10">
-                                                <input type="text" class="form-control" v-model="form.name">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-md-2 control-label">Status</label>
-                                            <div class="col-md-10">
-                                                <div class="checkbox-wrapper">
-                                                    <input type="checkbox" id="is_active" v-model="form.is_active">
-                                                    <label for="is_active">Enable the category</label>
-                                                </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 control-label">Searchable</label>
+                                        <div class="col-md-9">
+                                            <div class="checkbox-wrapper">
+                                                <input type="checkbox" id="is_searchable" v-model="form.is_searchable">
+                                                <label for="is_searchable">Show this category in search box category list</label>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-show="activeTab === 'image'">
-                                        <ImageUploader
-                                            title="Logo"
-                                            v-model="form.logo"
-                                            @update:fileId="form.logoFileId = $event"
-                                        />
-                                        <ImageUploader
-                                            title="Banner"
-                                            v-model="form.banner"
-                                            @update:fileId="form.bannerFileId = $event"
-                                        />
-                                    </div>
-                                    <div v-show="activeTab === 'seo'">
-                                        <div v-if="!isNewCategory" class="form-group">
-                                            <label>URL</label>
-                                            <input type="text" class="form-control" v-model="form.slug">
+                                    <div class="form-group row">
+                                        <label class="col-md-3 control-label">Status</label>
+                                        <div class="col-md-9">
+                                            <div class="checkbox-wrapper">
+                                                <input type="checkbox" id="is_active" v-model="form.is_active">
+                                                <label for="is_active">Enable the category</label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary" :disabled="saving">
-                                        {{ saving ? 'Saving...' : 'Save' }}
-                                    </button>
-                                    <button v-if="!isNewCategory" type="button" class="btn btn-link" @click="handleDelete">
-                                        Delete
-                                    </button>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 control-label"></label>
+                                        <div class="col-md-9">
+                                            <button type="submit" class="btn btn-primary" :disabled="saving">
+                                                {{ saving ? 'Saving...' : 'Save' }}
+                                            </button>
+                                            <button v-if="!isNewCategory" type="button" class="btn btn-link" @click="handleDelete">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -101,19 +81,13 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import $ from 'jquery';
 import 'jstree';
 import 'jstree/dist/themes/default/style.min.css';
-import ImageUploader from './components/ImageUploader.vue';
 import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi';
-import { attachFileToBrand, getBrandFiles, deleteEntityFile } from '@/api/brandApi';
 
 export default {
     name: 'CategoryPage',
-    components: {
-        ImageUploader
-    },
     setup() {
         const categoryTree = ref(null);
         const selectedNode = ref(null);
-        const activeTab = ref('general');
         const loading = ref(false);
         const saving = ref(false);
         const categories = ref([]);
@@ -121,14 +95,8 @@ export default {
         const form = ref({
             id: null,
             name: '',
-            is_active: false,
-            logo: null,
-            banner: null,
-            logoFileId: null,
-            bannerFileId: null,
-            existingLogoEntityFileId: null,
-            existingBannerEntityFileId: null,
-            slug: ''
+            is_searchable: false,
+            is_active: false
         });
 
         const isNewCategory = computed(() => !form.value.id);
@@ -200,40 +168,13 @@ export default {
                         form.value = {
                             id: cat.id,
                             name: cat.name,
-                            is_active: cat.isActive,
-                            logo: null,
-                            banner: null,
-                            logoFileId: null,
-                            bannerFileId: null,
-                            existingLogoEntityFileId: null,
-                            existingBannerEntityFileId: null,
-                            slug: cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                            is_searchable: cat.isSearchable || false,
+                            is_active: cat.isActive
                         };
-
-                        // Load entity files (logo and banner)
-                        try {
-                            const logoFiles = await getBrandFiles(categoryId, 'category', 'logo');
-                            if (logoFiles.code === 200 && logoFiles.result?.length > 0) {
-                                const logoFile = logoFiles.result[0];
-                                form.value.existingLogoEntityFileId = logoFile.id;
-                                form.value.logo = logoFile.path;
-                            }
-
-                            const bannerFiles = await getBrandFiles(categoryId, 'category', 'banner');
-                            if (bannerFiles.code === 200 && bannerFiles.result?.length > 0) {
-                                const bannerFile = bannerFiles.result[0];
-                                form.value.existingBannerEntityFileId = bannerFile.id;
-                                form.value.banner = bannerFile.path;
-                            }
-                        } catch (error) {
-                            console.error('Failed to load entity files:', error);
-                        }
                     }
                 } catch (error) {
                     console.error('Failed to load category:', error);
                 }
-
-                activeTab.value = 'general';
             });
         };
 
@@ -242,17 +183,10 @@ export default {
             form.value = {
                 id: null,
                 name: '',
+                is_searchable: false,
                 is_active: true,
-                logo: null,
-                banner: null,
-                logoFileId: null,
-                bannerFileId: null,
-                existingLogoEntityFileId: null,
-                existingBannerEntityFileId: null,
-                parentId: null,
-                slug: ''
+                parentId: null
             };
-            activeTab.value = 'general';
             if (categoryTree.value) $(categoryTree.value).jstree('deselect_all');
         };
 
@@ -261,17 +195,10 @@ export default {
             form.value = {
                 id: null,
                 name: '',
+                is_searchable: false,
                 is_active: true,
-                logo: null,
-                banner: null,
-                logoFileId: null,
-                bannerFileId: null,
-                existingLogoEntityFileId: null,
-                existingBannerEntityFileId: null,
-                parentId: parseInt(selectedNode.value.id),
-                slug: ''
+                parentId: parseInt(selectedNode.value.id)
             };
-            activeTab.value = 'general';
         };
 
         const collapseAll = () => {
@@ -294,66 +221,13 @@ export default {
                 const categoryData = {
                     parentId: form.value.parentId || null,
                     name: form.value.name,
+                    isSearchable: form.value.is_searchable,
                     isActive: form.value.is_active
                 };
 
                 if (form.value.id) {
                     // Update existing category
                     await updateCategory(form.value.id, categoryData);
-
-                    // Handle logo changes
-                    if (form.value.logoFileId) {
-                        // Delete old logo if exists
-                        if (form.value.existingLogoEntityFileId) {
-                            try {
-                                await deleteEntityFile(form.value.existingLogoEntityFileId);
-                            } catch (error) {
-                                console.error('Failed to delete old logo:', error);
-                            }
-                        }
-
-                        // Attach new logo
-                        await attachFileToBrand({
-                            fileId: form.value.logoFileId,
-                            entityId: form.value.id,
-                            entityType: 'category',
-                            zone: 'logo'
-                        });
-                    } else if (!form.value.logo && form.value.existingLogoEntityFileId) {
-                        // Logo was removed
-                        try {
-                            await deleteEntityFile(form.value.existingLogoEntityFileId);
-                        } catch (error) {
-                            console.error('Failed to delete logo:', error);
-                        }
-                    }
-
-                    // Handle banner changes
-                    if (form.value.bannerFileId) {
-                        // Delete old banner if exists
-                        if (form.value.existingBannerEntityFileId) {
-                            try {
-                                await deleteEntityFile(form.value.existingBannerEntityFileId);
-                            } catch (error) {
-                                console.error('Failed to delete old banner:', error);
-                            }
-                        }
-
-                        // Attach new banner
-                        await attachFileToBrand({
-                            fileId: form.value.bannerFileId,
-                            entityId: form.value.id,
-                            entityType: 'category',
-                            zone: 'banner'
-                        });
-                    } else if (!form.value.banner && form.value.existingBannerEntityFileId) {
-                        // Banner was removed
-                        try {
-                            await deleteEntityFile(form.value.existingBannerEntityFileId);
-                        } catch (error) {
-                            console.error('Failed to delete banner:', error);
-                        }
-                    }
 
                     // Update tree node name
                     if (selectedNode.value) {
@@ -366,28 +240,6 @@ export default {
                     const response = await createCategory(categoryData);
 
                     if (response.code === 200 && response.result) {
-                        const categoryId = response.result.id;
-
-                        // Attach logo if selected
-                        if (form.value.logoFileId) {
-                            await attachFileToBrand({
-                                fileId: form.value.logoFileId,
-                                entityId: categoryId,
-                                entityType: 'category',
-                                zone: 'logo'
-                            });
-                        }
-
-                        // Attach banner if selected
-                        if (form.value.bannerFileId) {
-                            await attachFileToBrand({
-                                fileId: form.value.bannerFileId,
-                                entityId: categoryId,
-                                entityType: 'category',
-                                zone: 'banner'
-                            });
-                        }
-
                         alert('Category created successfully!');
 
                         // Reload categories to update tree
@@ -437,7 +289,6 @@ export default {
         return {
             categoryTree,
             selectedNode,
-            activeTab,
             loading,
             saving,
             form,
@@ -470,10 +321,10 @@ export default {
 .btn-link { background: none; border: none; color: #337ab7; }
 .btn-link:hover { text-decoration: underline; }
 .form-group { margin-bottom: 15px; }
-.form-group.row { display: flex; align-items: center; }
-.col-md-2 { width: 16.66%; padding-right: 15px; }
-.col-md-10 { width: 83.34%; }
-.control-label { font-weight: 600; text-align: left; padding-top: 0; }
+.form-group.row { display: flex; align-items: flex-start; }
+.col-md-3 { width: 120px; min-width: 120px; padding-right: 15px; padding-top: 7px; }
+.col-md-9 { flex: 1; }
+.control-label { font-weight: 600; text-align: left; padding-top: 0; font-size: 13px; }
 .checkbox-wrapper { display: flex; align-items: center; gap: 8px; }
 .checkbox-wrapper input[type="checkbox"] { margin: 0; width: 16px; height: 16px; }
 .checkbox-wrapper label { margin: 0; cursor: pointer; }

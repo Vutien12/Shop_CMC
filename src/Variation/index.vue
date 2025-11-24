@@ -27,6 +27,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { getVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
 
 export default {
     name: 'VariationPage',
@@ -35,28 +36,60 @@ export default {
     },
     setup() {
         const variations = ref([]);
+        const loading = ref(false);
         
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
             { key: 'type', label: 'Type', sortable: true, width: '150px' },
+            { key: 'values_count', label: 'Values', sortable: false, width: '100px' },
             { key: 'updated_at', label: 'Updated', sortable: true, width: '150px' }
         ];
 
-        const loadVariations = () => {
-            // Mock data - replace with actual API call
-            variations.value = [
-                { id: 2, name: 'Color 1', type: 'Color', updated_at: '2024-10-20T10:00:00' },
-                { id: 3, name: 'Color 2', type: 'Image', updated_at: '2024-10-19T15:30:00' },
-                { id: 1, name: 'Size', type: 'Text', updated_at: '2024-10-18T08:45:00' }
-            ];
+        const loadVariations = async () => {
+            try {
+                loading.value = true;
+                const response = await getVariations({ page: 1, size: 100 });
+
+                if (response.code === 200) {
+                    // Map API response to component format
+                    variations.value = response.result.map(variation => ({
+                        id: variation.id,
+                        name: variation.name,
+                        type: variation.type,
+                        values_count: variation.variationValues?.length || 0,
+                        updated_at: variation.createdAt || variation.updatedAt,
+                        isGlobal: variation.isGlobal
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to load variations:', error);
+                alert('Failed to load variations. Please try again.');
+            } finally {
+                loading.value = false;
+            }
         };
 
-        const handleDelete = (selectedIds) => {
+        const handleDelete = async (selectedIds) => {
             if (confirm(`Are you sure you want to delete ${selectedIds.length} variation(s)?`)) {
-                variations.value = variations.value.filter(
-                    v => !selectedIds.includes(v.id)
-                );
+                try {
+                    loading.value = true;
+
+                    if (selectedIds.length === 1) {
+                        await deleteVariation(selectedIds[0]);
+                    } else {
+                        await deleteManyVariations(selectedIds);
+                    }
+
+                    // Reload variations after deletion
+                    await loadVariations();
+                    alert('Variation(s) deleted successfully!');
+                } catch (error) {
+                    console.error('Failed to delete variations:', error);
+                    alert('Failed to delete variations. Please try again.');
+                } finally {
+                    loading.value = false;
+                }
             }
         };
 
@@ -86,6 +119,7 @@ export default {
         return {
             variations,
             columns,
+            loading,
             handleDelete,
             formatDate
         };
