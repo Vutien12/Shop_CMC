@@ -1,61 +1,123 @@
-import api from './axiosInstance'
+import api from './axiosInstance';
 
 /**
- * Get all variations
- * @returns {Promise}
+ * Get all variations with pagination
+ * @param {Object} params
+ * @param {number} params.page
+ * @param {number} params.size
  */
-export const getVariations = async () => {
-  const response = await api.get('/variations')
-  return response.data
-}
+export const getVariations = async (params = {}) => {
+  try {
+    const response = await api.get('/variations', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching variations:', error);
+    throw error;
+  }
+};
 
 /**
- * Get global variations (only variations marked as global)
- * @returns {Promise}
+ * Get global variations
  */
 export const getGlobalVariations = async () => {
-  const response = await api.get('/variations/global')
-  return response.data
-}
+  try {
+    const response = await api.get('/variations/global');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching global variations:', error);
+    throw error;
+  }
+};
 
 /**
  * Get a single variation by ID
- * @param {number} id - Variation ID
- * @returns {Promise}
  */
 export const getVariationById = async (id) => {
-  const response = await api.get(`/variations/${id}`)
-  return response.data
-}
+  try {
+    const response = await api.get(`/variations/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching variation ${id}:`, error);
+    throw error;
+  }
+};
 
 /**
- * Create a new variation
- * @param {Object} variationData - Variation data
- * @returns {Promise}
+ * Create variation
  */
-export const createVariation = async (variationData) => {
-  const response = await api.post('/variations', variationData)
-  return response.data
-}
+export const createVariation = async (data) => {
+  try {
+    const response = await api.post('/variations', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating variation:', error);
+    throw error;
+  }
+};
 
 /**
- * Update a variation
- * @param {number} id - Variation ID
- * @param {Object} variationData - Updated variation data
- * @returns {Promise}
+ * Update variation
  */
-export const updateVariation = async (id, variationData) => {
-  const response = await api.put(`/variations/${id}`, variationData)
-  return response.data
-}
+export const updateVariation = async (id, data) => {
+  try {
+    const response = await api.put(`/variations/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating variation ${id}:`, error);
+    throw error;
+  }
+};
 
 /**
- * Delete a variation
- * @param {number} id - Variation ID
- * @returns {Promise}
+ * Delete single variation
  */
 export const deleteVariation = async (id) => {
-  const response = await api.delete(`/variations/${id}`)
-  return response.data
-}
+  try {
+    const response = await api.delete(`/variations/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting variation ${id}:`, error);
+    throw error;
+  }
+};
 
+/**
+ * Delete multiple variations
+ */
+export const deleteManyVariations = async (ids) => {
+  try {
+    const response = await api.post('/variations/delete-many', ids);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting multiple variations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get variation values
+ */
+export const getVariationValues = async (variationId) => {
+  try {
+    const response = await api.get(`/variations/${variationId}/values`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching values for variation ${variationId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Search variations
+ */
+export const searchVariations = async (query) => {
+  try {
+    const response = await api.get('/variations/search', {
+      params: { q: query },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error searching variations:', error);
+    throw error;
+  }
+};

@@ -1,6 +1,6 @@
 <template>
   <section class="content-header clearfix">
-    <h3>Create Option</h3>
+    <h3>{{ isEditMode ? 'Edit Option' : 'Create Option' }}</h3>
 
     <ol class="breadcrumb">
       <li>
@@ -13,12 +13,17 @@
       </li>
 
       <li><a href="#" @click.prevent="$router.push({ name: 'admin.options.index' })">Options</a></li>
-      <li class="active">Create Option</li>
+      <li class="active">{{ isEditMode ? 'Edit Option' : 'Create Option' }}</li>
     </ol>
   </section>
 
   <section class="content">
-    <form class="form-horizontal" @submit.prevent="saveForm" novalidate>
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading option...</p>
+    </div>
+
+    <form v-else class="form-horizontal" @submit.prevent="saveForm" novalidate>
       <div class="accordion-content clearfix">
         <div class="col-lg-3 col-md-4 col-sm-12 col-xs-12 sidebar-column" style="width: 350px;">
           <div class="accordion-box">
@@ -84,27 +89,25 @@
                           required
                         >
                           <option value="">Please Select</option>
-
-                          <optgroup label="Text">
-                            <option value="field">Field</option>
-                            <option value="textarea">Textarea</option>
-                          </optgroup>
-
-                          <optgroup label="Select">
-                            <option value="dropdown">Dropdown</option>
-                            <option value="checkbox">Checkbox</option>
-                            <option value="checkbox_custom">Custom Checkbox</option>
-                            <option value="radio">Radio Button</option>
-                            <option value="radio_custom">Custom Radio Button</option>
-                            <option value="multiple_select">Multiple Select</option>
-                          </optgroup>
-
-                          <optgroup label="Date">
-                            <option value="date">Date</option>
-                            <option value="date_time">Date & Time</option>
-                            <option value="time">Time</option>
-                          </optgroup>
+                          <option value="text">Text</option>
+                          <option value="select">Select</option>
                         </select>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="is_global" class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label text-left">
+                        Global
+                      </label>
+                      <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
+                        <div class="checkbox">
+                          <input
+                            type="checkbox"
+                            id="is_global"
+                            v-model="form.isGlobal"
+                          />
+                          <label for="is_global">This option is global</label>
+                        </div>
                       </div>
                     </div>
 
@@ -117,7 +120,7 @@
                           <input
                             type="checkbox"
                             id="is_required"
-                            v-model="form.is_required"
+                            v-model="form.isRequired"
                           />
                           <label for="is_required">This option is required</label>
                         </div>
@@ -153,7 +156,7 @@
                           <td>
                             <input
                               type="number"
-                              v-model="form.values[0].price"
+                              v-model="form.optionValues[0].price"
                               class="form-control"
                               step="0.01"
                               min="0"
@@ -161,11 +164,11 @@
                           </td>
                           <td>
                             <select
-                              v-model="form.values[0].price_type"
+                              v-model="form.optionValues[0].priceType"
                               class="form-control custom-select-black"
                             >
-                              <option value="fixed">Fixed</option>
-                              <option value="percent">Percent</option>
+                              <option value="FIXED">Fixed</option>
+                              <option value="PERCENT">Percent</option>
                             </select>
                           </td>
                         </tr>
@@ -188,7 +191,7 @@
                         </thead>
                         <tbody id="select-values">
                           <tr
-                            v-for="(value, index) in form.values"
+                            v-for="(value, index) in form.optionValues"
                             :key="index"
                             class="option-row"
                           >
@@ -216,11 +219,11 @@
                             </td>
                             <td>
                               <select
-                                v-model="value.price_type"
+                                v-model="value.priceType"
                                 class="form-control custom-select-black"
                               >
-                                <option value="fixed">Fixed</option>
-                                <option value="percent">Percent</option>
+                                <option value="FIXED">Fixed</option>
+                                <option value="PERCENT">Percent</option>
                               </select>
                             </td>
                             <td class="text-center">
@@ -267,37 +270,85 @@
 </template>
 
 <script>
+import { computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { getOptionById, createOption, updateOption } from '@/api/optionAPi';
+
 export default {
   name: 'OptionCreate',
   data() {
     return {
+      loading: false,
       activeTab: 'general',
       form: {
         name: '',
         type: '',
-        is_required: false,
-        values: []
+        isRequired: false,
+        isGlobal: true,
+        optionValues: []
       }
     };
   },
   computed: {
+    isEditMode() {
+      return !!this.$route.params.id;
+    },
     isTextType() {
-      return ['field', 'textarea'].includes(this.form.type);
+      return this.form.type === 'text';
     },
     isSelectType() {
-      return ['dropdown', 'checkbox', 'checkbox_custom', 'radio', 'radio_custom', 'multiple_select'].includes(this.form.type);
+      return this.form.type === 'select';
     }
   },
   methods: {
+    async loadOption() {
+      if (!this.isEditMode) return;
+      
+      this.loading = true;
+      try {
+        const optionId = this.$route.params.id;
+        console.log('Loading option:', optionId);
+        
+        const response = await getOptionById(optionId);
+        
+        if (response.code === 200 && response.result) {
+          const data = response.result;
+          
+          // Populate form with loaded data
+          this.form.name = data.name;
+          this.form.type = data.type.toLowerCase(); // text, select
+          this.form.isRequired = data.isRequired || false;
+          this.form.isGlobal = data.isGlobal !== undefined ? data.isGlobal : true;
+          
+          // Map optionValues
+          this.form.optionValues = data.optionValues.map((v, index) => ({
+            id: v.id || Date.now() + index,
+            label: v.label || '',
+            price: v.price || 0,
+            priceType: v.priceType || 'FIXED'
+          }));
+        } else {
+          alert('Failed to load option');
+          this.$router.push({ name: 'admin.options.index' });
+        }
+      } catch (error) {
+        console.error('Error loading option:', error);
+        alert('Error loading option. Redirecting to list...');
+        this.$router.push({ name: 'admin.options.index' });
+      } finally {
+        this.loading = false;
+      }
+    },
     onTypeChange() {
       // Reset values when type changes
-      this.form.values = [];
+      this.form.optionValues = [];
       
       if (this.isTextType) {
         // Add single value for text types
-        this.form.values.push({
+        this.form.optionValues.push({
+          label: '',
           price: 0,
-          price_type: 'fixed'
+          priceType: 'FIXED'
         });
       } else if (this.isSelectType) {
         // Add initial row for select types
@@ -305,21 +356,76 @@ export default {
       }
     },
     addRow() {
-      this.form.values.push({
+      this.form.optionValues.push({
         label: '',
         price: 0,
-        price_type: 'fixed'
+        priceType: 'FIXED'
       });
     },
     deleteRow(index) {
-      this.form.values.splice(index, 1);
+      this.form.optionValues.splice(index, 1);
     },
-    saveForm() {
-      console.log('Form submitted:', this.form);
-      // TODO: Add API call to save option
-      // For now, just redirect back to list
-      this.$router.push({ name: 'admin.options.index' });
+    async saveForm() {
+      // Validate form
+      if (!this.form.name.trim()) {
+        alert('Please enter option name');
+        return;
+      }
+      
+      if (!this.form.type) {
+        alert('Please select option type');
+        return;
+      }
+      
+      if (this.form.optionValues.length === 0) {
+        alert('Please add at least one value');
+        return;
+      }
+
+      // Validate select type has labels
+      if (this.isSelectType && !this.form.optionValues.some(v => v.label.trim())) {
+        alert('Please add at least one value with a label');
+        return;
+      }
+
+      try {
+        // Prepare data according to API format
+        const optionType = this.form.type.charAt(0).toUpperCase() + this.form.type.slice(1); // Text, Select
+        
+        const optionData = {
+          name: this.form.name,
+          type: optionType,
+          isRequired: this.form.isRequired,
+          isGlobal: this.form.isGlobal,
+          optionValues: this.form.optionValues
+            .filter(v => this.isTextType || v.label.trim()) // Filter empty labels for select type
+            .map(v => ({
+              label: v.label || this.form.name, // Use name as label for text type
+              price: parseFloat(v.price) || 0,
+              priceType: v.priceType
+            }))
+        };
+
+        console.log(this.isEditMode ? 'Updating option:' : 'Creating option:', optionData);
+        
+        const response = this.isEditMode
+          ? await updateOption(this.$route.params.id, optionData)
+          : await createOption(optionData);
+        
+        if (response.code === 200) {
+          alert(`Option ${this.isEditMode ? 'updated' : 'created'} successfully!`);
+          this.$router.push({ name: 'admin.options.index' });
+        } else {
+          alert(`Failed to ${this.isEditMode ? 'update' : 'create'} option: ` + (response.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} option:`, error);
+        alert(`Error ${this.isEditMode ? 'updating' : 'creating'} option. Please try again.`);
+      }
     }
+  },
+  mounted() {
+    this.loadOption();
   }
 };
 </script>
@@ -647,5 +753,33 @@ export default {
   .form-control {
     font-size: 14px;
   }
+}
+
+/* Loading state */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+  background: #fff;
+  border-radius: 4px;
+  margin: 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0071a1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

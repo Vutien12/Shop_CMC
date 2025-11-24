@@ -1,9 +1,9 @@
-import api from './axiosInstance';
+import axiosInstance from './axiosInstance';
 
 // Get all options
 export const getOptions = async () => {
   try {
-    const response = await api.get('/options');
+    const response = await axiosInstance.get('/options');
     return response.data;
   } catch (error) {
     console.error('Error fetching options:', error);
@@ -14,7 +14,7 @@ export const getOptions = async () => {
 // Get option by ID
 export const getOptionById = async (id) => {
   try {
-    const response = await api.get(`/options/${id}`);
+    const response = await axiosInstance.get(`/options/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching option:', error);
@@ -25,7 +25,7 @@ export const getOptionById = async (id) => {
 // Create new option
 export const createOption = async (optionData) => {
   try {
-    const response = await api.post('/options', optionData);
+    const response = await axiosInstance.post('/options', optionData);
     return response.data;
   } catch (error) {
     console.error('Error creating option:', error);
@@ -36,7 +36,7 @@ export const createOption = async (optionData) => {
 // Update option
 export const updateOption = async (id, optionData) => {
   try {
-    const response = await api.put(`/options/${id}`, optionData);
+    const response = await axiosInstance.put(`/options/${id}`, optionData);
     return response.data;
   } catch (error) {
     console.error('Error updating option:', error);
@@ -47,7 +47,7 @@ export const updateOption = async (id, optionData) => {
 // Delete option
 export const deleteOption = async (id) => {
   try {
-    const response = await api.delete(`/options/${id}`);
+    const response = await axiosInstance.delete(`/options/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting option:', error);
@@ -59,7 +59,7 @@ export const deleteOption = async (id) => {
 export const deleteManyOptions = async (ids) => {
   try {
     // Backend expects POST with array directly
-    const response = await api.post('/options/delete-many', ids);
+    const response = await axiosInstance.post('/options/delete-many', ids);
     return response.data;
   } catch (error) {
     console.error('Error deleting options:', error);
@@ -71,23 +71,12 @@ export const deleteManyOptions = async (ids) => {
 // Search options
 export const searchOptions = async (query) => {
   try {
-    const response = await api.get('/options/search', {
+    const response = await axiosInstance.get('/options/search', {
       params: { q: query }
     });
     return response.data;
   } catch (error) {
     console.error('Error searching options:', error);
-    throw error;
-  }
-};
-
-// Get global options
-export const getGlobalOptions = async () => {
-  try {
-    const response = await api.get('/options/global');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching global options:', error);
     throw error;
   }
 };

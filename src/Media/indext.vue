@@ -73,7 +73,7 @@
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th style="width: 3%;">
+                                                <th style="width: 60px;">
                                                     <div class="checkbox">
                                                         <input
                                                             type="checkbox"
@@ -84,13 +84,13 @@
                                                         <label for="select-all"></label>
                                                     </div>
                                                 </th>
-                                                <th style="width: 5%;">ID</th>
-                                                <th style="width: 10%;">Thumbnail</th>
-                                                <th>Filename</th>
-                                                <th style="width: 8%;">Extension</th>
-                                                <th style="width: 10%;">Disk</th>
-                                                <th style="width: 10%;">Size</th>
-                                                <th style="width: 12%;">Created</th>
+                                                <th style="width: 80px;" @click="sortBy('id')">ID <i class="fa fa-sort"></i></th>
+                                                <th style="width: 120px;">Thumbnail</th>
+                                                <th style="width: 300px; max-width: 300px;" @click="sortBy('filename')">Filename <i class="fa fa-sort"></i></th>
+                                                <th style="width: 120px;" @click="sortBy('extension')">Extension <i class="fa fa-sort"></i></th>
+                                                <th style="width: 120px;" @click="sortBy('size')">Size <i class="fa fa-sort"></i></th>
+                                                <th style="width: 140px;" @click="sortBy('disk')">Disk <i class="fa fa-sort"></i></th>
+                                                <th style="width: 160px;" @click="sortBy('createdAt')">Created <i class="fa fa-sort"></i></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -188,6 +188,20 @@ export default {
         const mediaFiles = ref([]);
         const totalElements = ref(0);
         const loading = ref(false);
+        const sortField = ref('createdAt');
+        const sortOrder = ref('desc');
+
+        // Sort by field
+        const sortBy = (field) => {
+            if (sortField.value === field) {
+                sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField.value = field;
+                sortOrder.value = 'asc';
+            }
+            currentPage.value = 0;
+            loadFiles();
+        };
 
         // Load files from API
         const loadFiles = async () => {
@@ -196,7 +210,7 @@ export default {
                 const response = await searchFiles({
                     page: currentPage.value,
                     size: perPage.value,
-                    sort: 'createdAt,desc',
+                    sort: `${sortField.value},${sortOrder.value}`,
                     search: searchQuery.value
                 });
 
@@ -374,6 +388,7 @@ export default {
             visiblePages,
             loading,
             totalElements,
+            sortBy,
             toggleSelectAll,
             handleFileUpload,
             handleDrop,
@@ -390,12 +405,16 @@ export default {
 <style scoped>
 .content {
     padding: 20px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .box {
     background: #fff;
     border: 1px solid #d2d6de;
     border-radius: 3px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .m-b-0 {
@@ -488,11 +507,34 @@ export default {
 
 .index-table {
     margin-top: 20px;
+    width: 100%;
 }
 
 /* Remove horizontal scroll */
 .table-responsive {
     overflow-x: visible !important;
+    width: 100%;
+}
+
+.dt-container {
+    width: 100%;
+    max-width: 100%;
+}
+
+.dt-layout-row {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+/* Override Bootstrap column padding */
+.dt-layout-cell,
+.col-12,
+.col-sm-6 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 .data-table {
@@ -500,38 +542,97 @@ export default {
     width: 100%;
 }
 
+.table {
+    width: 100% !important;
+    margin: 0;
+}
+
+.table thead th {
+    background-color: #f5f5f5;
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 13px;
+    border-bottom: 2px solid #ddd;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.table thead th i {
+    color: #adb5bd;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.table thead th:hover {
+    background-color: #e9ecef;
+}
+
+.table thead th:first-child {
+    cursor: default;
+}
+
+.table thead th:first-child:hover {
+    background-color: #f5f5f5;
+}
+
 /* Optimized column widths */
 .table th:nth-child(1),
 .table td:nth-child(1) {
-    width: 40px;
-    padding: 10px 6px !important;
-    text-align: center;
-}
-
-.table th:nth-child(2),
-.table td:nth-child(2) {
     width: 60px;
     padding: 10px 8px !important;
     text-align: center;
 }
 
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 80px;
+    padding: 10px 10px !important;
+    text-align: center;
+}
+
 .table th:nth-child(3),
 .table td:nth-child(3) {
-    width: 90px;
-    padding: 10px 8px !important;
+    width: 120px;
+    padding: 10px 10px !important;
     text-align: center;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-    width: auto;
-    padding: 10px 12px !important;
+    width: 300px;
+    max-width: 300px;
+    padding: 10px 15px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
     width: 120px;
-    padding: 10px 8px !important;
+    padding: 10px 10px !important;
+    text-align: center;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 120px;
+    padding: 10px 10px !important;
+    text-align: center;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+    width: 140px;
+    padding: 10px 10px !important;
+    text-align: center;
+}
+
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    width: 160px;
+    padding: 10px 10px !important;
     text-align: center;
 }
 
@@ -540,8 +641,8 @@ export default {
 }
 
 .thumbnail-holder {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     margin: 0 auto;
 }
 </style>
