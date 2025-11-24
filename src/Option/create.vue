@@ -272,7 +272,7 @@
 <script>
 import { computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { getOptionById, createOption, updateOption } from '@/api/optionAPi';
+import { getOptionById, createOption, updateOption } from '@/api/optionApi.js';
 
 export default {
   name: 'OptionCreate',
@@ -303,23 +303,23 @@ export default {
   methods: {
     async loadOption() {
       if (!this.isEditMode) return;
-      
+
       this.loading = true;
       try {
         const optionId = this.$route.params.id;
         console.log('Loading option:', optionId);
-        
+
         const response = await getOptionById(optionId);
-        
+
         if (response.code === 200 && response.result) {
           const data = response.result;
-          
+
           // Populate form with loaded data
           this.form.name = data.name;
           this.form.type = data.type.toLowerCase(); // text, select
           this.form.isRequired = data.isRequired || false;
           this.form.isGlobal = data.isGlobal !== undefined ? data.isGlobal : true;
-          
+
           // Map optionValues
           this.form.optionValues = data.optionValues.map((v, index) => ({
             id: v.id || Date.now() + index,
@@ -342,7 +342,7 @@ export default {
     onTypeChange() {
       // Reset values when type changes
       this.form.optionValues = [];
-      
+
       if (this.isTextType) {
         // Add single value for text types
         this.form.optionValues.push({
@@ -371,12 +371,12 @@ export default {
         alert('Please enter option name');
         return;
       }
-      
+
       if (!this.form.type) {
         alert('Please select option type');
         return;
       }
-      
+
       if (this.form.optionValues.length === 0) {
         alert('Please add at least one value');
         return;
@@ -391,7 +391,7 @@ export default {
       try {
         // Prepare data according to API format
         const optionType = this.form.type.charAt(0).toUpperCase() + this.form.type.slice(1); // Text, Select
-        
+
         const optionData = {
           name: this.form.name,
           type: optionType,
@@ -407,11 +407,11 @@ export default {
         };
 
         console.log(this.isEditMode ? 'Updating option:' : 'Creating option:', optionData);
-        
+
         const response = this.isEditMode
           ? await updateOption(this.$route.params.id, optionData)
           : await createOption(optionData);
-        
+
         if (response.code === 200) {
           alert(`Option ${this.isEditMode ? 'updated' : 'created'} successfully!`);
           this.$router.push({ name: 'admin.options.index' });
@@ -609,16 +609,16 @@ export default {
     flex-direction: column;
     align-items: normal;
   }
-  
+
   .sidebar-column {
     margin-top: 0;
     margin-bottom: 20px;
   }
-  
+
   .input-wrapper {
     max-width: 100%;
   }
-  
+
   .accordion-tab li a {
     padding: 8px 12px;
     font-size: 14px;
@@ -631,96 +631,96 @@ export default {
     padding: 10px;
     margin-bottom: 15px;
   }
-  
+
   .content-header h3 {
     font-size: 18px;
     margin-bottom: 8px;
   }
-  
+
   .breadcrumb {
     font-size: 12px;
   }
-  
+
   .accordion-content {
     padding: 10px;
     flex-direction: column;
     align-items: normal;
   }
-  
+
   .sidebar-column {
     margin-top: 0;
     margin-bottom: 15px;
     padding-left: 15px;
     padding-right: 15px;
   }
-  
+
   .content-column {
     padding-left: 15px;
     padding-right: 15px;
   }
-  
+
   .accordion-box,
   .accordion-box-content {
     margin-bottom: 15px;
   }
-  
+
   /* Keep tabs vertical on mobile */
   .accordion-tab.nav-stacked li {
     display: block;
     width: 100%;
   }
-  
+
   .accordion-tab li a {
     padding: 8px 15px;
     font-size: 14px;
   }
-  
+
   /* Form styles for mobile */
   .form-group label.control-label {
     text-align: left !important;
     margin-bottom: 5px;
     padding-left: 15px;
   }
-  
+
   .form-group .col-xs-12 {
     padding-left: 15px;
     padding-right: 15px;
   }
-  
+
   .input-wrapper {
     max-width: 100%;
   }
-  
+
   .tab-content-title {
     font-size: 16px;
     margin-bottom: 15px;
   }
-  
+
   /* Table responsive adjustments */
   .table-responsive {
     margin-bottom: 15px;
     font-size: 13px;
   }
-  
+
   .table th,
   .table td {
     padding: 8px 5px;
   }
-  
+
   .drag-handle {
     font-size: 12px;
   }
-  
+
   .delete-row {
     padding: 3px 8px;
   }
-  
+
   /* Button styling */
   .btn {
     width: 100%;
     margin-bottom: 10px;
   }
-  
+
   #add-new-row {
     margin-top: 10px;
   }
@@ -731,25 +731,25 @@ export default {
   .content-header h3 {
     font-size: 16px;
   }
-  
+
   .breadcrumb {
     font-size: 11px;
   }
-  
+
   .accordion-tab li a {
     padding: 6px 10px;
     font-size: 13px;
   }
-  
+
   .table-responsive {
     font-size: 12px;
   }
-  
+
   .table th,
   .table td {
     padding: 5px 3px;
   }
-  
+
   .form-control {
     font-size: 14px;
   }

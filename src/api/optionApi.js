@@ -91,3 +91,4 @@ export const getGlobalOptions = async () => {
     throw error;
   }
 };
+

@@ -27,7 +27,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { getOptions, deleteOption, deleteManyOptions } from '@/api/optionApi';
+import { getOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
 
 export default {
     name: 'OptionPage',
