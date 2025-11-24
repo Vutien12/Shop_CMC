@@ -3,10 +3,10 @@
         section="general"
         :form="form"
         :errors="errors"
-        :rootCategories="rootCategories"
+        :categories="rootCategories"
         :brands="brands"
     />
-    
+
     <div class="box" v-for="(section, sectionIndex) in formLeftSections" :data-id="section" :key="sectionIndex">
         <OptionsSection
             v-if="section === 'options'"
@@ -17,7 +17,7 @@
             :defaultCurrencySymbol="defaultCurrencySymbol"
             :hasAccess="hasAccess"
         />
-        
+
         <VariationsSection
             v-if="section === 'variations'"
             :section="section"
@@ -28,7 +28,7 @@
             @generate-variants="$emit('generate-variants')"
             @choose-variation-image="$emit('choose-variation-image', $event)"
         />
-        
+
         <VariantsSection
             v-if="section === 'variants'"
             :section="section"

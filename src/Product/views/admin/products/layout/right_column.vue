@@ -8,14 +8,14 @@
             :hasAnyVariant="hasAnyVariant"
             :flatPickrConfig="flatPickrConfig"
         />
-        
+
         <InventorySection
             v-if="section === 'inventory'"
             :section="section"
             :form="form"
             :errors="errors"
         />
-        
+
         <AdditionalSection
             v-if="section === 'additional'"
             :section="section"
@@ -23,13 +23,15 @@
             :errors="errors"
             :flatPickrConfig="flatPickrConfig"
         />
-        
+
         <MediaSection
             v-if="section === 'media'"
             :section="section"
             :form="form"
             :errors="errors"
             :placeholderImage="placeholderImage"
+            @open-file-manager="$emit('open-file-manager', $event)"
+            @remove-media="$emit('remove-media', $event)"
         />
     </div>
 </template>

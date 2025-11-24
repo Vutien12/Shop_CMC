@@ -5,119 +5,150 @@
         </div>
 
         <div class="box-body">
-            <div class="form-group row">
-                <label for="name" class="col-sm-12 control-label text-left">
+            <!-- Name Field -->
+            <div class="form-group row" :class="{'has-error': errors.has('name')}">
+                <label for="name" class="col-sm-3 control-label text-left">
                     {{ trans('product::attributes.name') }}
                     <span class="text-red">*</span>
                 </label>
 
-                <div class="col-sm-12">
-                    <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        class="form-control"
-                        v-model="form.name"
-                    >
-                    <span 
-                        v-if="errors.has('name')" 
-                        class="help-block text-red"
-                        v-text="errors.get('name')"
-                    ></span>
+                <div class="col-sm-9">
+                    <div class="field-with-error-tooltip">
+                        <input
+                            type="text"
+                            name="name"
+                            id="name"
+                            class="form-control"
+                            v-model="form.name"
+                            placeholder="Enter product name"
+                        >
+                        <div v-if="errors.has('name')" class="error-tooltip">
+                            {{ errors.get('name') }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group row">
+            <!-- Description Field - Full Width -->
+            <div class="form-group row" :class="{'has-error': errors.has('description')}">
                 <label for="description" class="col-sm-12 control-label text-left">
                     {{ trans('product::attributes.description') }}
                 </label>
 
                 <div class="col-sm-12">
-                    <TinyMCEEditor
-                        v-model="form.description"
-                        :height="350"
-                        @change="handleDescriptionChange"
-                    />
-                    <span 
-                        v-if="errors.has('description')" 
-                        class="help-block text-red"
-                        v-text="errors.get('description')"
-                    ></span>
+                    <div class="field-with-error-tooltip">
+                        <TinyMCEEditor
+                            v-model="form.description"
+                            :height="400"
+                            @change="handleDescriptionChange"
+                        />
+                        <div v-if="errors.has('description')" class="error-tooltip">
+                            {{ errors.get('description') }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group row">
-                <label for="brand-id" class="col-sm-12 control-label text-left">
+            <!-- Brand Field -->
+            <div class="form-group row" :class="{'has-error': errors.has('brand_id')}">
+                <label for="brand-id" class="col-sm-2 control-label text-left">
                     {{ trans('product::attributes.brand_id') }}
                     <span class="text-red">*</span>
                 </label>
-                <div class="col-sm-6">
-                    <select 
-                        name="brand_id" 
-                        id="brand-id" 
-                        class="form-control custom-select-black"
-                        v-model="form.brand_id"
-                    >
-                        <option value="">{{ trans('admin::admin.form.please_select') }}</option>
-                        <option 
-                            v-for="brand in brands" 
-                            :key="brand.id" 
-                            :value="brand.id"
+                <div class="col-sm-4">
+                    <div class="field-with-error-tooltip">
+                        <select
+                            name="brand_id"
+                            id="brand-id"
+                            class="form-control custom-select-black"
+                            v-model="form.brand_id"
                         >
-                            {{ brand.name }}
-                        </option>
-                    </select>
-                    <span 
-                        v-if="errors.has('brand_id')" 
-                        class="help-block text-red"
-                        v-text="errors.get('brand_id')"
-                    ></span>
+                            <option value="">{{ trans('admin::admin.form.please_select') }}</option>
+                            <option
+                                v-for="brand in brands"
+                                :key="brand.id"
+                                :value="brand.id"
+                            >
+                                {{ brand.name }}
+                            </option>
+                        </select>
+                        <div v-if="errors.has('brand_id')" class="error-tooltip">
+                            {{ errors.get('brand_id') }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Categories & Status Row -->
             <div class="form-group row">
-                <label for="categories" class="col-sm-12 control-label text-left">
-                    {{ trans('product::attributes.categories') }}
-                    <span class="text-red">*</span>
-                </label>
+                <!-- Categories Field - Left Side -->
+                <div class="col-sm-6" :class="{'has-error': errors.has('categories')}">
+                    <label for="categories" class="control-label text-left">
+                        {{ trans('product::attributes.categories') }}
+                        <span class="text-red">*</span>
+                    </label>
 
-                <div class="col-sm-6">
-                    <select 
-                        name="category_id" 
-                        id="category-id" 
-                        class="form-control custom-select-black"
-                        v-model="form.category_id"
-                    >
-                        <option value="">{{ trans('admin::admin.form.please_select') }}</option>
-                        <option 
-                            v-for="category in rootCategories" 
-                            :key="category.id" 
-                            :value="category.id"
+                    <div class="field-with-error-tooltip">
+                        <!-- Selected categories as tags -->
+                        <div class="selected-categories-tags">
+                            <div
+                                v-for="catId in form.categories"
+                                :key="catId"
+                                class="category-tag"
+                            >
+                                <span>{{ getCategoryName(catId) }}</span>
+                                <button
+                                    type="button"
+                                    @click="removeCategory(catId)"
+                                    class="btn-remove-tag"
+                                    title="Remove"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Simple Multi-select dropdown -->
+                        <select
+                            multiple
+                            name="categories"
+                            id="categories"
+                            class="form-control categories-select"
+                            @change="handleCategoriesChange"
+                            size="8"
+                            style="width: 100%;"
                         >
-                            {{ category.name }}
-                        </option>
-                    </select>
-                    <span 
-                        v-if="errors.has('category_id')" 
-                        class="help-block text-red"
-                        v-text="errors.get('category_id')"
-                    ></span>
+                            <option
+                                v-for="category in getCategoryTree()"
+                                :key="category.id"
+                                :value="category.id"
+                            >
+                                {{ getIndent(category.level) }} {{ category.name }}
+                            </option>
+                        </select>
+                        <div v-if="errors.has('categories')" class="error-tooltip">
+                            {{ errors.get('categories') }}
+                        </div>
+                    </div>
+                    <small class="form-text text-muted d-block mt-2">
+                        Hold <strong>Ctrl</strong> (Windows) or <strong>Cmd</strong> (Mac) + Click to select multiple categories
+                    </small>
                 </div>
-            </div>
 
-            <div class="form-group row">
-                <label for="is-active" class="col-sm-12 control-label text-left">
-                    {{ trans('product::attributes.is_active') }}
-                    <span class="text-red">*</span>
-                </label>
+                <!-- Status Field - Right Side -->
+                <div class="col-sm-6" :class="{'has-error': errors.has('is_active')}">
+                    <label for="is-active" class="control-label text-left">
+                        {{ trans('product::attributes.is_active') }}
+                        <span class="text-red">*</span>
+                    </label>
 
-                <div class="col-sm-9">
-                    <div class="switch">
-                        <input 
-                            type="checkbox" 
-                            name="is_active" 
-                            id="is-active" 
-                            v-model="form.is_active"
+                    <div class="switch" style="padding-top: 5px;">
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            id="is-active"
+                            :checked="form.is_active === 1"
+                            @change="(e) => form.is_active = e.target.checked ? 1 : 0"
                         >
 
                         <label for="is-active">
@@ -167,9 +198,34 @@ export default {
             default: () => [],
         },
     },
+    data() {
+        return {
+            // No need for selectizeInstance with native select
+        };
+    },
+    mounted() {
+        // No Selectize initialization needed - using native select
+    },
+    watch: {
+        'form.categories': {
+            handler(newVal) {
+                // Ensure categories is always an array
+                if (!Array.isArray(newVal)) {
+                    this.$emit('update:form', {
+                        ...this.form,
+                        categories: Array.isArray(newVal) ? newVal : []
+                    });
+                }
+            },
+            deep: true
+        }
+    },
     computed: {
         rootCategories() {
-            return this.categories.filter(cat => cat.parent_id === null);
+            // Filter categories - show all categories that have parentId (not null)
+            // Since the structure is: Electronics (parentId=null) -> Smartphones, Laptops, etc (parentId=1)
+            // We want to show the child categories for selection
+            return this.categories.filter(cat => cat.parentId !== null);
         },
     },
     methods: {
@@ -208,7 +264,206 @@ export default {
             if (this.errors.has('description')) {
                 this.errors.clear('description');
             }
+        },
+        getCategoryTree() {
+            // Build flattened tree with level info for indentation
+            const tree = [];
+            const buildTree = (categories, level = 0) => {
+                categories.forEach(category => {
+                    tree.push({
+                        id: category.id,
+                        name: category.name,
+                        parentId: category.parentId,
+                        level: level
+                    });
+
+                    // Find children
+                    const children = this.categories.filter(c => c.parentId === category.id);
+                    if (children.length > 0) {
+                        buildTree(children, level + 1);
+                    }
+                });
+            };
+
+            // Start with root categories (parentId = null)
+            const rootCategories = this.categories.filter(c => c.parentId === null);
+            buildTree(rootCategories);
+
+            return tree;
+        },
+        getIndent(level) {
+            // Create indentation using pipe symbols like FleetCart: ¦–– ¦–– Category
+            if (level === 0) return '';
+            return '¦–– '.repeat(level);
+        },
+        getCategoryName(categoryId) {
+            // Get category name by ID
+            const categoryTree = this.getCategoryTree();
+            const found = categoryTree.find(c => c.id === categoryId);
+            return found ? found.name : '';
+        },
+        removeCategory(categoryId) {
+            // Remove category from selected list
+            const index = this.form.categories.indexOf(categoryId);
+            if (index > -1) {
+                this.form.categories.splice(index, 1);
+            }
+        },
+        handleCategoriesChange(event) {
+            // Handle multiple select change
+            const selectedOptions = Array.from(event.target.selectedOptions, option => {
+                // Convert to number if it's numeric
+                const val = option.value;
+                return isNaN(val) ? val : parseInt(val);
+            });
+            this.form.categories = selectedOptions;
         }
     },
 };
 </script>
+
+<style scoped>
+/* Styling cho form-group khi có error */
+.form-group.has-error {
+    margin-bottom: 15px;
+}
+
+.form-group.has-error .form-control,
+.form-group.has-error .custom-select-black {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5;
+}
+
+.form-group.has-error .form-control:focus,
+.form-group.has-error .custom-select-black:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.text-red {
+    color: #dc3545;
+}
+
+.form-control,
+.custom-select-black {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:hover:not(.has-error),
+.custom-select-black:hover:not(.has-error) {
+    border-color: #ced4da;
+}
+
+/* Error Tooltip Styling */
+.field-with-error-tooltip {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    overflow: visible !important;
+}
+
+.error-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: normal;
+    max-width: 250px;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Mũi tên tooltip */
+.error-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 10px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #dc3545;
+}
+
+/* Hiển thị tooltip khi hover vào wrapper hoặc input bên trong */
+.field-with-error-tooltip:hover > .error-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Select/Dropdown improvements */
+#categories {
+    border-top: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+/* Selected Categories Tags */
+.selected-categories-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    min-height: 40px;
+    align-items: center;
+}
+
+.category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #007bff;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    animation: slideIn 0.2s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.btn-remove-tag {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    font-weight: bold;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.btn-remove-tag:hover {
+    opacity: 0.8;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.categories-select {
+    border-radius: 0 0 4px 4px;
+}
+</style>

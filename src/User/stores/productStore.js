@@ -38,10 +38,12 @@ export const useProductStore = defineStore('product', () => {
     isLoadingCategories.value = true;
     try {
       const res = await getCategories();
-      if (res.data.code !== 200) throw new Error(res.data.message);
+      console.log('Categories API response:', res);
+      if (res.code !== 200) throw new Error(res.message);
 
-      const tree = buildCategoryTree(res.data.result || []);
+      const tree = buildCategoryTree(res.result || []);
       categories.value.splice(0, categories.value.length, ...tree);
+      console.log('Categories loaded:', categories.value.length);
     } catch (error) {
       console.error('Lỗi tải danh mục:', error);
     } finally {
@@ -69,10 +71,10 @@ export const useProductStore = defineStore('product', () => {
       if (priceRange.value[1] < 100000000) params.maxPrice = priceRange.value[1];
 
       const res = await searchProducts(params);
-      console.log('Products API response:', res.data);
-      if (res.data.code !== 200) throw new Error(res.data.message);
+      console.log('Products API response:', res);
+      if (res.code !== 200) throw new Error(res.message);
 
-      const data = res.data.result;
+      const data = res.result;
       const today = new Date().toISOString().split('T')[0];
 
       const mapped = data.content.map(p => {

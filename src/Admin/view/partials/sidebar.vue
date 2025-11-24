@@ -148,7 +148,6 @@
 </template>
 
 <script>
-import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -176,16 +175,22 @@ export default {
 
     const activeMenu = (item, subItem = '') => {
       const routeName = route.name || '';
-      
+
+      // Nếu có subItem (như 'create'), check chính xác cả item và subItem
       if (subItem) {
         return routeName.includes(item) && routeName.includes(subItem) ? 'active' : '';
       }
-      
+
+      // Nếu là dashboard, check chính xác
       if (item === 'dashboard') {
         return routeName === 'admin.dashboard' ? 'active' : '';
       }
-      
-      return routeName.includes(item) ? 'active' : '';
+
+      // Với item khác (như 'products'), chỉ active khi là index route
+      // Không active khi là create/edit để tránh conflict
+      const isIndexRoute = routeName === `admin.${item}.index` || routeName === `admin.${item}`;
+
+      return isIndexRoute ? 'active' : '';
     };
 
     const toggleMenu = (menu) => {

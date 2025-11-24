@@ -35,31 +35,14 @@
 
                         <div class="media-grid-item media-picker" id="media-picker" v-show="showMediaPicker">
                             <div class="image-holder">
-                                <input 
-                                    v-if="product.thumbnail" 
-                                    type="hidden" 
-                                    name="thumbnail" 
-                                    :value="product.thumbnail"
+                                <button
+                                    type="button"
+                                    class="btn-add-media"
+                                    @click="openFileManager"
                                 >
-
-                                <img
-                                    :src="placeholderImage"
-                                    class="placeholder-image"
-                                    alt="Placeholder"
-                                    id="placeholder-image"
-                                    style="cursor: pointer;"
-                                    @click="triggerFileInput"
-                                >
-                                <input 
-                                    type="file" 
-                                    name="thumbnail" 
-                                    id="thumbnail" 
-                                    class="form-control" 
-                                    style="display: none;"
-                                    @change="handleFileChange"
-                                    ref="fileInput"
-                                    accept="image/*"
-                                >
+                                    <i class="fa fa-plus"></i>
+                                    <span>Add Image</span>
+                                </button>
                             </div>
                         </div>
                     </draggable>
@@ -141,47 +124,117 @@ export default {
 
             return typeof result === 'string' ? result : key;
         },
-        
+
         preventLastSlideDrag() {
             // Prevent dragging the media picker
             return true;
         },
 
         removeMedia(index) {
-            this.form.media.splice(index, 1);
-            this.showMediaPicker = true;
-            
-            // Clear file input
-            if (this.$refs.fileInput) {
-                this.$refs.fileInput.value = '';
-            }
+            this.$emit('remove-media', index);
         },
 
-        triggerFileInput() {
-            this.$refs.fileInput.click();
-        },
-
-        handleFileChange(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                const imagePath = e.target.result;
-
-                // Thêm ảnh mới vào đầu danh sách
-                this.form.media.unshift({
-                    path: imagePath,
-                    file: file,
-                    isNew: true,
-                });
-
-                this.showMediaPicker = false;
-            };
-
-            reader.readAsDataURL(file);
+        openFileManager() {
+            this.$emit('open-file-manager', 'gallery');
         },
     },
 };
 </script>
+
+<style scoped>
+/* Media Grid Layout */
+.product-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.media-grid-item {
+    position: relative;
+    aspect-ratio: 1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.media-grid-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-holder {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.image-holder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.btn.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 0;
+}
+
+.media-grid-item:hover .btn.remove-image {
+    opacity: 1;
+}
+
+.btn.remove-image:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-add-media {
+    background: none;
+    border: 2px dashed #ddd;
+    width: 100%;
+    height: 100%;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #999;
+}
+
+.btn-add-media:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.btn-add-media i {
+    font-size: 24px;
+}
+
+.btn-add-media span {
+    font-size: 14px;
+}
+</style>

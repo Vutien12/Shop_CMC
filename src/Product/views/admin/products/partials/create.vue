@@ -18,7 +18,7 @@
 
         <form class="product-form" @submit.prevent="handleSubmit">
             <input type="hidden" name="redirect_after_save" v-model="redirectAfterSave">
-            
+
             <div class="row">
                 <div class="product-form-left-column col-lg-8 col-md-12">
                     <LeftColumn
@@ -51,6 +51,8 @@
                         :hasAnyVariant="hasAnyVariant"
                         :flatPickrConfig="flatPickrConfig"
                         :placeholderImage="placeholderImage"
+                        @open-file-manager="openFileManager"
+                        @remove-media="removeGalleryImage"
                     />
                 </div>
             </div>
@@ -64,20 +66,37 @@
                 </button>
             </div>
         </form>
+
+        <!-- File Manager Modal -->
+        <SelectImage
+            v-if="isFileManagerOpen"
+            :isOpen="isFileManagerOpen"
+            @close="closeFileManager"
+            @select="handleImageSelect"
+        />
     </div>
 </template>
 
 <script>
 import LeftColumn from '../layout/left_column.vue';
 import RightColumn from '../layout/right_column.vue';
+import SelectImage from '@/Media/SelectImage.vue';
 import products from '@/Product/lang/en/products.json';
 import admin from '@/Admin/lang/en/admin.json';
+import {
+    createProduct,
+    getBrands,
+    getCategories,
+    getGlobalVariations,
+    getGlobalOptions
+} from '@/api';
 
 export default {
     name: 'ProductCreate',
     components: {
         LeftColumn,
         RightColumn,
+        SelectImage,
     },
     data() {
         return {
@@ -138,10 +157,30 @@ export default {
                 dateFormat: 'Y-m-d',
             },
             placeholderImage: '/assets/placeholder_image.png',
+            isFileManagerOpen: false,
+            currentImageTarget: null, // 'thumbnail' or 'gallery'
         };
     },
     mounted() {
         this.loadInitialData();
+    },
+    watch: {
+        'form.price'(newPrice) {
+            // Auto-update variant price khi user thay đổi giá (chỉ cho simple product - không có variations)
+            if (this.form.variations.length === 0 && this.form.variants.length > 0) {
+                this.form.variants.forEach(variant => {
+                    variant.price = parseFloat(newPrice) || 0;
+                });
+            }
+        },
+        'form.special_price'(newSpecialPrice) {
+            // Auto-update variant special price
+            if (this.form.variations.length === 0 && this.form.variants.length > 0) {
+                this.form.variants.forEach(variant => {
+                    variant.special_price = newSpecialPrice ? parseFloat(newSpecialPrice) : '';
+                });
+            }
+        }
     },
     methods: {
         trans(key, params = {}) {
@@ -182,9 +221,36 @@ export default {
         },
 
         async loadInitialData() {
-            // Load categories, brands, and global variations
-            // This would typically be an API call
-            // For now, initialize with empty arrays
+            try {
+                // Load brands, categories, global variations và global options từ API
+                const [brandsRes, categoriesRes, variationsRes, optionsRes] = await Promise.all([
+                    getBrands(),
+                    getCategories(),
+                    getGlobalVariations(),
+                    getGlobalOptions()
+                ]);
+
+                this.brands = brandsRes.result || [];
+
+                // Get all categories - filtering will be done in GeneralSection component
+                this.rootCategories = categoriesRes.result || [];
+
+                this.globalVariations = variationsRes.result || [];
+                this.globalOptions = optionsRes.result || [];
+
+                console.log('Loaded initial data:', {
+                    brands: this.brands.length,
+                    categories: this.rootCategories.length,
+                    variations: this.globalVariations.length,
+                    options: this.globalOptions.length
+                });
+
+                // Generate default variant for simple product (no variations)
+                this.generateVariants();
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                // Có thể show notification lỗi cho user
+            }
         },
 
         save() {
@@ -199,51 +265,312 @@ export default {
 
         async handleSubmit() {
             try {
-                // Submit form data to API
-                // const response = await axios.post('/admin/products', this.form);
-                
-                console.log('Form submitted:', this.form);
-                console.log('Redirect after save:', this.redirectAfterSave);
-                
+                // Ensure variants are generated (especially for simple products without variations)
+                if (this.form.variants.length === 0) {
+                    this.generateVariants();
+                }
+
+                // Transform form data sang format API backend yêu cầu
+                const productData = this.transformFormData();
+
+                console.log('Submitting product data:', productData);
+
+                // Gọi API tạo sản phẩm
+                const response = await createProduct(productData);
+
+                console.log('Product created successfully:', response);
+
                 // Handle success
                 if (this.redirectAfterSave === '1') {
                     // Redirect to products list
                     this.$router.push({ name: 'admin.products.index' });
                 } else {
-                    // Stay on page or redirect to edit
-                    // this.$router.push({ name: 'admin.products.edit', params: { id: response.data.id } });
+                    // Redirect to edit page của product vừa tạo
+                    const productId = response.result?.id;
+                    if (productId) {
+                        this.$router.push({ name: 'admin.products.edit', params: { id: productId } });
+                    }
                 }
             } catch (error) {
-                // Handle validation errors
-                if (error.response && error.response.data.errors) {
-                    this.errors.errors = error.response.data.errors;
+                console.error('Error creating product:', error);
+
+                // Handle validation errors từ API response
+                if (error.response && error.response.data) {
+                    const errorData = error.response.data;
+
+                    // API có thể trả về errors ở 3 nơi khác nhau:
+                    // 1. errors object (traditional Laravel validation)
+                    // 2. result object (nested validation errors)
+                    // 3. message string (general error)
+
+                    let validationErrors = {};
+
+                    // Case 1: errors object trực tiếp
+                    if (errorData.errors && typeof errorData.errors === 'object') {
+                        validationErrors = errorData.errors;
+                    }
+                    // Case 2: result object chứa validation errors
+                    else if (errorData.result && typeof errorData.result === 'object') {
+                        validationErrors = errorData.result;
+                    }
+
+                    // Map errors vào errors object để hiển thị trên form
+                    if (Object.keys(validationErrors).length > 0) {
+                        this.errors.errors = {};
+
+                        // Map camelCase API field names sang snake_case form field names
+                        const fieldNameMap = {
+                            'brandId': 'brand_id',
+                            'categoryIds': 'categories',
+                            'shortDescription': 'short_description',
+                            'manageStock': 'manage_stock',
+                            'inStock': 'in_stock',
+                            'isActive': 'is_active',
+                            'specialPrice': 'special_price',
+                            'specialPriceType': 'special_price_type',
+                            'specialPriceStart': 'special_price_start',
+                            'specialPriceEnd': 'special_price_end',
+                        };
+
+                        Object.keys(validationErrors).forEach(key => {
+                            const errorMsg = validationErrors[key];
+                            // Convert camelCase API field name to snake_case form field name
+                            const formFieldName = fieldNameMap[key] || key;
+                            this.errors.errors[formFieldName] = Array.isArray(errorMsg) ? errorMsg : [errorMsg];
+                        });
+                        console.log('Validation errors mapped:', this.errors.errors);
+                    } else if (errorData.message) {
+                        alert('Error: ' + errorData.message);
+                    }
+                } else {
+                    alert('Error creating product: ' + error.message);
                 }
             }
+        },
+
+        transformFormData() {
+            // Calculate selling price
+            const calculateSellingPrice = (price, specialPrice, specialPriceType) => {
+                const basePrice = parseFloat(price) || 0;
+                const discount = parseFloat(specialPrice) || 0;
+
+                if (!discount || discount === 0) {
+                    // Không có giảm giá → sellingPrice = price
+                    return basePrice;
+                }
+
+                if (specialPriceType === 'percent') {
+                    // Giảm theo phần trăm
+                    return basePrice - (basePrice * discount / 100);
+                } else {
+                    // Giảm cố định (fixed)
+                    return basePrice - discount;
+                }
+            };
+
+            const price = this.form.price ? parseFloat(this.form.price) : null;
+            const sellingPrice = calculateSellingPrice(
+                this.form.price,
+                this.form.special_price,
+                this.form.special_price_type
+            );
+
+            // Transform form data từ format Vue sang format API backend
+            return {
+                name: this.form.name || '',
+                slug: this.form.slug || '',
+                thumbnail: this.form.media && this.form.media.length > 0 ? this.form.media[0].path : null,
+                brandId: this.form.brand_id ? parseInt(this.form.brand_id) : null,
+                description: this.form.description || '',
+                shortDescription: this.form.short_description || '',
+                sku: this.form.sku || '',
+                manageStock: this.form.manage_stock === 1,
+                qty: this.form.qty ? parseInt(this.form.qty) : 0,
+                inStock: this.form.in_stock === 1,
+                isActive: this.form.is_active === 1,
+                categoryIds: this.form.categories || [],
+
+                // Transform variations
+                variations: this.transformVariations(),
+
+                // Transform variants
+                variants: this.transformVariants(),
+
+                // Transform options
+                options: this.transformOptions(),
+
+                // Meta data
+                meta: this.form.meta || {},
+
+                // Price info (nếu không có variants)
+                price: price,
+                sellingPrice: sellingPrice,
+            };
+        },
+
+        transformVariations() {
+            // Transform variations từ format Vue sang format API
+            return this.form.variations.map(variation => {
+                const variationType = variation.type?.toLowerCase();
+
+                const transformed = {
+                    name: variation.name,
+                    type: variation.type?.toUpperCase() || 'TEXT', // API expect uppercase: COLOR, TEXT, IMAGE
+                    isGlobal: variation.isGlobal || false,
+                    variationValues: (variation.values || []).map(value => {
+                        const valueData = {
+                            label: value.label
+                        };
+
+                        // Map value dựa theo type
+                        if (variationType === 'color') {
+                            valueData.value = value.color || value.value || '#000000';
+                        } else if (variationType === 'image') {
+                            valueData.value = value.image?.path || value.value || '';
+                        } else {
+                            valueData.value = value.value || value.label || '';
+                        }
+
+                        return valueData;
+                    })
+                };
+
+                // Nếu có id (từ global), thêm vào
+                if (variation.id) {
+                    transformed.id = variation.id;
+                }
+
+                return transformed;
+            });
+        },
+
+        transformVariants() {
+            // Calculate selling price for variant
+            const calculateSellingPrice = (price, specialPrice, specialPriceType) => {
+                const basePrice = parseFloat(price) || 0;
+                const discount = parseFloat(specialPrice) || 0;
+
+                if (!discount || discount === 0) {
+                    // Không có giảm giá → sellingPrice = price
+                    return basePrice;
+                }
+
+                if (specialPriceType === 'percent') {
+                    // Giảm theo phần trăm
+                    return basePrice - (basePrice * discount / 100);
+                } else {
+                    // Giảm cố định (fixed)
+                    return basePrice - discount;
+                }
+            };
+
+            // Transform variants từ format Vue sang format API
+            return this.form.variants.map(variant => {
+                const price = parseFloat(variant.price) || 0;
+                const sellingPrice = calculateSellingPrice(
+                    variant.price,
+                    variant.special_price,
+                    variant.special_price_type || 'fixed'
+                );
+
+                return {
+                    sku: variant.sku || '',
+                    price: price,
+                    sellingPrice: sellingPrice,
+                    manageStock: variant.manage_stock === 1,
+                    qty: variant.qty ? parseInt(variant.qty) : 0,
+                    inStock: variant.in_stock === 1,
+                    isActive: variant.is_active === 1,
+                    isDefault: variant.is_default || false,
+                    media: variant.media || []
+                };
+            });
+        },
+
+        transformOptions() {
+            // Map option type từ UI format sang API format
+            const mapOptionTypeToAPI = (uiType) => {
+                const typeMap = {
+                    'dropdown': 'SELECT',
+                    'field': 'TEXT',
+                    'textarea': 'TEXTAREA',
+                    'checkbox': 'CHECKBOX',
+                    'radio': 'RADIO',
+                    'multiple_select': 'MULTIPLE_SELECT',
+                    'date': 'DATE',
+                    'datetime': 'DATETIME',
+                    'time': 'TIME'
+                };
+                return typeMap[uiType?.toLowerCase()] || 'TEXT';
+            };
+
+            // Transform options từ format Vue sang format API
+            return this.form.options.map(option => {
+                const transformed = {
+                    name: option.name,
+                    type: mapOptionTypeToAPI(option.type), // Map từ UI format (dropdown) sang API format (SELECT)
+                    isRequired: option.is_required || false,
+                    isGlobal: option.isGlobal || false,
+                    optionValues: (option.values || []).map(value => ({
+                        label: value.label,
+                        price: value.price ? parseFloat(value.price) : 0,
+                        priceType: (value.price_type || 'fixed').toUpperCase() // API expect uppercase: FIXED, PERCENT
+                    }))
+                };
+
+                // Nếu có id (từ global), thêm vào
+                if (option.id) {
+                    transformed.id = option.id;
+                }
+
+                return transformed;
+            });
         },
 
         generateVariants() {
             // Generate product variants from variations
             const variations = this.form.variations.filter(v => v.name && v.type && v.values.length > 0);
-            
+
             if (variations.length === 0) {
-                this.form.variants = [];
-                this.hasAnyVariant = false;
+                // Nếu không có variations, tạo 1 variant mặc định (simple product)
+                const defaultUid = this.generateUid();
+                this.form.variants = [{
+                    uid: defaultUid,
+                    name: this.form.name || 'Default',
+                    price: parseFloat(this.form.price) || 0,
+                    special_price: this.form.special_price ? parseFloat(this.form.special_price) : '',
+                    special_price_type: 'fixed',
+                    special_price_start: '',
+                    special_price_end: '',
+                    sku: this.form.sku || '',
+                    manage_stock: this.form.manage_stock || 0,
+                    qty: parseInt(this.form.qty) || 0,
+                    in_stock: this.form.in_stock !== undefined ? this.form.in_stock : 1,
+                    is_active: this.form.is_active !== undefined ? this.form.is_active : 1,
+                    is_default: true,
+                    is_selected: true,
+                    is_open: false,
+                    media: [],
+                    position: 0,
+                }];
+                this.hasAnyVariant = false; // Simple product không có variant trong UI
+                this.defaultVariantUid = defaultUid;
                 return;
             }
 
             // Generate combinations of variation values
             const combinations = this.generateCombinations(variations);
-            
+
             // Create or update variants
             const existingVariants = this.form.variants;
             this.form.variants = combinations.map(combo => {
                 const uid = this.generateVariantUid(combo);
                 const existing = existingVariants.find(v => v.uid === uid);
-                
+
                 return existing || {
                     uid: uid,
                     name: combo.map(c => c.label).join(' / '),
-                    price: this.form.price || 0,
+                    price: parseFloat(this.form.price) || 0,
                     special_price: '',
                     special_price_type: 'fixed',
                     special_price_start: '',
@@ -262,7 +589,7 @@ export default {
             });
 
             this.hasAnyVariant = this.form.variants.length > 0;
-            
+
             // Set first variant as default if none selected
             if (this.hasAnyVariant && !this.defaultVariantUid) {
                 this.defaultVariantUid = this.form.variants[0].uid;
@@ -273,21 +600,26 @@ export default {
         generateCombinations(variations) {
             if (variations.length === 0) return [];
             if (variations.length === 1) return variations[0].values.map(v => [v]);
-            
+
             const result = [];
             const restCombinations = this.generateCombinations(variations.slice(1));
-            
+
             variations[0].values.forEach(value => {
                 restCombinations.forEach(combo => {
                     result.push([value, ...combo]);
                 });
             });
-            
+
             return result;
         },
 
         generateVariantUid(combination) {
             return combination.map(c => c.uid).join('-');
+        },
+
+        generateUid() {
+            // Generate unique ID for form elements
+            return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         },
 
         chooseVariationImage(data) {
@@ -312,6 +644,43 @@ export default {
         addVariantMedia(variantIndex) {
             // Handle adding media to variant
             console.log('Add variant media:', variantIndex);
+        },
+
+        // File Manager Methods
+        openFileManager(target = 'thumbnail') {
+            this.currentImageTarget = target;
+            this.isFileManagerOpen = true;
+        },
+
+        closeFileManager() {
+            this.isFileManagerOpen = false;
+            this.currentImageTarget = null;
+        },
+
+        handleImageSelect(media) {
+            if (this.currentImageTarget === 'thumbnail') {
+                // Set thumbnail
+                this.form.thumbnail = media.path;
+            } else if (this.currentImageTarget === 'gallery') {
+                // Add to gallery
+                if (!this.form.media) {
+                    this.form.media = [];
+                }
+                this.form.media.push({
+                    id: media.id,
+                    path: media.path,
+                    filename: media.filename
+                });
+            }
+            this.closeFileManager();
+        },
+
+        removeThumbnail() {
+            this.form.thumbnail = null;
+        },
+
+        removeGalleryImage(index) {
+            this.form.media.splice(index, 1);
         },
     },
 };

@@ -7916,8 +7916,11 @@ strong {
 .treeview-menu > li:last-child > a {
   border-bottom-right-radius: 3px;
 }
-.treeview-menu > li.active > a,
-.treeview-menu > li > a:hover {
+.treeview-menu > li.active > a {
+  color: rgb(183.4340101523, 199.3375634518, 206.0659898477);
+  font-weight: 600;
+}
+.treeview-menu > li:not(.active) > a:hover {
   color: rgb(183.4340101523, 199.3375634518, 206.0659898477);
   font-weight: 600;
 }

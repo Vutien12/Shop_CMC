@@ -273,8 +273,8 @@
                     {{ trans('product::products.variations.add_variation') }}
                 </button>
                 <div class="insert-template">
-                    <select 
-                        class="form-control custom-select-black" 
+                    <select
+                        class="form-control custom-select-black"
                         v-model="globalVariationId"
                         style="width: 150px; margin-right: 20px;"
                     >
@@ -282,8 +282,8 @@
                             {{ trans('product::products.form.variations.select_template') }}
                         </option>
 
-                        <option 
-                            v-for="variation in globalVariations" 
+                        <option
+                            v-for="variation in globalVariations"
                             :key="variation.id"
                             :value="variation.id"
                         >
@@ -381,7 +381,7 @@ export default {
 
         toggleAccordions({ selector, state, data }) {
             this.isCollapsedVariationsAccordion = !state;
-            
+
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
                     item.is_open = this.isCollapsedVariationsAccordion;
@@ -431,10 +431,10 @@ export default {
 
         changeVariationType(type, index, uid) {
             const variation = this.form.variations[index];
-            
+
             // Clear existing values when changing type
             variation.values = [];
-            
+
             // Add initial row for new type
             this.addVariationRow(index, uid);
         },
@@ -442,7 +442,7 @@ export default {
         addVariationRow(index, uid) {
             const valueUid = this.generateUid();
             const variation = this.form.variations[index];
-            
+
             const newValue = {
                 uid: valueUid,
                 label: '',
@@ -460,11 +460,11 @@ export default {
 
         addVariationRowOnPressEnter(event, index, valueIndex) {
             const variation = this.form.variations[index];
-            
+
             // Check if this is the last row
             if (valueIndex === variation.values.length - 1) {
                 this.addVariationRow(index, variation.uid);
-                
+
                 // Focus on the new row's label input
                 this.$nextTick(() => {
                     const newValueUid = variation.values[variation.values.length - 1].uid;
@@ -496,28 +496,40 @@ export default {
 
             // Find the selected global variation from the prop
             const selectedVariation = this.globalVariations.find(
-                v => v.id === this.globalVariationId
+                v => v.id === parseInt(this.globalVariationId)
             );
 
             if (!selectedVariation) return;
 
             const uid = this.generateUid();
+
+            // API trả về variationValues, không phải values
+            const variationValues = selectedVariation.variationValues || selectedVariation.values || [];
+
             const newVariation = {
                 uid: uid,
+                id: selectedVariation.id, // Lưu id để biết đây là global variation
                 name: selectedVariation.name,
-                type: selectedVariation.type,
-                values: selectedVariation.values.map((value, index) => {
+                type: selectedVariation.type?.toLowerCase() || '', // API có thể trả về "Text", "Color", cần lowercase
+                isGlobal: true, // Đánh dấu đây là global variation
+                values: variationValues.map((value, index) => {
                     const valueUid = this.generateUid();
                     const newValue = {
                         uid: valueUid,
+                        id: value.id, // Lưu id của variation value
                         label: value.label,
                         position: index,
                     };
 
-                    if (selectedVariation.type === 'color') {
-                        newValue.color = value.color || '#000000';
-                    } else if (selectedVariation.type === 'image') {
-                        newValue.image = value.image || { id: null, path: '' };
+                    // Map theo type của variation
+                    const variationType = selectedVariation.type?.toLowerCase();
+                    if (variationType === 'color') {
+                        newValue.color = value.value || value.color || '#000000'; // API có thể dùng "value" thay vì "color"
+                    } else if (variationType === 'image') {
+                        newValue.image = value.image || { id: null, path: value.value || '' };
+                    } else {
+                        // For text or other types, store value
+                        newValue.value = value.value || '';
                     }
 
                     return newValue;

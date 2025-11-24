@@ -1,4 +1,4 @@
-<template>
+z<template>
     <div v-if="section === 'options'">
         <div class="box-header">
             <h5>{{ trans('product::products.group.options') }}</h5>
@@ -50,7 +50,9 @@
                     <div class="panel panel-default option">
                         <div class="panel-heading" @click.stop="toggleAccordion($event, option)">
                             <h4 class="panel-title">
-                                <div
+                                <button
+                                    type="button"
+                                    class="btn-accordion"
                                     :aria-expanded="option.is_open"
                                     data-toggle="collapse"
                                     data-transition="false"
@@ -62,22 +64,23 @@
                                         })
                                     }"
                                 >
-                                    <div>
+                                    <div class="option-header-content">
                                         <span class="drag-handle">
                                             <i class="fa">&#xf142;</i>
                                             <i class="fa">&#xf142;</i>
                                         </span>
-
-                                        <span>{{ option.name || trans('product::products.options.new_option') }}</span>
+                                        <span class="option-name">{{ option.name || trans('product::products.options.new_option') }}</span>
                                     </div>
 
-                                    <span
-                                        class="delete-option"
-                                        @click.stop="deleteOption(index, option.uid)"
+                                    <button
+                                        type="button"
+                                        class="btn-delete-option"
+                                        @click.stop="deleteOption(index)"
+                                        title="Delete option"
                                     >
                                         <i class="fa fa-trash"></i>
-                                    </span>
-                                </div>
+                                    </button>
+                                </button>
                             </h4>
                         </div>
 
@@ -85,8 +88,8 @@
                             <div class="panel-body">
                                 <div class="new-option">
                                     <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="form-group row">
+                                        <div class="col-sm-5">
+                                            <div class="form-group">
                                                 <label :for="`options-${option.uid}-name`">
                                                     {{ trans('product::products.form.options.name') }}
                                                     <span v-if="option.name || option.type" class="text-red">*</span>
@@ -98,6 +101,7 @@
                                                     class="form-control option-name-field"
                                                     :id="`options-${option.uid}-name`"
                                                     v-model="option.name"
+                                                    placeholder="Option name"
                                                 >
 
                                                 <span
@@ -109,8 +113,8 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-sm-3">
-                                            <div class="form-group row">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
                                                 <label :for="`options-${option.uid}-type`">
                                                     {{ trans('product::products.form.options.type') }}
                                                     <span v-if="option.name || option.type" class="text-red">*</span>
@@ -123,10 +127,7 @@
                                                     @change="changeOptionType(index, option.uid)"
                                                     v-model="option.type"
                                                 >
-                                                    <option value="">
-                                                        {{ trans('product::products.form.options.option_types.please_select') }}
-                                                    </option>
-
+                                                    <option value="">Please Select</option>
                                                     <option value="field">Field</option>
                                                     <option value="textarea">Textarea</option>
                                                     <option value="dropdown">Dropdown</option>
@@ -148,16 +149,16 @@
                                         </div>
 
                                         <div class="col-sm-3">
-                                            <div class="form-group row">
-                                                <div class="checkbox">
+                                            <div class="form-group">
+                                                <label>&nbsp;</label>
+                                                <div class="checkbox" style="margin-top: 5px;">
                                                     <input
                                                         type="checkbox"
                                                         :name="`options.${option.uid}.is_required`"
                                                         :id="`options-${option.uid}-is-required`"
                                                         v-model="option.is_required"
                                                     >
-
-                                                    <label :for="`options-${option.uid}-is-required`">
+                                                    <label :for="`options-${option.uid}-is-required`" style="margin-left: 5px; margin-bottom: 0;">
                                                         {{ trans('product::products.form.options.is_required') }}
                                                     </label>
                                                 </div>
@@ -194,8 +195,8 @@
                                                                 class="form-control custom-select-black"
                                                                 v-model="value.price_type"
                                                             >
-                                                                <option value="fixed">{{ trans('product::products.form.options.fixed') }}</option>
-                                                                <option value="percent">{{ trans('product::products.form.options.percent') }}</option>
+                                                                <option value="fixed">Fixed</option>
+                                                                <option value="percent">Percent</option>
                                                             </select>
                                                         </td>
                                                     </tr>
@@ -220,12 +221,9 @@
                                                         </tr>
                                                     </thead>
 
-                                                    <tbody
-                                                        animation="150"
-                                                        handle=".drag-handle"
-                                                        is="draggable"
-                                                        tag="tbody"
-                                                        :list="option.values"
+                                                    <component
+                                                        :is="'tbody'"
+                                                        v-if="isOptionTypeSelect(option)"
                                                     >
                                                         <tr class="option-row" v-for="(value, valueIndex) in option.values" :key="valueIndex">
                                                             <td class="text-center">
@@ -258,8 +256,8 @@
                                                                     class="form-control custom-select-black"
                                                                     v-model="value.price_type"
                                                                 >
-                                                                    <option value="fixed">{{ trans('product::products.form.options.fixed') }}</option>
-                                                                    <option value="percent">{{ trans('product::products.form.options.percent') }}</option>
+                                                                    <option value="fixed">Fixed</option>
+                                                                    <option value="percent">Percent</option>
                                                                 </select>
                                                             </td>
                                                             <td class="text-center">
@@ -273,7 +271,7 @@
                                                                 </button>
                                                             </td>
                                                         </tr>
-                                                    </tbody>
+                                                    </component>
                                                 </table>
                                             </div>
 
@@ -299,16 +297,16 @@
                 </button>
 
                 <div v-if="hasAccess" class="insert-template">
-                    <select 
-                        class="form-control custom-select-black" 
+                    <select
+                        class="form-control custom-select-black"
                         v-model="globalOptionId"
                         style="width: 150px; margin-right: 20px;"
                     >
                         <option value="">{{ trans('product::products.form.options.select_template') }}</option>
 
-                        <option 
-                            v-for="globalOption in globalOptions" 
-                            :key="globalOption.id" 
+                        <option
+                            v-for="globalOption in globalOptions"
+                            :key="globalOption.id"
                             :value="globalOption.id"
                         >
                             {{ globalOption.name }}
@@ -407,9 +405,9 @@ export default {
             return typeof result === 'string' ? result : key;
         },
 
-        toggleAccordions({ selector, state, data }) {
+        toggleAccordions({ state, data }) {
             this.isCollapsedOptionsAccordion = !state;
-            
+
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
                     item.is_open = this.isCollapsedOptionsAccordion;
@@ -436,10 +434,10 @@ export default {
 
         changeOptionType(index, uid) {
             const option = this.form.options[index];
-            
+
             // Clear existing values
             option.values = [];
-            
+
             if (this.isOptionTypeText(option)) {
                 option.values.push({
                     uid: this.generateUid(),
@@ -453,7 +451,7 @@ export default {
             }
         },
 
-        deleteOption(index, uid) {
+        deleteOption(index) {
             this.form.options.splice(index, 1);
         },
 
@@ -470,7 +468,7 @@ export default {
             });
         },
 
-        addOptionRow(index, uid) {
+        addOptionRow(index) {
             const option = this.form.options[index];
             option.values.push({
                 uid: this.generateUid(),
@@ -481,17 +479,33 @@ export default {
             });
         },
 
-        deleteOptionRow(index, optionUid, valueIndex, valueUid) {
+        deleteOptionRow(index, optionUid, valueIndex) {
             const option = this.form.options[index];
             option.values.splice(valueIndex, 1);
         },
 
+        mapOptionTypeFromAPI(apiType) {
+            // Map từ API format (SELECT, TEXT, etc) sang UI format (dropdown, field, etc)
+            const typeMap = {
+                'SELECT': 'dropdown',
+                'TEXT': 'field',
+                'TEXTAREA': 'textarea',
+                'CHECKBOX': 'checkbox',
+                'RADIO': 'radio',
+                'MULTIPLE_SELECT': 'multiple_select',
+                'DATE': 'date',
+                'DATETIME': 'datetime',
+                'TIME': 'time'
+            };
+            return typeMap[apiType?.toUpperCase()] || apiType?.toLowerCase() || 'field';
+        },
+
         addOptionRowOnPressEnter(event, index, valueIndex) {
             const option = this.form.options[index];
-            
+
             if (valueIndex === option.values.length - 1) {
                 this.addOptionRow(index, option.uid);
-                
+
                 this.$nextTick(() => {
                     const newValueUid = option.values[option.values.length - 1].uid;
                     const selector = `input[name="options.${option.uid}.values.${newValueUid}.label"]`;
@@ -507,23 +521,30 @@ export default {
             if (!this.globalOptionId) return;
 
             this.addingGlobalOption = true;
-            
+
             const selectedGlobalOption = this.globalOptions.find(opt => opt.id === this.globalOptionId);
-            
+
             if (selectedGlobalOption) {
                 const uid = this.generateUid();
+
+                // Map option values từ API format (label, price, priceType) sang UI format (label, price, price_type)
+                const optionValues = (selectedGlobalOption.optionValues || selectedGlobalOption.values || []).map((v, i) => ({
+                    uid: this.generateUid(),
+                    id: v.id,
+                    label: v.label || '',
+                    price: v.price || 0,
+                    price_type: (v.priceType || v.price_type || 'FIXED').toLowerCase(), // Map priceType -> price_type
+                    position: i,
+                }));
+
                 this.form.options.push({
                     uid: uid,
+                    id: selectedGlobalOption.id,
                     name: selectedGlobalOption.name,
-                    type: selectedGlobalOption.type || '',
-                    is_required: selectedGlobalOption.is_required || false,
-                    values: selectedGlobalOption.values ? selectedGlobalOption.values.map((v, i) => ({
-                        uid: this.generateUid(),
-                        label: v.label || '',
-                        price: v.price || 0,
-                        price_type: v.price_type || 'fixed',
-                        position: i,
-                    })) : [],
+                    type: this.mapOptionTypeFromAPI(selectedGlobalOption.type), // Map từ API format (SELECT) sang UI format (dropdown)
+                    is_required: selectedGlobalOption.isRequired || selectedGlobalOption.is_required || false,
+                    isGlobal: true,
+                    values: optionValues,
                     is_open: true,
                     position: this.form.options.length,
                 });
@@ -556,5 +577,73 @@ export default {
 .delete-option {
     margin-left: auto;
     margin-right: 10px !important;
+}
+
+.btn-accordion {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-weight: 500;
+    color: #333;
+    transition: background-color 0.2s ease;
+    justify-content: space-between;
+}
+
+.btn-accordion:hover {
+    background-color: #f5f5f5;
+}
+
+.btn-accordion.collapsed {
+    opacity: 0.7;
+}
+
+.btn-accordion.has-error {
+    border-left: 3px solid #dc3545;
+    padding-left: 12px;
+}
+
+.option-header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.drag-handle {
+    cursor: grab;
+    color: #999;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.option-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.btn-delete-option {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 14px;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 15px;
+}
+
+.btn-delete-option:hover {
+    color: #c82333;
 }
 </style>

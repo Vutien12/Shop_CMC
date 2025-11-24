@@ -555,13 +555,14 @@ export default {
         }
 
         const response = await getProductById(productId)
+        console.log('Product detail API response:', response)
 
-        if (response.data.code === 200 && response.data.result) {
-          this.productData = response.data.result
-          this.processProductData(response.data.result)
+        if (response.code === 200 && response.result) {
+          this.productData = response.result
+          this.processProductData(response.result)
           this.loadProductReviews(productId)
         } else {
-          console.error('Failed to fetch product:', response.data.message)
+          console.error('Failed to fetch product:', response.message)
           alert('Product not found! Redirecting to shop...')
           this.$router.push('/product')
         }
@@ -796,7 +797,7 @@ export default {
 
       try {
         const response = await addCartItems(cartPayload)
-        console.log('Cart response:', response.data)
+        console.log('Cart response:', response)
         alert('Đã thêm vào giỏ hàng!')
       } catch (error) {
         console.error('Failed to add to cart', error)
