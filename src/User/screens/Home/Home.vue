@@ -10,7 +10,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Footer from '../../components/Footer/Footer.vue'
-import Header from '@/User/components/Header1/Header.vue';
+import Header from '../../components/Header1/Header.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import Main from './Main.vue'
 
