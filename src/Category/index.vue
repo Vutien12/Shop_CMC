@@ -38,15 +38,6 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <label class="col-md-3 control-label">Searchable</label>
-                                        <div class="col-md-9">
-                                            <div class="checkbox-wrapper">
-                                                <input type="checkbox" id="is_searchable" v-model="form.is_searchable">
-                                                <label for="is_searchable">Show this category in search box category list</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
                                         <label class="col-md-3 control-label">Status</label>
                                         <div class="col-md-9">
                                             <div class="checkbox-wrapper">

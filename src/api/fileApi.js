@@ -61,3 +61,17 @@ export const deleteFiles = async (ids) => {
   return Promise.all(deletePromises)
 }
 
+/**
+ * Attach a file to an entity (blog, product, brand, etc.)
+ * @param {Object} entityFileData - Entity file data
+ * @param {number} entityFileData.fileId - The file ID
+ * @param {number} entityFileData.entityId - The entity ID (blog ID, product ID, etc.)
+ * @param {string} entityFileData.entityType - The entity type (e.g., 'blog', 'product', 'brand')
+ * @param {string} entityFileData.zone - The zone/purpose (e.g., 'thumbnail', 'logo', 'gallery')
+ * @returns {Promise}
+ */
+export const attachFileToEntity = async (entityFileData) => {
+  const response = await api.post('/entity-files', entityFileData)
+  return response.data
+}
+
