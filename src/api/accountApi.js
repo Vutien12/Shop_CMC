@@ -12,13 +12,14 @@ export const getRecentOrders = (page, size) =>
   });
 
 // Wishlist
-export const searchWishlist = (
+export const searchWishlist = async (
   page = DEFAULT_PAGE,
   size = DEFAULT_PAGE_SIZE.wishlist
 ) => {
-  return api.get('/wishlist/search', {
+  const response = await api.get('/wishlist/search', {
     params: { page, size, sort: DEFAULT_SORT.wishlist }
   });
+  return response.data;
 };
 
 // Addresses
@@ -32,6 +33,11 @@ export const getAddresses = (
 };
 
 // Wishlist actions
+export const addToWishlist = async (variantId) => {
+  const response = await api.post('/wishlist', { variantId });
+  return response.data;
+};
+
 export const removeFromWishlist = (wishlistId) =>
   api.delete(`/wishlist/${wishlistId}`);
 

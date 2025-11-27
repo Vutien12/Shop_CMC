@@ -300,6 +300,42 @@ const updateItem = async (wishlistId) => {
   }
 };
 
+// Add to Cart
+const addToCart = async (item) => {
+  // Check if item is available
+  if (isCartDisabled(item.status)) {
+    toast(getCartTooltip(item.status), 'error');
+    return;
+  }
+
+  try {
+    // Use wishlistStore method to add to cart
+    await wishlistStore.addToCart(item);
+
+    toast(`Đã thêm "${item.productName}" vào giỏ hàng!`, 'success');
+
+    // Optionally remove from wishlist after adding to cart
+    // Uncomment the line below if you want to auto-remove from wishlist
+    // await removeItem(item.id);
+  } catch (error) {
+    console.error('❌ Failed to add to cart:', error);
+
+    if (error.response?.status === 401) {
+      toast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'error');
+    } else if (error.response?.status === 400) {
+      toast('Không thể thêm sản phẩm này vào giỏ hàng', 'error');
+    } else if (error.message?.includes('OUT_OF_STOCK')) {
+      toast('Sản phẩm hiện đã hết hàng', 'error');
+    } else if (error.message?.includes('INACTIVE')) {
+      toast('Sản phẩm tạm thời không bán', 'error');
+    } else if (error.message?.includes('DELETED')) {
+      toast('Sản phẩm đã ngừng kinh doanh', 'error');
+    } else {
+      toast('Thêm vào giỏ hàng thất bại. Vui lòng thử lại.', 'error');
+    }
+  }
+};
+
 // Logout
 const handleLogout = async () => {
   await authLogout();

@@ -49,7 +49,7 @@
           </div>
 
           <div class="action-buttons">
-            <button class="btn-wishlist" type="button">
+            <button class="btn-wishlist" type="button" @click="addToWishlist">
               <i class="fa-regular fa-heart"></i> Wishlist
             </button>
             <button class="btn-compare" type="button">
@@ -837,6 +837,38 @@ export default {
         alert(this.submitError)
       } finally {
         this.isSubmitting = false
+      }
+    },
+    async addToWishlist() {
+      if (!this.product) return;
+
+      try {
+        // Import API
+        const { addToWishlist } = await import('@/api/accountApi.js');
+
+        // Get variant ID - use selected variant or first variant
+        const variantId = this.selectedVariant?.id || this.product.variants?.[0]?.id;
+
+        if (!variantId) {
+          alert('Cannot add to wishlist: No variant available');
+          return;
+        }
+
+        await addToWishlist(variantId);
+
+        console.log('✅ Added to wishlist:', this.product.name);
+        alert('Added to wishlist!');
+
+        // Dispatch event để update wishlist icon
+        window.dispatchEvent(new Event('wishlistChanged'));
+      } catch (error) {
+        console.error('❌ Failed to add to wishlist:', error);
+
+        if (error.response?.status === 401) {
+          alert('Please login to add items to wishlist');
+        } else {
+          alert('Failed to add to wishlist. Please try again.');
+        }
       }
     },
     buildCartPayload() {

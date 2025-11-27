@@ -213,26 +213,55 @@ export const useProductStore = defineStore('product', () => {
     return wishlist.some(i => i.id === id);
   };
 
-  const toggleLike = (product) => {
+  const toggleLike = async (product) => {
+    const wasLiked = product.isLiked;
     product.isLiked = !product.isLiked;
-    let wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
 
-    if (product.isLiked) {
-      const item = {
-        id: product.id,
-        name: product.name,
-        price: product.price.toFixed(2),
-        image: product.image,
-        availability: product.badge === 'Out of Stock' ? 'Out of Stock' : 'In Stock',
-        availabilityClass: product.badge === 'Out of Stock' ? 'out-of-stock' : 'in-stock'
-      };
-      if (!wishlist.some(i => i.id === item.id)) wishlist.push(item);
-    } else {
-      wishlist = wishlist.filter(i => i.id !== product.id);
+    try {
+      if (product.isLiked) {
+        // Import APIs dynamically
+        const { addToWishlist } = await import('@/api/accountApi.js');
+        const { getProductById } = await import('@/api/productApi.js');
+
+        // Fetch product detail to get first variant ID
+        const productDetail = await getProductById(product.id);
+
+        if (productDetail.code !== 200 || !productDetail.result) {
+          throw new Error('Failed to fetch product detail');
+        }
+
+        const variants = productDetail.result.variants || [];
+        const firstVariantId = variants[0]?.id;
+
+        if (!firstVariantId) {
+          alert('This product has no variants available for wishlist');
+          product.isLiked = wasLiked;
+          return;
+        }
+
+        // Add to wishlist with variant ID
+        await addToWishlist(firstVariantId);
+
+        console.log('✅ Added to wishlist:', product.name);
+        alert('Added to wishlist!');
+
+        window.dispatchEvent(new Event('wishlistChanged'));
+      } else {
+        // Remove from wishlist - need to implement
+        alert('Remove from wishlist not implemented yet. Please go to Wishlist page.');
+        product.isLiked = wasLiked;
+      }
+    } catch (error) {
+      // Revert on error
+      product.isLiked = wasLiked;
+      console.error('❌ Failed to toggle wishlist:', error);
+
+      if (error.response?.status === 401) {
+        alert('Please login to add items to wishlist');
+      } else {
+        alert('Failed to add to wishlist: ' + (error.message || 'Unknown error'));
+      }
     }
-
-    localStorage.setItem('userWishlist', JSON.stringify(wishlist));
-    window.dispatchEvent(new Event('wishlistChanged'));
   };
 
   return {
