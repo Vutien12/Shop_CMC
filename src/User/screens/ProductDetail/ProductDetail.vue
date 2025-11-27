@@ -26,9 +26,6 @@
 
         <div class="product-info">
           <h1 class="product-title">{{ product.name }}</h1>
-          <p v-if="product.shortDescription" class="product-subtitle">
-            {{ product.shortDescription }}
-          </p>
 
           <div class="rating-section">
             <div class="stars">
@@ -51,6 +48,8 @@
             </button>
           </div>
 
+          <hr class="divider" />
+
           <div class="price-section">
             <div class="price-row">
               <span class="price">{{ formatPrice(currentPrice) }}</span>
@@ -59,11 +58,10 @@
               </span>
             </div>
           </div>
-          <div v-if="selectedVariant" class="variant-sku">SKU: {{ selectedVariant.sku }}</div>
 
           <div v-if="colorVariation" class="variation-section color-block">
             <div class="variation-label">
-              Color
+              Color:
               <span v-if="selectedColor" class="selected-value">{{ selectedColor }}</span>
             </div>
             <div class="variation-options color-options">
@@ -81,14 +79,13 @@
                 :title="value.label"
               >
                 <div class="color-swatch" :style="{ backgroundColor: value.value }"></div>
-                <span class="color-name">{{ value.label }}</span>
               </button>
             </div>
           </div>
 
           <div v-if="storageVariation" class="variation-section storage-block">
             <div class="variation-label">
-              Storage
+              Storage:
               <span v-if="selectedStorage" class="selected-value">{{ selectedStorage }}</span>
             </div>
             <div class="variation-options storage-options">
@@ -150,13 +147,13 @@
           </div>
 
           <div v-if="options.length" class="options">
-            <h4 class="options-title">Tùy chọn thêm</h4>
+            <h4 class="options-title">Additional Options</h4>
 
             <div class="options-content">
               <!-- Price Breakdown - Left Side -->
               <div class="price-breakdown">
                 <div class="price-line base">
-                  <span>Giá sản phẩm</span>
+                  <span>Product Price</span>
                   <strong>{{ formatPrice(currentPrice) }}</strong>
                 </div>
                 <template v-for="option in options" :key="'price-' + option.id">
@@ -166,7 +163,7 @@
                   </div>
                 </template>
                 <div class="price-line total">
-                  <span>Tổng cộng</span>
+                  <span>Total</span>
                   <strong>{{ formatPrice(displayTotalPrice) }}</strong>
                 </div>
               </div>
@@ -182,7 +179,7 @@
                   </div>
                   <template v-if="option.type === 'SELECT'">
                     <select v-model="selectedOptions[option.id]" class="option-select">
-                      <option v-if="!option.isRequired" value="">Chọn {{ option.name }}</option>
+                      <option v-if="!option.isRequired" value="">Select {{ option.name }}</option>
                       <option
                         v-for="optValue in option.optionValues"
                         :key="optValue.id"
@@ -197,7 +194,7 @@
                       v-model="selectedOptions[option.id]"
                       type="text"
                       class="option-input"
-                      :placeholder="`Nhập ${option.name}`"
+                      :placeholder="`Enter ${option.name}`"
                     />
                   </template>
                 </div>
