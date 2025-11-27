@@ -280,7 +280,7 @@ export default {
       }
     },
     handleCartUpdated() {
-      this.updateCartCount();
+      this.updateCartCount(true); // Force refresh to get latest cart data
     },
     openCart() {
       if (!this.isLoggedIn) {

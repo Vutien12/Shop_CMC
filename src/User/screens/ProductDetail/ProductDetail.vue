@@ -29,9 +29,18 @@
 
           <div class="rating-section">
             <div class="stars">
-              <span v-for="star in 5" :key="star" class="star">☆</span>
+              <span
+                v-for="star in 5"
+                :key="star"
+                class="star"
+                :class="{ filled: star <= Math.round(reviewStore.averageRating) }"
+              >
+                {{ star <= Math.round(reviewStore.averageRating) ? '★' : '☆' }}
+              </span>
             </div>
-            <span class="review-count">{{ productReviews.length }} Review</span>
+            <span class="review-count" v-if="reviewStore.totalElements > 0">
+              {{ reviewStore.averageRating }} ({{ reviewStore.totalElements }} Review{{ reviewStore.totalElements > 1 ? 's' : '' }})
+            </span>
           </div>
 
           <div class="stock-status" :class="{ 'out-stock': !product.inStock }">
@@ -284,7 +293,7 @@
             :class="{ active: activeTab === 'reviews' }"
             @click="setActiveTab('reviews')"
           >
-            Reviews ({{ productReviews.length }})
+            Reviews<span v-if="reviewStore.totalElements > 0"> ({{ reviewStore.totalElements }})</span>
           </button>
         </div>
 
@@ -385,49 +394,7 @@
 
           <!-- Reviews Tab -->
           <div v-if="activeTab === 'reviews'" class="tab-panel">
-            <h3>Customer Reviews</h3>
-
-            <div v-if="productReviews.length > 0">
-              <div class="review-summary">
-                <div class="rating-overview">
-                  <div class="stars">
-                    <span v-for="star in getStars(averageRating)" :key="star" class="star filled"
-                      >★</span
-                    >
-                  </div>
-                  <span>
-                    {{ averageRating.toFixed(1) }}/5 based on {{ productReviews.length }} review{{
-                      productReviews.length > 1 ? 's' : ''
-                    }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="reviews-list">
-                <div v-for="review in productReviews" :key="review.date" class="review-item">
-                  <div class="review-header">
-                    <div class="reviewer-info">
-                      <strong>{{ review.userName }}</strong>
-                      <div class="review-stars">
-                        <span v-for="star in review.userRating" :key="star" class="star filled"
-                          >★</span
-                        >
-                        <span
-                          v-for="star in 5 - review.userRating"
-                          :key="'empty-' + star"
-                          class="star"
-                          >☆</span
-                        >
-                      </div>
-                    </div>
-                    <span class="review-date">{{ formatDate(review.date) }}</span>
-                  </div>
-                  <p class="review-comment">{{ review.userComment }}</p>
-                </div>
-              </div>
-            </div>
-
-            <p v-else class="no-reviews">No reviews yet. Be the first to review this product!</p>
+            <ReviewList :productId="product.id" :showRatingFilter="true" />
           </div>
         </div>
       </div>
@@ -456,9 +423,11 @@
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
+import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import { getProductById } from '@/api/productApi.js'
-import { addToCart as addCartItems } from '@/api/cartApi.js'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import { useReviewStore } from '@/User/stores/reviewStore.js'
+import { useCartStore } from '@/User/stores/cartStore.js'
 
 export default {
   name: 'ProductDetail',
@@ -467,6 +436,15 @@ export default {
     Header,
     Footer,
     Loading,
+    ReviewList,
+  },
+  setup() {
+    const reviewStore = useReviewStore()
+    const cartStore = useCartStore()
+    return {
+      reviewStore,
+      cartStore
+    }
   },
   data() {
     return {
@@ -544,27 +522,36 @@ export default {
         this.isLoading = true
         const productId = parseInt(this.$route.params.id)
 
-        if (!productId) {
-          console.error('No product ID provided')
+        console.log('🔍 fetchProductDetail START, productId:', productId);
+
+        if (!productId || isNaN(productId)) {
+          console.error('❌ No product ID provided or invalid ID');
           alert('No product ID provided! Redirecting to shop...')
           this.$router.push('/product')
           return
         }
 
+        console.log('🔍 Calling getProductById API...');
         const response = await getProductById(productId)
-        console.log('Product detail API response:', response)
+        console.log('✅ Product detail API response:', response)
 
         if (response.code === 200 && response.result) {
+          console.log('✅ Product loaded successfully');
           this.productData = response.result
           this.processProductData(response.result)
-          this.loadProductReviews(productId)
+
+          // Load reviews count for display (ReviewList will load full data when tab is clicked)
+          this.reviewStore.fetchProductReviews(productId, 0, 1).catch(err => {
+            console.warn('Failed to load reviews count:', err);
+          });
         } else {
-          console.error('Failed to fetch product:', response.message)
+          console.error('❌ Failed to fetch product:', response.message)
           alert('Product not found! Redirecting to shop...')
           this.$router.push('/product')
         }
       } catch (error) {
-        console.error('Error fetching product:', error)
+        console.error('❌ Error fetching product:', error)
+        console.error('❌ Error details:', error.message, error.stack)
         alert('Error loading product! Redirecting to shop...')
         this.$router.push('/product')
       } finally {
@@ -627,7 +614,7 @@ export default {
 
       this.buildVariantLookup(variants)
       this.initializeSelections()
-      this.loadProductReviews(data.id)
+      // this.loadProductReviews(data.id) // Commented - now using ReviewList component
     },
     buildVariantLookup(variants) {
       this.variantLookup = {}
@@ -840,8 +827,9 @@ export default {
       this.submitError = ''
 
       try {
-        const response = await addCartItems(cartPayload)
-        console.log('Cart response:', response)
+        // Use cartStore instead of calling API directly
+        await this.cartStore.addItem(cartPayload)
+        console.log('Added to cart successfully')
         alert('Đã thêm vào giỏ hàng!')
       } catch (error) {
         console.error('Failed to add to cart', error)
@@ -990,15 +978,12 @@ export default {
         .fill('')
         .map((_, i) => (i < rating ? 'star' : 'star_border'))
     },
-    loadProductReviews(productId) {
-      // Load reviews from localStorage
-      const allReviews = JSON.parse(localStorage.getItem('productReviews') || '[]')
-
-      // Filter reviews for this specific product
-      this.productReviews = allReviews.filter((review) => review.productId === productId)
-
-      console.log('Loaded reviews for product', productId, ':', this.productReviews)
-    },
+    // DEPRECATED: Now using ReviewList component with reviewStore
+    // loadProductReviews(productId) {
+    //   const allReviews = JSON.parse(localStorage.getItem('productReviews') || '[]')
+    //   this.productReviews = allReviews.filter((review) => review.productId === productId)
+    //   console.log('Loaded reviews for product', productId, ':', this.productReviews)
+    // },
     formatDate(dateString) {
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', {

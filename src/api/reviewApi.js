@@ -3,23 +3,20 @@ import api from './axiosInstance';
 // Create review for a product
 export const createReview = async (reviewData) => {
   try {
-    // Backend expects: userId, productId, orderId, variantId?, rating, title, comment
     const payload = {
       userId: reviewData.userId,
-      productId: reviewData.productId,
       orderId: reviewData.orderId,
       rating: reviewData.rating,
       title: reviewData.title,
       comment: reviewData.comment
     };
 
-    // Only add variantId if it exists
     if (reviewData.variantId) {
       payload.variantId = reviewData.variantId;
     }
 
-    console.log('Creating review with payload:', payload);
-    return await api.post('/reviews', payload);
+    const response = await api.post('/reviews', payload);
+    return response.data;
   } catch (error) {
     console.error('Error creating review:', error);
     console.error('Error details:', error.response?.data);
@@ -27,31 +24,45 @@ export const createReview = async (reviewData) => {
   }
 };
 
-// Get reviews for a product
-export const getProductReviews = async (productId, page = 0, size = 10) => {
+// Search reviews with advanced filter
+export const searchReviews = async (searchRequest) => {
   try {
-    return await api.get('/reviews/search', {
-      params: {
-        productId,
-        page,
-        size,
-        sort: 'createdAt,desc'
-      }
-    });
+    const params = {
+      page: searchRequest.page || 0,
+      size: searchRequest.size || 10,
+      sort: `${searchRequest.sortBy || 'createdAt'},${(searchRequest.direction || 'DESC').toLowerCase()}`
+    };
+
+    // Add optional filters
+    if (searchRequest.productId) {
+      params.productId = searchRequest.productId;
+    }
+    if (searchRequest.userId) {
+      params.userId = searchRequest.userId;
+    }
+    if (searchRequest.rating) {
+      params.rating = searchRequest.rating;
+    }
+    if (searchRequest.comment) {
+      params.comment = searchRequest.comment;
+    }
+
+    const response = await api.get('/reviews/search', { params });
+    return response.data; // Return unwrapped data like other APIs
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    console.error('Error searching reviews:', error);
     throw error;
   }
 };
+
 
 // Update review
 export const updateReview = async (reviewId, reviewData) => {
   try {
     const payload = {
-      userId: reviewData.userId,
       productId: reviewData.productId,
+      userId: reviewData.userId,
       orderId: reviewData.orderId,
-      rating: reviewData.rating,
       title: reviewData.title,
       comment: reviewData.comment
     };
@@ -62,7 +73,8 @@ export const updateReview = async (reviewId, reviewData) => {
     }
 
     console.log('Updating review with payload:', payload);
-    return await api.put(`/reviews/${reviewId}`, payload);
+    const response = await api.put(`/reviews/${reviewId}`, payload);
+    return response.data;
   } catch (error) {
     console.error('Error updating review:', error);
     console.error('Error details:', error.response?.data);
@@ -73,25 +85,13 @@ export const updateReview = async (reviewId, reviewData) => {
 // Delete review
 export const deleteReview = async (reviewId) => {
   try {
-    return await api.delete(`/reviews/${reviewId}`);
+    const response = await api.delete(`/reviews/${reviewId}`);
+    return response.data;
   } catch (error) {
     console.error('Error deleting review:', error);
     throw error;
   }
 };
 
-// Get all reviews for current user
-export const getMyReviews = async (page = 0, size = 10) => {
-  try {
-    return await api.get('/reviews/my-reviews', {
-      params: {
-        page,
-        size
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching my reviews:', error);
-    throw error;
-  }
-};
+
 

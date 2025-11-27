@@ -27,9 +27,12 @@ export const useCartStore = defineStore('cart', () => {
     isLoading.value = true;
     try {
       const res = await getCart();
-      cart.value = res.data.result;
-      isLoaded.value = true;
-      lastFetched.value = now;
+      // res is now {code: 200, message: 'Success', result: {...}}
+      if (res.code === 200) {
+        cart.value = res.result;
+        isLoaded.value = true;
+        lastFetched.value = now;
+      }
       return cart.value;
     } catch (error) {
       // Xử lý lỗi: reset cart, log
@@ -58,9 +61,12 @@ export const useCartStore = defineStore('cart', () => {
     isLoading.value = true;
     try {
       const res = await addToCart(payload);
-      cart.value = res.data.result;
-      lastFetched.value = Date.now();
-      window.dispatchEvent(new Event('cartUpdated'));
+      // res is now {code: 200, message: 'Success', result: {...}}
+      if (res.code === 200) {
+        cart.value = res.result;
+        lastFetched.value = Date.now();
+        window.dispatchEvent(new Event('cartUpdated'));
+      }
       return cart.value;
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -76,8 +82,11 @@ export const useCartStore = defineStore('cart', () => {
   const updateQuantity = async (cartItemId, qty) => {
     if (qty < 1) return;
     const res = await updateCartItemQty(cartItemId, qty);
-    cart.value = res.data.result;
-    window.dispatchEvent(new Event('cartUpdated'));
+    // res is now {code: 200, message: 'Success', result: {...}}
+    if (res.code === 200) {
+      cart.value = res.result;
+      window.dispatchEvent(new Event('cartUpdated'));
+    }
   };
 
   const updateItemQuantity = async (cartItemId, qty) => {
@@ -86,14 +95,18 @@ export const useCartStore = defineStore('cart', () => {
 
   const removeItem = async (cartItemId) => {
     const res = await removeCartItem(cartItemId);
-    cart.value = res.data.result;
-    window.dispatchEvent(new Event('cartUpdated'));
+    if (res.code === 200) {
+      cart.value = res.result;
+      window.dispatchEvent(new Event('cartUpdated'));
+    }
   };
 
   const clear = async () => {
-    await clearCart();
-    cart.value = { cartItems: [], total: 0 };
-    window.dispatchEvent(new Event('cartUpdated'));
+    const res = await clearCart();
+    if (res.code === 200) {
+      cart.value = { cartItems: [], total: 0 };
+      window.dispatchEvent(new Event('cartUpdated'));
+    }
   };
 
   // Computed
