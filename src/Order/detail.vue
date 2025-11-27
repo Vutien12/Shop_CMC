@@ -66,18 +66,28 @@
                             <select
                               id="order-status"
                               class="form-control custom-select-black"
+                              :class="{ 'status-error': statusError }"
                               v-model="order.status"
-                              :disabled="isSaving"
+                              :disabled="isSaving || allowedStatuses.length === 1"
+                              :title="statusError || (order.status === 'CANCELLED' || order.status === 'REFUNDED' ? 'This status is final and cannot be changed' : 'Select order status')"
                             >
-                              <option value="PENDING">Pending</option>
-                              <option value="PENDING_PAYMENT">Pending Payment</option>
-                              <option value="PAID">Paid</option>
-                              <option value="PROCESSING">Processing</option>
-                              <option value="SHIPPED">Shipped</option>
-                              <option value="DELIVERED">Delivered</option>
-                              <option value="CANCELLED">Cancelled</option>
-                              <option value="REFUNDED">Refunded</option>
+                              <option
+                                v-for="status in allowedStatuses"
+                                :key="status.value"
+                                :value="status.value"
+                              >
+                                {{ status.label }}
+                              </option>
                             </select>
+                            <small v-if="statusError" class="status-error-message">
+                              <i class="fa fa-exclamation-circle"></i> {{ statusError }}
+                            </small>
+                            <small v-else-if="order.status === 'CANCELLED' || order.status === 'REFUNDED'" class="text-muted status-note">
+                              <i class="fa fa-info-circle"></i> This status is final and cannot be changed
+                            </small>
+                            <small v-else-if="allowedStatuses.length > 1" class="text-muted status-note">
+                              <i class="fa fa-info-circle"></i> Can transition to: {{ allowedStatuses.filter(s => s.value !== order.status).map(s => s.label).join(', ') }}
+                            </small>
                           </div>
                         </div>
                       </td>
@@ -300,7 +310,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getOrderById, updateOrderStatus, sendOrderEmail } from '@/api/orderApi.js';
 
@@ -308,6 +318,42 @@ const router = useRouter();
 const route = useRoute();
 const isLoading = ref(true);
 const isSaving = ref(false);
+const statusError = ref(''); // Error message for status
+
+// Define valid status transitions (matching backend validation)
+const validStatusTransitions = {
+  'PENDING': ['PROCESSING', 'CANCELLED'],
+  'PENDING_PAYMENT': ['PAID', 'CANCELLED'],
+  'PAID': ['PROCESSING', 'REFUNDED', 'CANCELLED'],
+  'PROCESSING': ['SHIPPED', 'CANCELLED'],
+  'SHIPPED': ['DELIVERED', 'CANCELLED'],
+  'DELIVERED': ['REFUNDED'],
+  'CANCELLED': [], // Cannot transition from cancelled
+  'REFUNDED': [] // Cannot transition from refunded
+};
+
+// All possible statuses
+const allStatuses = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PENDING_PAYMENT', label: 'Pending Payment' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'PROCESSING', label: 'Processing' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'REFUNDED', label: 'Refunded' }
+];
+
+// Computed property for allowed statuses
+const allowedStatuses = computed(() => {
+  const currentStatus = order.status;
+  const allowedTransitions = validStatusTransitions[currentStatus] || [];
+
+  // Always include current status + allowed transitions
+  return allStatuses.filter(status =>
+    status.value === currentStatus || allowedTransitions.includes(status.value)
+  );
+});
 
 // Order data
 const order = reactive({
@@ -497,12 +543,18 @@ const formatPrice = (price) => {
 const save = async () => {
   try {
     isSaving.value = true;
+    statusError.value = ''; // Clear previous error
     await updateOrderStatus(order.id, order.status);
     alert('Order updated successfully!');
     await loadOrderData(); // Reload to get latest data
   } catch (error) {
     console.error('Failed to save order:', error);
-    alert('Failed to save order. Please try again.');
+    console.error('Error response:', error.response?.data);
+    // Show error message next to status dropdown
+    const errorMessage = error.response?.data?.message || 'Failed to save order. Please try again.';
+    statusError.value = errorMessage;
+    // Reload to reset status to original value
+    await loadOrderData();
   } finally {
     isSaving.value = false;
   }
@@ -512,12 +564,17 @@ const save = async () => {
 const saveAndExit = async () => {
   try {
     isSaving.value = true;
+    statusError.value = ''; // Clear previous error
     await updateOrderStatus(order.id, order.status);
-    alert('Order updated successfully!');
-    router.push({ name: 'admin.orders.index' });
+    // Success - redirect to orders list
+    await router.push({ name: 'admin.orders.index' });
   } catch (error) {
     console.error('Failed to save order:', error);
-    alert('Failed to save order. Please try again.');
+    // Show error message next to status dropdown instead of alert
+    const errorMessage = error.response?.data?.message || 'Failed to update order status.';
+    statusError.value = errorMessage;
+    // Reload to reset status to original value
+    await loadOrderData();
     isSaving.value = false;
   }
 };
@@ -766,6 +823,42 @@ onMounted(async () => {
 .custom-select-black:focus {
   border-color: #0071dc;
   outline: 0;
+}
+
+/* Status error styles */
+.status-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 1px #e74c3c;
+}
+
+.status-error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 1px #e74c3c;
+}
+
+.status-error-message {
+  display: block;
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.status-error-message i {
+  margin-right: 4px;
+}
+
+.status-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.status-note i {
+  margin-right: 4px;
+  color: #0071dc;
 }
 
 label {
@@ -1112,10 +1205,208 @@ label {
 }
 
 @media print {
-  .order-information-buttons,
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: white;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #333;
+  }
+
+  .content {
+    background: white;
+    padding: 0;
+    margin: 0;
+    min-height: auto;
+  }
+
+  .content-header,
   .breadcrumb,
-  .page-form-footer {
-    display: none;
+  .order-information-buttons,
+  .page-form-footer,
+  .btn {
+    display: none !important;
+  }
+
+  .order-wrapper {
+    background: white;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    box-shadow: none;
+    border: none;
+  }
+
+  .order-information-wrapper,
+  .transactions-wrapper,
+  .address-information-wrapper,
+  .items-ordered-wrapper,
+  .order-totals-wrapper {
+    margin-bottom: 15px;
+    background: white;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #333;
+    color: #000;
+  }
+
+  h5 {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 10px 0 8px 0;
+    color: #000;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+
+  .table td,
+  .table th {
+    padding: 8px;
+    border: 1px solid #333;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+
+  .table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+
+  .table td:first-child {
+    width: 30%;
+    font-weight: bold;
+  }
+
+  .address-content {
+    line-height: 1.6;
+    border-left: none;
+    background: white;
+    padding: 0;
+    margin-top: 5px;
+  }
+
+  .item-options {
+    margin-top: 3px;
+  }
+
+  .item-options small {
+    display: block;
+    color: #666;
+    margin-top: 2px;
+    font-size: 10px;
+  }
+
+  .order-totals-container {
+    display: block;
+    text-align: right;
+    padding: 0;
+  }
+
+  .order-totals {
+    width: 50%;
+    background: white;
+    border: 1px solid #333;
+    border-radius: 0;
+    box-shadow: none;
+    margin-left: auto;
+  }
+
+  .order-totals .table {
+    margin-bottom: 0;
+  }
+
+  .order-totals .table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+
+  .order-totals .table tr:last-child {
+    background-color: #f0f0f0;
+    border-top: 2px solid #333;
+  }
+
+  .order-totals .table tr:last-child td {
+    font-size: 12px;
+    padding: 10px;
+    font-weight: bold;
+    border: 1px solid #333;
+  }
+
+  .text-muted {
+    color: #666 !important;
+  }
+
+  code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 11px;
+    word-break: break-word;
+  }
+
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  /* Header for print */
+  .page-header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+  }
+
+  /* Page break handling */
+  .order-information-wrapper {
+    page-break-inside: avoid;
+  }
+
+  .items-ordered-wrapper {
+    page-break-inside: avoid;
+  }
+
+  .order-totals-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /* Print footer */
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  /* Hide scrollbars and overflows */
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  /* Ensure text is visible */
+  body, .content, .order-wrapper {
+    color: #000 !important;
   }
 }
 

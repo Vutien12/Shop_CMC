@@ -98,7 +98,7 @@
                     <td>{{ order.total }}</td>
                     <td class="transaction-id">{{ order.tracking }}</td>
                     <td>
-                      <router-link :to="`/orders/${order.id}`" class="action-btn">
+                      <router-link :to="`/orderdetail/${order.id}`" class="action-btn">
                         <i class="fa-regular fa-eye"></i>
                       </router-link>
                     </td>

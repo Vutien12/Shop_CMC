@@ -150,10 +150,6 @@
               </div>
               <div class="latest-product-info">
                 <p class="latest-product-name">{{ p.name }}</p>
-                <div class="rating">
-                  <span v-for="i in 5" :key="i" class="star">★</span>
-                  <span class="review-count">0 Review</span>
-                </div>
                 <div class="latest-product-price">
                   <span class="latest-product-price">
                     {{ formatPrice(p.price) }}

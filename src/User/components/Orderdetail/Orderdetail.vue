@@ -130,6 +130,7 @@
                       <th>Price</th>
                       <th>Qty</th>
                       <th>Total</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -148,6 +149,17 @@
                       <td>{{ formatPrice(product.unitPrice) }}</td>
                       <td>{{ product.qty }}</td>
                       <td><strong>{{ formatPrice(product.lineTotal) }}</strong></td>
+                      <td>
+                        <button
+                          @click="openReviewModal(product)"
+                          class="action-btn review-btn"
+                          :class="{ 'reviewed': product.review }"
+                          :disabled="!canReview"
+                          :title="getReviewButtonTitle(product)"
+                        >
+                          <i :class="product.review ? 'fa-solid fa-edit' : 'fa-solid fa-pen'"></i>
+                        </button>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -200,6 +212,15 @@
 
     <Footer />
     <Chatbot />
+
+    <!-- Review Modal -->
+    <Review
+      :isOpen="showReviewModal"
+      :order="orderDetail"
+      :product="selectedProduct"
+      @close="closeReviewModal"
+      @submit="handleReviewSubmit"
+    />
   </div>
 </template>
 
@@ -210,6 +231,7 @@ import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import Review from '@/User/screens/Review/Review.vue'
 import { getOrderById } from '@/api/orderApi.js'
 import { useAuth } from '@/User/components/useAuth.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
@@ -222,6 +244,11 @@ const { add: toast } = useToast()
 const isLoading = ref(true)
 const orderDetail = ref(null)
 const orderId = ref(route.params.id)
+
+// Review modal state
+const showReviewModal = ref(false)
+const selectedProduct = ref(null)
+const canReview = ref(false)
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
@@ -271,21 +298,62 @@ const getVariationLabel = (variation) => {
   return variation.value
 }
 
+const getReviewButtonTitle = (product) => {
+  if (!canReview.value) {
+    return 'Only delivered orders can be reviewed'
+  }
+  if (product.review) {
+    return 'Edit your review'
+  }
+  return 'Write a review'
+}
+
 const handleLogout = async () => {
   await authLogout()
   await router.push('/login')
 }
 
+// Review modal handlers
+const openReviewModal = (product) => {
+  selectedProduct.value = product
+  showReviewModal.value = true
+}
+
+const closeReviewModal = () => {
+  showReviewModal.value = false
+  selectedProduct.value = null
+}
+
+const handleReviewSubmit = (reviewData) => {
+  console.log('Review submitted:', reviewData)
+  const message = reviewData.isUpdate
+    ? 'Đánh giá đã được cập nhật!'
+    : 'Cảm ơn bạn đã đánh giá sản phẩm!';
+  toast(message, 'success')
+  // Review creation/update is handled by Review component and API
+  closeReviewModal()
+}
+
 onMounted(async () => {
   try {
     const response = await getOrderById(orderId.value)
-    orderDetail.value = response.data.result
+    console.log('Order detail response:', response)
+
+    // API returns: { code, message, result: {...} }
+    const result = response.data?.result || response.data
+    orderDetail.value = result
+
+    // Check if order can be reviewed - only DELIVERED status allowed
+    if (result) {
+      canReview.value = result.status === 'DELIVERED'
+    }
   } catch (error) {
     console.error('Error fetching order detail:', error)
     if (error.response?.status === 401) {
       toast('Phiên đăng nhập hết hạn.', 'error')
       await handleLogout()
     } else {
+      console.error('Full error:', error.response?.data)
       toast('Không thể tải thông tin đơn hàng.', 'error')
     }
   } finally {

@@ -48,14 +48,16 @@ z<template>
                     :key="index"
                 >
                     <div class="panel panel-default option">
-                        <div class="panel-heading" @click.stop="toggleAccordion($event, option)">
+                        <div class="panel-heading">
                             <h4 class="panel-title">
-                                <button
-                                    type="button"
+                                <div
                                     class="btn-accordion"
+                                    role="button"
+                                    tabindex="0"
                                     :aria-expanded="option.is_open"
-                                    data-toggle="collapse"
-                                    data-transition="false"
+                                    @click.stop="toggleAccordion($event, option)"
+                                    @keydown.enter.stop="toggleAccordion($event, option)"
+                                    @keydown.space.stop="toggleAccordion($event, option)"
                                     :class="{
                                         'collapsed': !option.is_open,
                                         'has-error': hasAnyError({
@@ -80,7 +82,7 @@ z<template>
                                     >
                                         <i class="fa fa-trash"></i>
                                     </button>
-                                </button>
+                                </div>
                             </h4>
                         </div>
 

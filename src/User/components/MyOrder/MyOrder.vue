@@ -86,7 +86,6 @@
                     <th>Total</th>
                     <th>Transaction</th>
                     <th>Action</th>
-                    <th>Review</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -100,11 +99,6 @@
                       <router-link :to="`/orderdetail/${order.id}`" class="action-btn">
                         <i class="fa-regular fa-eye"></i>
                       </router-link>
-                    </td>
-                    <td>
-                      <button @click="openReviewModal(order)" class="action-btn review-btn" :disabled="order.status !== 'Completed'">
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
                     </td>
                   </tr>
                   </tbody>
@@ -132,14 +126,6 @@
 
     <Footer />
     <Chatbot />
-
-    <!-- Review Modal -->
-    <Review
-      :isOpen="showReviewModal"
-      :productId="selectedOrderId"
-      @close="closeReviewModal"
-      @submit="handleReviewSubmit"
-    />
   </div>
 </template>
 
@@ -155,7 +141,6 @@ import { useToast } from '@/User/components/Toast/useToast.js';
 import { useLazyLoad } from '@/User/components/LazyLoad/useLazyLoad.js';
 import { usePrefetch } from '@/User/stores/usePrefetch.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
-import Review from '@/User/screens/Review/Review.vue'
 
 const router = useRouter();
 const { handleLogout: authLogout } = useAuth();
@@ -170,9 +155,6 @@ const totalPages = ref(0);
 const currentPage = ref(0);
 const ordersLoading = ref(false);
 
-// Review modal state
-const showReviewModal = ref(false);
-const selectedOrderId = ref(null);
 
 // Lazy load
 const ordersTarget = ref(null);
@@ -214,24 +196,6 @@ const handleLogout = async () => {
   await router.push('/login');
 };
 
-// Review modal handlers
-const openReviewModal = (order) => {
-  if (order.status === 'Completed') {
-    selectedOrderId.value = order.id;
-    showReviewModal.value = true;
-  }
-};
-
-const closeReviewModal = () => {
-  showReviewModal.value = false;
-  selectedOrderId.value = null;
-};
-
-const handleReviewSubmit = (reviewData) => {
-  console.log('Review submitted:', reviewData);
-  toast('Cảm ơn bạn đã đánh giá!', 'success');
-  // TODO: Gọi API để lưu review
-};
 
 // Initial load
 onMounted(async () => {
@@ -313,34 +277,6 @@ onMounted(async () => {
 
 @keyframes fadeInRow {
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* Review button */
-.review-btn {
-  background: white;
-  border: 1px solid #dee2e6;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #000;
-}
-
-.review-btn:hover:not(:disabled) {
-  background: #f8f9fa;
-  transform: translateY(-2px);
-  border-color: #000;
-}
-
-.review-btn:disabled {
-  background: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.review-btn i {
-  font-size: 14px;
 }
 </style>
 

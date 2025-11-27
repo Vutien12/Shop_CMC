@@ -432,6 +432,70 @@
   transform: translateY(10px);
 }
 
+/* Review Action Buttons */
+.action-btn {
+  background: white;
+  border: 1px solid #dee2e6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #495057;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.action-btn:disabled {
+  background: #f5f5f5;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.5;
+  border-color: #e0e0e0;
+}
+
+.action-btn i {
+  font-size: 14px;
+}
+
+/* Review Button Specific Styles */
+.review-btn {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.review-btn:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  color: white;
+}
+
+/* Reviewed State - Green */
+.review-btn.reviewed {
+  background: #28a745;
+  border-color: #28a745;
+}
+
+.review-btn.reviewed:hover:not(:disabled) {
+  background: #218838;
+  border-color: #218838;
+}
+
+.review-btn:disabled {
+  background: #e9ecef;
+  border-color: #e9ecef;
+  color: #adb5bd;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .order-detail-page {

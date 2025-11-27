@@ -632,20 +632,43 @@ export default {
     buildVariantLookup(variants) {
       this.variantLookup = {}
       this.availableStoragesByColor = {}
+
       variants.forEach((variant) => {
-        const colorLabel = this.extractVariationLabel(this.colorVariation, variant.name)
-        const storageLabel = this.extractVariationLabel(this.storageVariation, variant.name)
-        const key = this.buildVariantKey(colorLabel, storageLabel)
+        // Extract all variation labels from variant name
+        const variantLabels = {}
+        this.variations.forEach((variation) => {
+          const label = this.extractVariationLabel(variation, variant.name)
+          if (label) {
+            variantLabels[variation.id] = label
+          }
+        })
+
+        // Build comprehensive key from all variations (sorted by variation ID)
+        const key = this.buildVariantKeyFromAllVariations(variantLabels)
         if (key) {
           this.variantLookup[key] = variant
         }
-        if (colorLabel && storageLabel) {
-          if (!this.availableStoragesByColor[colorLabel]) {
-            this.availableStoragesByColor[colorLabel] = new Set()
+
+        // Maintain backward compatibility for color/storage filtering
+        if (this.colorVariation && this.storageVariation) {
+          const colorLabel = this.extractVariationLabel(this.colorVariation, variant.name)
+          const storageLabel = this.extractVariationLabel(this.storageVariation, variant.name)
+          if (colorLabel && storageLabel) {
+            if (!this.availableStoragesByColor[colorLabel]) {
+              this.availableStoragesByColor[colorLabel] = new Set()
+            }
+            this.availableStoragesByColor[colorLabel].add(storageLabel)
           }
-          this.availableStoragesByColor[colorLabel].add(storageLabel)
         }
       })
+    },
+    buildVariantKeyFromAllVariations(variantLabels) {
+      const keys = Object.entries(variantLabels)
+        .sort(([aId], [bId]) => aId - bId) // Sort by variation ID for consistency
+        .map(([_, label]) => (label || '').toLowerCase())
+        .filter(k => k)
+
+      return keys.length > 0 ? keys.join('::') : null
     },
     buildVariantKey(colorLabel, storageLabel) {
       if (!colorLabel && !storageLabel) return null
@@ -661,6 +684,14 @@ export default {
     initializeSelections() {
       const initialVariant =
         this.product.variants.find((variant) => variant.inStock) || this.product.variants[0]
+
+      // Extract all variation labels from initial variant
+      this.variations.forEach((variation) => {
+        const label = this.extractVariationLabel(variation, initialVariant?.name)
+        this.selectedVariations[variation.id] = label || variation.variationValues?.[0]?.label || null
+      })
+
+      // Also set color and storage for backward compatibility
       const initialColor = this.extractVariationLabel(this.colorVariation, initialVariant?.name)
       const initialStorage = this.extractVariationLabel(this.storageVariation, initialVariant?.name)
 
@@ -724,11 +755,27 @@ export default {
     },
     updateVariantFromSelection() {
       if (!this.product || !this.product.variants.length) return
-      const key = this.buildVariantKey(this.selectedColor, this.selectedStorage)
+
+      // Build key from all selected variations
+      const variantLabels = {}
+      this.variations.forEach((variation) => {
+        // Check both selectedVariations and specific color/storage selections
+        const label = this.selectedVariations[variation.id] ||
+                      (variation === this.colorVariation ? this.selectedColor : null) ||
+                      (variation === this.storageVariation ? this.selectedStorage : null)
+        if (label) {
+          variantLabels[variation.id] = label
+        }
+      })
+
+      const key = this.buildVariantKeyFromAllVariations(variantLabels)
       let variant = key ? this.variantLookup[key] : null
+
       if (!variant) {
+        // Fallback: use first available variant or first variant
         variant = this.product.variants.find((v) => v.inStock) || this.product.variants[0]
       }
+
       this.selectedVariant = variant || null
       if (variant) {
         this.product.inStock = variant.inStock
