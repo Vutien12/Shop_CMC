@@ -1,32 +1,21 @@
 <template>
   <aside class="main-sidebar">
     <header class="main-header clearfix">
-      <a class="logo" href="#" @click.prevent="$emit('go-to-dashboard')">
-        <img :src="asset('build/assets/sidebar-logo-ltr.svg')" alt="sidebar logo" />
+      <!-- Logo khi expanded - click vào logo cũng toggle sidebar -->
+      <a class="logo logo-expanded" href="#" @click.prevent="$emit('toggle-sidebar')" title="Click to collapse sidebar">
+        <img src="@/assets/sidebar-logo-mini copy.svg" alt="sidebar logo" />
+        <span class="shop-name">CMC Shop</span>
       </a>
 
-      <a class="sidebar-logo-mini" href="#" @click.prevent="$emit('go-to-dashboard')">
-        <img :src="asset('build/assets/sidebar-logo-mini.svg')" alt="sidebar logo mini" />
-      </a>
+      <!-- Toggle button khi expanded -->
+      <button class="sidebar-toggle toggle-expanded" @click="$emit('toggle-sidebar')" title="Collapse sidebar">
+        <i class="fa fa-chevron-left toggle-icon"></i>
+      </button>
 
-      <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button" @click.prevent="$emit('toggle-sidebar')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M15.0001 19.92L8.48009 13.4C7.71009 12.63 7.71009 11.37 8.48009 10.6L15.0001 4.07996"
-            stroke="#292D32"
-            stroke-width="3"
-            stroke-miterlimit="10"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="150px" height="150px">
-          <path
-            d="M 3 9 A 1.0001 1.0001 0 1 0 3 11 L 47 11 A 1.0001 1.0001 0 1 0 47 9 L 3 9 z M 3 24 A 1.0001 1.0001 0 1 0 3 26 L 47 26 A 1.0001 1.0001 0 1 0 47 24 L 3 24 z M 3 39 A 1.0001 1.0001 0 1 0 3 41 L 47 41 A 1.0001 1.0001 0 1 0 47 39 L 3 39 z"
-          />
-        </svg>
-      </a>
+      <!-- Toggle button khi collapsed (full width, có icon expand) -->
+      <button class="sidebar-toggle toggle-collapsed" @click="$emit('toggle-sidebar')" title="Expand sidebar">
+        <i class="fa fa-chevron-right toggle-icon"></i>
+      </button>
     </header>
     <section class="sidebar">
       <ul class="sidebar-menu">
@@ -208,11 +197,6 @@ export default {
       activeMenu,
       toggleMenu
     };
-  },
-  methods: {
-    asset(path) {
-      return `${this.baseUrl}${path}`;
-    }
   }
 };
 </script>
@@ -221,6 +205,97 @@ export default {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* Logo and Shop Name */
+.logo-expanded {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.logo-expanded:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logo-expanded img {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.shop-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* Toggle Button - Expanded State */
+.toggle-expanded {
+  background: transparent !important;
+  border: none !important;
+  color: #b8c7ce !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.toggle-expanded:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Toggle Button - Collapsed State (full width) */
+.toggle-collapsed {
+  display: none !important;
+  background: transparent !important;
+  border: none !important;
+  color: #b8c7ce !important;
+  cursor: pointer !important;
+  padding: 12px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  width: 100% !important;
+  height: 56px !important;
+  margin: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.toggle-collapsed:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.toggle-icon {
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+/* Main Header Layout */
+.main-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 12px 15px !important;
 }
 
 </style>

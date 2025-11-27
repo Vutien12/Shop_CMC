@@ -9,72 +9,75 @@
         </div>
 
         <form @submit.prevent="handleSubmit">
-            <div class="row">
-                <!-- Left Column -->
-                <div class="col-lg-8">
+            <div class="row row-gap">
+                <!-- Left Column - Made wider -->
+                <div class="col-lg-9 col-md-8">
                     <!-- General Section -->
-                    <div class="box">
+                    <div class="box box-shadow">
                         <div class="box-header">
-                            <h5>General</h5>
+                            <h5>General Information</h5>
                         </div>
                         <div class="box-body">
-                            <div class="form-group row">
-                                <label for="title" class="col-sm-12 control-label text-left">
-                                    Title <span class="text-red">*</span>
+                            <div class="form-group">
+                                <label for="title" class="form-label">
+                                    Blog Title <span class="text-red">*</span>
                                 </label>
-                                <div class="col-sm-12">
-                                    <input
-                                        type="text"
-                                        id="title"
-                                        class="form-control"
-                                        v-model="form.title"
-                                        @input="generateSlug"
-                                    />
-                                    <span v-if="errors.has('title')" class="help-block text-red">
-                                        {{ errors.get('title') }}
-                                    </span>
-                                </div>
+                                <input
+                                    type="text"
+                                    id="title"
+                                    class="form-control form-control-lg"
+                                    v-model="form.title"
+                                    @input="generateSlug"
+                                    placeholder="Enter your blog title..."
+                                />
+                                <span v-if="errors.has('title')" class="help-block text-red">
+                                    {{ errors.get('title') }}
+                                </span>
                             </div>
 
-                            <div class="form-group row">
-                                <label for="description" class="col-sm-12 control-label text-left">
-                                    Description <span class="text-red">*</span>
+                            <div class="form-group">
+                                <label for="content" class="form-label">
+                                    Content <span class="text-red">*</span>
                                 </label>
-                                <div class="col-sm-12">
+                                <div class="editor-wrapper">
                                     <TinyMCEEditor
-                                        v-model="form.description"
-                                        :height="350"
-                                        @change="() => errors.clear('description')"
+                                        v-model="form.content"
+                                        :height="500"
+                                        @change="() => errors.clear('content')"
                                     />
-                                    <span v-if="errors.has('description')" class="help-block text-red">
-                                        {{ errors.get('description') }}
-                                    </span>
                                 </div>
+                                <span v-if="errors.has('content')" class="help-block text-red">
+                                    {{ errors.get('content') }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="col-lg-4">
+                <!-- Right Column - Made narrower -->
+                <div class="col-lg-3 col-md-4">
                     <!-- Featured Image Section -->
-                    <div class="box">
+                    <div class="box box-shadow sidebar-box">
                         <div class="box-header">
-                            <h5>Featured Image</h5>
+                            <h5>
+                                <i class="fa fa-image"></i>
+                                Featured Image
+                            </h5>
                         </div>
                         <div class="box-body">
                             <div class="featured-image-uploader">
-                                <div v-if="form.featured_image_preview" class="image-preview">
-                                    <img :src="form.featured_image_preview" alt="Featured Image" />
-                                    <button type="button" class="btn btn-sm btn-danger remove-image" @click="removeFeaturedImage">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <path d="M6.00098 17.9995L17.9999 6.00053" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M17.9999 17.9995L6.00098 6.00055" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
+                                <div v-if="form.thumbnailPreview" class="image-preview">
+                                    <img :src="form.thumbnailPreview" alt="Featured" />
+                                    <button type="button" class="btn btn-sm btn-danger remove-image" @click="removeFeaturedImage" title="Remove image">
+                                        <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                                 <div v-else class="image-placeholder" @click="triggerFileInput">
-                                    <img src="@/Admin/assets/images/placeholder_image.png" alt="Upload" class="placeholder-image" />
+                                    <div class="placeholder-content">
+                                        <i class="fa fa-image fa-3x"></i>
+                                        <p>Select from Media Library</p>
+                                        <small>Click to browse images</small>
+                                    </div>
                                 </div>
                                 <input
                                     type="file"
@@ -84,30 +87,38 @@
                                     @change="handleFeaturedImageChange"
                                 />
                             </div>
-                            <span v-if="errors.has('featured_image')" class="help-block text-red">
-                                {{ errors.get('featured_image') }}
+                            <span v-if="errors.has('thumbnail')" class="help-block text-red">
+                                {{ errors.get('thumbnail') }}
                             </span>
+                            <p class="image-help-text">
+                                <i class="fa fa-info-circle"></i>
+                                Select an image from the media library to use as the blog thumbnail.
+                            </p>
                         </div>
                     </div>
 
                     <!-- Publish Section -->
-                    <div class="box">
+                    <div class="box box-shadow sidebar-box">
                         <div class="box-header">
-                            <h5>Publish</h5>
+                            <h5>
+                                <i class="fa fa-send"></i>
+                                Publish Settings
+                            </h5>
                         </div>
                         <div class="box-body">
-                            <div class="form-group">
-                                <label for="publish_status">Publish Status <span class="text-red">*</span></label>
+                            <div class="form-group mb-0">
+                                <label for="isPublished" class="form-label">Status <span class="text-red">*</span></label>
                                 <select
-                                    id="publish_status"
+                                    id="isPublished"
                                     class="form-control"
-                                    v-model="form.publish_status"
+                                    v-model="form.isPublished"
                                 >
-                                    <option value="published">Published</option>
-                                    <option value="draft">Draft</option>
-                                    <option value="scheduled">Scheduled</option>
-                                    <option value="pending">Pending Review</option>
+                                    <option :value="true">✓ Published</option>
+                                    <option :value="false">📝 Draft</option>
                                 </select>
+                                <small class="form-text text-muted mt-2">
+                                    {{ form.isPublished ? 'This blog will be visible to everyone' : 'This blog will be saved as draft' }}
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -115,20 +126,30 @@
             </div>
         </form>
     </div>
-            <div class="page-form-footer" style="">
-                <button type="button" class="btn btn-default save-btn" @click="save" style="width: 60px">
-                    Save
-                </button>
-                <button type="button" class="btn btn-primary save-exit-btn" @click="saveAndExit" style="width: 100px">
-                    Save &amp; Exit
-                </button>
-            </div>
+        <div class="page-form-footer">
+            <button type="button" class="btn btn-default save-btn" @click="save" :disabled="loading">
+                {{ loading ? 'Saving...' : 'Save' }}
+            </button>
+            <button type="button" class="btn btn-primary save-exit-btn" @click="saveAndExit" :disabled="loading">
+                Save &amp; Exit
+            </button>
+        </div>
+
+        <!-- File Manager Modal -->
+        <SelectImage
+            :isOpen="isFileManagerOpen"
+            @close="closeFileManager"
+            @select="handleImageSelect"
+        />
 </template>
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TinyMCEEditor from '@/Admin/components/TinyMCEEditor.vue';
+import SelectImage from '@/Media/SelectImage.vue';
+import { createBlog, updateBlog, getBlogById } from '@/api/blogApi.js';
+import { attachFileToEntity } from '@/api/fileApi.js';
 
 class Errors {
     constructor() {
@@ -162,23 +183,26 @@ class Errors {
 export default {
     name: 'BlogCreate',
     components: {
-        TinyMCEEditor
+        TinyMCEEditor,
+        SelectImage
     },
     setup() {
         const route = useRoute();
         const router = useRouter();
         const loading = ref(false);
         const featuredImageInput = ref(null);
-        
+        const isFileManagerOpen = ref(false);
+        const selectedThumbnailFileId = ref(null);
+
         const isEditMode = computed(() => !!route.params.id);
-        
+
         const form = reactive({
             title: '',
-            description: '',
-            featured_image: null,
-            featured_image_preview: null,
-            publish_status: 'published',
-            user_id: 1 // TODO: Get from auth
+            content: '',
+            thumbnail: '',
+            thumbnailFile: null,
+            thumbnailPreview: null,
+            isPublished: true
         });
 
         const blog = ref({});
@@ -189,7 +213,7 @@ export default {
         };
 
         const triggerFileInput = () => {
-            featuredImageInput.value.click();
+            isFileManagerOpen.value = true;
         };
 
         const handleFeaturedImageChange = (event) => {
@@ -198,26 +222,41 @@ export default {
 
             // Check file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                errors.set({ featured_image: ['File size must be less than 5MB'] });
+                errors.set({ thumbnail: ['File size must be less than 5MB'] });
                 return;
             }
 
-            errors.clear('featured_image');
-            form.featured_image = file;
+            errors.clear('thumbnail');
+            form.thumbnailFile = file;
 
             const reader = new FileReader();
             reader.onload = (e) => {
-                form.featured_image_preview = e.target.result;
+                form.thumbnailPreview = e.target.result;
             };
             reader.readAsDataURL(file);
         };
 
         const removeFeaturedImage = () => {
-            form.featured_image = null;
-            form.featured_image_preview = null;
+            form.thumbnailFile = null;
+            form.thumbnailPreview = null;
+            form.thumbnail = '';
+            selectedThumbnailFileId.value = null;
             if (featuredImageInput.value) {
                 featuredImageInput.value.value = '';
             }
+        };
+
+        // File Manager Functions
+        const closeFileManager = () => {
+            isFileManagerOpen.value = false;
+        };
+
+        const handleImageSelect = (media) => {
+            form.thumbnail = media.path;
+            form.thumbnailPreview = media.path;
+            selectedThumbnailFileId.value = media.id;
+            errors.clear('thumbnail');
+            closeFileManager();
         };
 
         const formatDate = (dateString) => {
@@ -237,25 +276,18 @@ export default {
 
             loading.value = true;
             try {
-                // TODO: Replace with actual API call
-                blog.value = {
-                    id: route.params.id,
-                    title: 'Sample Blog Title',
-                    description: '<p>Sample blog description</p>',
-                    featured_image: 'https://via.placeholder.com/800x600',
-                    publish_status: 'published'
-                };
+                const response = await getBlogById(route.params.id);
+                blog.value = response.data.result;
 
                 // Populate form
-                Object.keys(form).forEach(key => {
-                    if (key === 'featured_image_preview' && blog.value.featured_image) {
-                        form.featured_image_preview = blog.value.featured_image;
-                    } else if (blog.value[key] !== undefined) {
-                        form[key] = blog.value[key];
-                    }
-                });
+                form.title = blog.value.title || '';
+                form.content = blog.value.content || '';
+                form.thumbnail = blog.value.thumbnail || '';
+                form.thumbnailPreview = blog.value.thumbnail || null;
+                form.isPublished = blog.value.isPublished ?? true;
             } catch (error) {
                 console.error('Error loading blog:', error);
+                alert('Error loading blog: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
@@ -266,15 +298,66 @@ export default {
             errors.clear();
 
             try {
-                console.log('Save clicked - Form data:', form);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                // Stay on the page after save
-                alert('Blog saved successfully!');
+                // Validate required fields
+                if (!form.title) {
+                    errors.set({ title: ['Title is required'] });
+                    loading.value = false;
+                    return;
+                }
+                if (!form.content) {
+                    errors.set({ content: ['Content is required'] });
+                    loading.value = false;
+                    return;
+                }
+
+                // Prepare data for API
+                const blogData = {
+                    title: form.title,
+                    content: form.content,
+                    thumbnail: form.thumbnail,
+                    isPublished: form.isPublished
+                };
+
+                let blogId;
+                if (isEditMode.value) {
+                    await updateBlog(route.params.id, blogData);
+                    blogId = route.params.id;
+
+                    // Attach thumbnail if selected
+                    if (selectedThumbnailFileId.value) {
+                        await attachFileToEntity({
+                            fileId: selectedThumbnailFileId.value,
+                            entityId: blogId,
+                            entityType: 'blog',
+                            zone: 'thumbnail'
+                        });
+                    }
+
+                    alert('Blog updated successfully!');
+                } else {
+                    const response = await createBlog(blogData);
+                    blogId = response.data.result.id;
+
+                    // Attach thumbnail if selected
+                    if (selectedThumbnailFileId.value) {
+                        await attachFileToEntity({
+                            fileId: selectedThumbnailFileId.value,
+                            entityId: blogId,
+                            entityType: 'blog',
+                            zone: 'thumbnail'
+                        });
+                    }
+
+                    alert('Blog created successfully!');
+                    // Update to edit mode with new blog ID
+                    router.replace({ name: 'admin.blogs.edit', params: { id: blogId } });
+                }
             } catch (error) {
-                if (error.response && error.response.data.errors) {
+                if (error.response?.data?.errors) {
                     errors.set(error.response.data.errors);
                 }
                 console.error('Error saving blog:', error);
+                alert('Error saving blog: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
@@ -285,15 +368,52 @@ export default {
             errors.clear();
 
             try {
-                console.log('Save & Exit clicked - Form data:', form);
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Validate required fields
+                if (!form.title) {
+                    errors.set({ title: ['Title is required'] });
+                    loading.value = false;
+                    return;
+                }
+                if (!form.content) {
+                    errors.set({ content: ['Content is required'] });
+                    loading.value = false;
+                    return;
+                }
+
+                // Prepare data for API
+                const blogData = {
+                    title: form.title,
+                    content: form.content,
+                    thumbnail: form.thumbnail,
+                    isPublished: form.isPublished
+                };
+
+                let blogId;
+                if (isEditMode.value) {
+                    await updateBlog(route.params.id, blogData);
+                    blogId = route.params.id;
+                } else {
+                    const response = await createBlog(blogData);
+                    blogId = response.data.result.id;
+                }
+
+                // Attach thumbnail if selected
+                if (selectedThumbnailFileId.value) {
+                    await attachFileToEntity({
+                        fileId: selectedThumbnailFileId.value,
+                        entityId: blogId,
+                        entityType: 'blog',
+                        zone: 'thumbnail'
+                    });
+                }
+
                 router.push({ name: 'admin.blogs.index' });
             } catch (error) {
-                if (error.response && error.response.data.errors) {
+                if (error.response?.data?.errors) {
                     errors.set(error.response.data.errors);
                 }
                 console.error('Error saving blog:', error);
-            } finally {
+                alert('Error saving blog: ' + (error.response?.data?.message || error.message));
                 loading.value = false;
             }
         };
@@ -314,10 +434,13 @@ export default {
             loading,
             isEditMode,
             featuredImageInput,
+            isFileManagerOpen,
             generateSlug,
             triggerFileInput,
             handleFeaturedImageChange,
             removeFeaturedImage,
+            closeFileManager,
+            handleImageSelect,
             formatDate,
             handleSubmit,
             save,
@@ -329,31 +452,163 @@ export default {
 
 <style scoped>
 .content-wrapper {
-    padding: 20px;
+    padding: 25px;
+    background: #f8f9fa;
+    min-height: 100vh;
 }
 
+.main-content-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 25px;
+}
+
+.row-gap {
+    gap: 20px;
+}
+
+/* Box Styling */
 .box {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
     margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.box-shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.box:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .box-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 18px 24px;
+    border-bottom: 2px solid #f0f4f8;
+    background: linear-gradient(to bottom, #fafbfc, #ffffff);
+    border-radius: 12px 12px 0 0;
 }
 
 .box-header h5 {
     margin: 0;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.box-header i {
+    color: #4299e1;
+    font-size: 18px;
 }
 
 .box-body {
+    padding: 24px;
+}
+
+.sidebar-box .box-body {
     padding: 20px;
 }
 
+/* Form Styling */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.form-control-lg {
+    padding: 13px 17px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.form-control::placeholder {
+    color: #a0aec0;
+}
+
+select.form-control {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    appearance: none;
+    height: auto;
+    min-height: 42px;
+    line-height: 1.5;
+}
+
+select.form-control option {
+    padding: 8px;
+    line-height: 1.5;
+}
+
+.form-text {
+    font-size: 13px;
+    line-height: 1.5;
+    display: block;
+}
+
+.text-muted {
+    color: #718096;
+}
+
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mb-0 {
+    margin-bottom: 0 !important;
+}
+
+/* Editor Wrapper */
+.editor-wrapper {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+    background: white;
+}
+
+.editor-wrapper:focus-within {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+/* Featured Image Uploader */
 .featured-image-uploader {
     width: 100%;
 }
@@ -361,9 +616,10 @@ export default {
 .image-preview {
     position: relative;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
+    border: 2px solid #e2e8f0;
+    background: #f7fafc;
 }
 
 .image-preview img {
@@ -376,126 +632,160 @@ export default {
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 8px;
-    border-radius: 4px;
-}
-
-.image-placeholder {
-    border: 2px dashed #e5e7eb;
+    padding: 8px 12px;
     border-radius: 8px;
-    padding: 0;
+    background: rgba(239, 68, 68, 0.95);
+    border: none;
+    color: white;
     cursor: pointer;
-    transition: all 0.3s;
-    background: #fafafa;
-    width: 150px;
-    height: 150px;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    font-size: 14px;
+}
+
+.remove-image:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.image-placeholder {
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    padding: 30px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+    text-align: center;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .image-placeholder:hover {
-    border-color: #d1d5db;
-    background: #f5f5f5;
-}
-
-.placeholder-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 10px;
+    border-color: #4299e1;
+    background: #eff6ff;
 }
 
 .placeholder-content {
-    position: relative;
-    display: inline-block;
-}
-
-.placeholder-content svg {
-    display: block;
-}
-
-.placeholder-content .plus-icon {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: white;
-    border-radius: 50%;
-    padding: 2px;
-}
-
-.publish-info {
-    margin: 15px 0;
-    padding: 15px;
-    background: #f9fafb;
-    border-radius: 6px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: #6b7280;
-}
-
-.info-item:last-child {
-    margin-bottom: 0;
-}
-
-.info-item i {
-    color: #9ca3af;
-}
-
-.form-actions {
-    margin-top: 20px;
-}
-
-.form-actions .btn-block {
+    color: #718096;
     width: 100%;
 }
 
+.placeholder-content i {
+    color: #9ca3af;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.placeholder-content p {
+    margin: 8px 0 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.placeholder-content small {
+    color: #9ca3af;
+    font-size: 12px;
+    display: block;
+}
+
+/* Help Text */
 .help-block {
     display: block;
-    margin-top: 5px;
+    margin-top: 6px;
     font-size: 13px;
+    line-height: 1.4;
 }
 
 .text-red {
-    color: #dc2626;
+    color: #e53e3e;
+    font-weight: 500;
 }
 
+.image-help-text {
+    margin-top: 12px;
+    margin-bottom: 0;
+    font-size: 13px;
+    color: #718096;
+    line-height: 1.5;
+}
+
+.image-help-text i {
+    color: #4299e1;
+    margin-right: 4px;
+}
+
+/* Footer */
 .page-form-footer {
-    position: fixed;
-    bottom: 0;
+    margin-top: 20px;
+    padding: 20px;
+    background: #f5f5f5;
+    text-align: right;
     left: 250px;
     right: 0;
-    background: #f5f5f5;
-    padding: 15px 30px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    z-index: 1000;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .page-form-footer .btn {
-    min-width: 120px;
+    margin-left: 10px;
+    padding: 8px 20px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* Add padding to content wrapper to prevent footer overlap */
-.content-wrapper {
-    padding-bottom: 80px;
+.page-form-footer .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-/* Responsive - adjust for mobile/tablet */
+.page-form-footer .btn-default {
+    background: #ffffff;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.page-form-footer .btn-default:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.page-form-footer .btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.page-form-footer .btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+    .content-wrapper {
+        padding: 15px;
+        padding-bottom: 80px;
+    }
+
     .page-form-footer {
         left: 0;
         padding: 15px;
+    }
+
+    .main-content-title {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 992px) {
+    .col-lg-9,
+    .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <section class="content-header clearfix">
-    <h3>Order #{{ order.id }}</h3>
+    <h3>Order #{{ order.id || '...' }}</h3>
 
     <ol class="breadcrumb">
       <li>
@@ -12,42 +12,19 @@
         </a>
       </li>
       <li><a href="#" @click.prevent="$router.push({ name: 'admin.orders.index' })">Orders</a></li>
-      <li class="active">Order #{{ order.id }}</li>
+      <li class="active">Order #{{ order.id || '...' }}</li>
     </ol>
   </section>
 
-  <section class="content">
+  <section class="content" v-if="isLoading">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading order details...</p>
+    </div>
+  </section>
+
+  <section class="content" v-else>
     <div class="order-wrapper box">
-      <!-- Order Tracking -->
-      <div class="order-tracking-wrapper">
-        <h4 class="section-title">Order Tracking</h4>
-
-        <form @submit.prevent="saveTracking">
-          <div class="row">
-            <div class="col-lg-5 col-md-8">
-              <label for="tracking_reference">Tracking Reference</label>
-
-              <div class="form-group">
-                <input 
-                  type="text" 
-                  name="tracking_reference" 
-                  id="tracking_reference" 
-                  class="form-control" 
-                  v-model="order.trackingReference"
-                  placeholder="Tracking reference such as Tracking Code, Tracking URL, Tracking ID, etc."
-                >
-              </div>
-
-              <div class="text-left mt-3">
-                <button type="submit" class="btn btn-primary">
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-
       <!-- Order Information -->
       <div class="order-information-wrapper">
         <div class="order-information-buttons">
@@ -55,17 +32,20 @@
             <i class="fa fa-print" aria-hidden="true"></i>
           </a>
 
-          <button @click="sendEmail" class="btn btn-default" data-toggle="tooltip" title="Send Email">
+          <button @click="sendEmail" class="btn btn-default" data-toggle="tooltip" title="Send Email" :disabled="isSaving">
             <i class="fa fa-envelope-o" aria-hidden="true"></i>
           </button>
         </div>
 
-        <h4 class="section-title">Order & Account Information</h4>
+        <h4 class="section-title">
+          <i class="fa fa-info-circle section-icon"></i>
+          Order & Account Information
+        </h4>
 
         <div class="row">
           <div class="col-md-6">
             <div class="order clearfix">
-              <h5>Order Information</h5>
+              <h5><i class="fa fa-file-text-o"></i> Order Information</h5>
 
               <div class="table-responsive">
                 <table class="table">
@@ -83,19 +63,20 @@
                       <td>
                         <div class="row">
                           <div class="col-lg-9 col-md-10 col-sm-10">
-                            <select 
-                              id="order-status" 
-                              class="form-control custom-select-black" 
+                            <select
+                              id="order-status"
+                              class="form-control custom-select-black"
                               v-model="order.status"
-                              @change="updateStatus"
+                              :disabled="isSaving"
                             >
-                              <option value="canceled">Canceled</option>
-                              <option value="completed">Completed</option>
-                              <option value="on_hold">On Hold</option>
-                              <option value="pending">Pending</option>
-                              <option value="pending_payment">Pending Payment</option>
-                              <option value="processing">Processing</option>
-                              <option value="refunded">Refunded</option>
+                              <option value="PENDING">Pending</option>
+                              <option value="PENDING_PAYMENT">Pending Payment</option>
+                              <option value="PAID">Paid</option>
+                              <option value="PROCESSING">Processing</option>
+                              <option value="SHIPPED">Shipped</option>
+                              <option value="DELIVERED">Delivered</option>
+                              <option value="CANCELLED">Cancelled</option>
+                              <option value="REFUNDED">Refunded</option>
                             </select>
                           </div>
                         </div>
@@ -115,7 +96,7 @@
                     </tr>
                     <tr>
                       <td>Currency Rate</td>
-                      <td>{{ order.currencyRate }}</td>
+                      <td>{{ order.currencyRate === 1 ? '1' : order.currencyRate }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -125,7 +106,7 @@
 
           <div class="col-md-6">
             <div class="account-information">
-              <h5>Account Information</h5>
+              <h5><i class="fa fa-user"></i> Account Information</h5>
 
               <div class="table-responsive">
                 <table class="table">
@@ -142,10 +123,6 @@
                       <td>Customer Phone</td>
                       <td>{{ order.customer.phone }}</td>
                     </tr>
-                    <tr>
-                      <td>Customer Group</td>
-                      <td>{{ order.customer.group }}</td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -154,14 +131,48 @@
         </div>
       </div>
 
+      <!-- Transactions Information -->
+      <div class="transactions-wrapper" v-if="order.transactions && order.transactions.length > 0">
+        <h4 class="section-title">
+          <i class="fa fa-credit-card section-icon"></i>
+          Payment Transactions
+        </h4>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Payment Method</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="transaction in order.transactions" :key="transaction.id">
+                    <td><code>{{ transaction.transactionId }}</code></td>
+                    <td>{{ formatPaymentMethod(transaction.paymentMethod) }}</td>
+                    <td>{{ formatDate(transaction.createdAt) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Address Information -->
       <div class="address-information-wrapper">
-        <h4 class="section-title">Address Information</h4>
+        <h4 class="section-title">
+          <i class="fa fa-map-marker section-icon"></i>
+          Address Information
+        </h4>
 
         <div class="row">
           <div class="col-md-6">
             <div class="billing-address">
-              <h5>Billing Address</h5>
+              <h5><i class="fa fa-money"></i> Billing Address</h5>
               <div class="address-content">
                 {{ order.billingAddress.name }}<br>
                 {{ order.billingAddress.address1 }}<br>
@@ -176,7 +187,7 @@
 
           <div class="col-md-6">
             <div class="shipping-address">
-              <h5>Shipping Address</h5>
+              <h5><i class="fa fa-truck"></i> Shipping Address</h5>
               <div class="address-content">
                 {{ order.shippingAddress.name }}<br>
                 {{ order.shippingAddress.address1 }}<br>
@@ -193,7 +204,10 @@
 
       <!-- Items Ordered -->
       <div class="items-ordered-wrapper">
-        <h4 class="section-title">Items Ordered</h4>
+        <h4 class="section-title">
+          <i class="fa fa-list section-icon"></i>
+          Items Ordered
+        </h4>
 
         <div class="row">
           <div class="col-md-12">
@@ -203,6 +217,7 @@
                   <thead>
                     <tr>
                       <th>Product</th>
+                      <th>SKU</th>
                       <th>Unit Price</th>
                       <th>Quantity</th>
                       <th>Line Total</th>
@@ -215,12 +230,16 @@
                         <a href="#" @click.prevent="goToProduct(item.productId)">
                           {{ item.name }}
                         </a>
+                        <div v-if="item.variations" class="item-options">
+                          <small>{{ item.variations }}</small>
+                        </div>
                         <div v-if="item.options" class="item-options">
                           <small v-for="(option, index) in item.options" :key="index">
                             {{ option.name }}: {{ option.value }}
                           </small>
                         </div>
                       </td>
+                      <td><small class="text-muted">{{ item.sku || 'N/A' }}</small></td>
                       <td>{{ formatPrice(item.unitPrice) }}</td>
                       <td>{{ item.quantity }}</td>
                       <td>{{ formatPrice(item.lineTotal) }}</td>
@@ -266,84 +285,241 @@
           </div>
         </div>
       </div>
+
+      <!-- Form Footer with Save Buttons -->
+      <div class="page-form-footer">
+        <button type="button" class="btn btn-default save-btn" @click="save" :disabled="isSaving">
+          <i class="fa fa-floppy-o" aria-hidden="true"></i> Save
+        </button>
+        <button type="button" class="btn btn-primary save-exit-btn" @click="saveAndExit" :disabled="isSaving">
+          <i class="fa fa-floppy-o" aria-hidden="true"></i> Save &amp; Exit
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { getOrderById, updateOrderStatus, sendOrderEmail } from '@/api/orderApi.js';
 
 const router = useRouter();
 const route = useRoute();
+const isLoading = ref(true);
+const isSaving = ref(false);
 
-// Mock data - Replace with real API call
+// Order data
 const order = reactive({
-  id: '2356',
-  date: 'Nov 24, 2025',
-  status: 'pending_payment',
-  shippingMethod: 'Free Shipping',
-  paymentMethod: 'Iyzico',
+  id: '',
+  date: '',
+  status: '',
+  shippingMethod: '',
+  paymentMethod: '',
   currency: 'USD',
   currencyRate: '1.0000',
   trackingReference: '',
   customer: {
-    name: 'Demo Admin',
-    email: 'admin@email.com',
-    phone: '12345678',
-    group: 'Registered'
+    name: '',
+    email: '',
+    phone: ''
   },
   billingAddress: {
-    name: 'Demo Admin',
-    address1: 'Banasree',
+    name: '',
+    address1: '',
     address2: '',
-    city: 'Dhaka',
-    state: 'Dhaka',
-    zip: '1219',
-    country: 'Bangladesh'
+    city: '',
+    state: '',
+    zip: '',
+    country: ''
   },
   shippingAddress: {
-    name: 'Demo Admin',
-    address1: 'Banasree',
+    name: '',
+    address1: '',
     address2: '',
-    city: 'Dhaka',
-    state: 'Dhaka',
-    zip: '1219',
-    country: 'Bangladesh'
+    city: '',
+    state: '',
+    zip: '',
+    country: ''
   },
-  items: [
-    {
-      id: 1,
-      productId: 101,
-      name: 'Men Embroidery Polo Giraffe Shirt',
-      unitPrice: 8.66,
-      quantity: 1,
-      lineTotal: 8.66,
-      options: null
-    }
-  ],
-  subtotal: 8.66,
-  shippingCost: 0.00,
-  discount: 0.00,
-  tax: 0.00,
-  total: 8.66
+  items: [],
+  transactions: [],
+  subtotal: 0,
+  shippingCost: 0,
+  discount: 0,
+  tax: 0,
+  total: 0
 });
+
+// Load order data
+const loadOrderData = async () => {
+  try {
+    isLoading.value = true;
+    const orderId = route.params.id;
+    const response = await getOrderById(orderId);
+    const data = response.data.result;
+
+    // Map API data to order object
+    order.id = data.id;
+    order.date = formatDate(data.createdAt);
+    order.status = data.status || 'PENDING';
+    order.shippingMethod = data.shippingMethod || 'N/A';
+    order.paymentMethod = formatPaymentMethod(data.paymentMethod);
+    order.currency = data.currency || 'VND';
+    order.currencyRate = data.currencyRate || 1;
+    order.trackingReference = data.trackingReference || '';
+
+    // Customer info - combine first and last name
+    const customerName = [data.customerFirstName, data.customerLastName]
+      .filter(Boolean)
+      .join(' ') || 'N/A';
+    order.customer.name = customerName;
+    order.customer.email = data.customerEmail || 'N/A';
+    order.customer.phone = data.customerPhone || 'N/A';
+    order.customer.group = 'Registered';
+
+    // Billing address - map flat fields to address object
+    const billingName = [data.billingFirstName, data.billingLastName]
+      .filter(Boolean)
+      .join(' ') || customerName;
+    order.billingAddress = {
+      name: billingName,
+      address1: data.billingAddress1 || '',
+      address2: data.billingAddress2 || '',
+      city: data.billingCity || '',
+      state: data.billingState || '',
+      zip: data.billingZip || '',
+      country: data.billingCountry || ''
+    };
+
+    // Shipping address - map flat fields to address object
+    const shippingName = [data.shippingFirstName, data.shippingLastName]
+      .filter(Boolean)
+      .join(' ') || customerName;
+    order.shippingAddress = {
+      name: shippingName,
+      address1: data.shippingAddress1 || '',
+      address2: data.shippingAddress2 || '',
+      city: data.shippingCity || '',
+      state: data.shippingState || '',
+      zip: data.shippingZip || '',
+      country: data.shippingCountry || ''
+    };
+
+    // Order items - map orderProducts array
+    order.items = (data.orderProducts || []).map(item => {
+      // Format variations if they exist
+      const variations = (item.variations || []).map(v =>
+        v.variationValues?.[0]?.label || v.value || ''
+      ).filter(Boolean).join(' - ');
+
+      // Format options if they exist
+      const options = (item.options || []).map(opt => ({
+        name: opt.name || opt.optionName,
+        value: opt.value || opt.optionValue || ''
+      }));
+
+      return {
+        id: item.id,
+        productId: item.productId,
+        variantId: item.productVariantId,
+        name: item.productName || item.product, // Use productName, not variantName
+        sku: item.sku || '',
+        unitPrice: parseFloat(item.unitPrice) || 0,
+        quantity: item.qty || 1,
+        lineTotal: parseFloat(item.lineTotal) || 0,
+        variations: variations,
+        options: options.length > 0 ? options : null
+      };
+    });
+
+    // Totals
+    order.subtotal = parseFloat(data.subTotal) || 0;
+    order.shippingCost = parseFloat(data.shippingCost) || 0;
+    order.discount = parseFloat(data.discount) || 0;
+    order.tax = parseFloat(data.tax) || 0;
+    order.total = parseFloat(data.total) || 0;
+
+    // Transactions
+    order.transactions = (data.transactions || []).map(txn => ({
+      id: txn.id,
+      transactionId: txn.transactionId,
+      paymentMethod: txn.paymentMethod,
+      createdAt: txn.createdAt
+    }));
+
+  } catch (error) {
+    console.error('Failed to load order:', error);
+    alert('Failed to load order details. Please try again.');
+    router.push({ name: 'admin.orders.index' });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Format date
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+// Format payment method
+const formatPaymentMethod = (method) => {
+  if (!method) return 'N/A';
+  // Convert DEBIT_CARD to Debit Card, etc.
+  return method
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 
 // Format price
 const formatPrice = (price) => {
-  return `$${parseFloat(price).toFixed(2)}`;
+  const amount = parseFloat(price);
+  if (order.currency === 'VND') {
+    return `${amount.toLocaleString('vi-VN')}₫`;
+  } else if (order.currency === 'USD') {
+    return `$${amount.toFixed(2)}`;
+  }
+  return `${order.currency} ${amount.toFixed(2)}`;
 };
 
-// Save tracking
-const saveTracking = () => {
-  alert('Tracking reference saved!');
-  // TODO: Call API to save tracking
+
+// Save order changes
+const save = async () => {
+  try {
+    isSaving.value = true;
+    await updateOrderStatus(order.id, order.status);
+    alert('Order updated successfully!');
+    await loadOrderData(); // Reload to get latest data
+  } catch (error) {
+    console.error('Failed to save order:', error);
+    alert('Failed to save order. Please try again.');
+  } finally {
+    isSaving.value = false;
+  }
 };
 
-// Update status
-const updateStatus = () => {
-  alert(`Order status updated to: ${order.status}`);
-  // TODO: Call API to update status
+// Save and exit
+const saveAndExit = async () => {
+  try {
+    isSaving.value = true;
+    await updateOrderStatus(order.id, order.status);
+    alert('Order updated successfully!');
+    router.push({ name: 'admin.orders.index' });
+  } catch (error) {
+    console.error('Failed to save order:', error);
+    alert('Failed to save order. Please try again.');
+    isSaving.value = false;
+  }
 };
 
 // Print order
@@ -352,28 +528,52 @@ const printOrder = () => {
 };
 
 // Send email
-const sendEmail = () => {
-  alert('Email sent to customer!');
-  // TODO: Call API to send email
+const sendEmail = async () => {
+  try {
+    isSaving.value = true;
+    await sendOrderEmail(order.id);
+    alert('Email sent to customer successfully!');
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    alert('Failed to send email. Please try again.');
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 // Go to product
 const goToProduct = (productId) => {
   router.push({ name: 'admin.products.edit', params: { id: productId } });
 };
+
+// Load data on mount
+onMounted(async () => {
+  await loadOrderData();
+});
 </script>
 
 <style scoped>
+.content {
+  background: #f5f5f5;
+  min-height: calc(100vh - 200px);
+  padding: 20px 20px 0 20px;
+}
+
+
 .content-header {
-  padding: 15px;
-  border-bottom: 1px solid #f4f4f4;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e8e8e8;
   margin-bottom: 20px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .content-header h3 {
   margin: 0 0 10px 0;
   font-size: 24px;
-  font-weight: 400;
+  font-weight: 500;
+  color: #333;
 }
 
 .breadcrumb {
@@ -422,42 +622,90 @@ const goToProduct = (productId) => {
 .order-wrapper {
   background: #fff;
   padding: 20px;
+  padding-bottom: 0;
   margin-bottom: 20px;
-  overflow-x: visible;
+  overflow: visible;
 }
+
 
 .section-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f4f4f4;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e8e8e8;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.order-tracking-wrapper,
+.section-icon {
+  color: #0071dc;
+  font-size: 18px;
+}
+
 .order-information-wrapper,
+.transactions-wrapper,
 .address-information-wrapper,
-.items-ordered-wrapper,
+.items-ordered-wrapper {
+  margin-bottom: 20px;
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.order-information-wrapper {
+  margin-top: 0;
+}
+
 .order-totals-wrapper {
-  margin-bottom: 30px;
+  margin-bottom: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .order-information-buttons {
   float: right;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  gap: 8px;
 }
 
 .order-information-buttons .btn {
-  margin-left: 5px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.order-information-buttons .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .order h5,
 .account-information h5,
 .billing-address h5,
 .shipping-address h5 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   margin-bottom: 15px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.order h5 i,
+.account-information h5 i,
+.billing-address h5 i,
+.shipping-address h5 i {
+  color: #0071dc;
+  font-size: 15px;
 }
 
 .table {
@@ -465,8 +713,19 @@ const goToProduct = (productId) => {
 }
 
 .table td {
-  padding: 10px;
-  border-top: 1px solid #f4f4f4;
+  padding: 12px 10px;
+  border-top: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.table td:first-child {
+  font-weight: 500;
+  color: #555;
+  width: 180px;
+}
+
+.table td:last-child {
+  color: #333;
 }
 
 .table tbody tr:first-child td {
@@ -482,7 +741,7 @@ const goToProduct = (productId) => {
   width: 100%;
   padding: 8px 12px;
   font-size: 14px;
-  line-height: 1.42857143;
+  line-height: 1.5;
   color: #555;
   background-color: #fff;
   border: 1px solid #d2d6de;
@@ -491,7 +750,7 @@ const goToProduct = (productId) => {
 }
 
 .form-control:focus {
-  border-color: #3c8dbc;
+  border-color: #0071dc;
   outline: 0;
 }
 
@@ -504,6 +763,11 @@ const goToProduct = (productId) => {
   border-radius: 4px;
 }
 
+.custom-select-black:focus {
+  border-color: #0071dc;
+  outline: 0;
+}
+
 label {
   display: inline-block;
   margin-bottom: 8px;
@@ -512,11 +776,14 @@ label {
 }
 
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.42857143;
+  line-height: 1.5;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
@@ -528,13 +795,13 @@ label {
 
 .btn-primary {
   color: #fff;
-  background-color: #3c8dbc;
-  border-color: #357ca5;
+  background-color: #0071dc;
+  border-color: #0071dc;
 }
 
 .btn-primary:hover {
-  background-color: #357ca5;
-  border-color: #2e6c96;
+  background-color: #005bb5;
+  border-color: #005bb5;
 }
 
 .btn-default {
@@ -560,8 +827,12 @@ label {
 
 .address-content {
   line-height: 1.8;
-  color: #666;
-  padding: 10px 0;
+  color: #555;
+  padding: 12px 15px;
+  background: #fafafa;
+  border-radius: 4px;
+  border-left: 3px solid #0071dc;
+  margin-top: 10px;
 }
 
 .table-responsive {
@@ -569,11 +840,64 @@ label {
   overflow-x: visible;
 }
 
-.items-ordered .table th {
+.items-ordered .table th,
+.transactions-wrapper .table th {
   background-color: #f9f9f9;
   font-weight: 600;
   padding: 12px 10px;
-  border-bottom: 2px solid #f4f4f4;
+  border-bottom: 2px solid #e8e8e8;
+  color: #333;
+}
+
+.transactions-wrapper .table tbody tr {
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.transactions-wrapper .table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.transactions-wrapper .table td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.transactions-wrapper .table td:first-child {
+  max-width: 400px;
+  width: 50%;
+}
+
+.transactions-wrapper .table td:nth-child(2) {
+  width: 25%;
+}
+
+.transactions-wrapper .table td:last-child {
+  width: 25%;
+}
+
+.transactions-wrapper .table th:first-child {
+  width: 50%;
+}
+
+.transactions-wrapper .table th:nth-child(2) {
+  width: 25%;
+}
+
+.transactions-wrapper .table th:last-child {
+  width: 25%;
+}
+
+.transactions-wrapper code {
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #333;
+  font-family: 'Courier New', Courier, monospace;
+  word-break: break-all;
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .item-options {
@@ -583,36 +907,80 @@ label {
 .item-options small {
   display: block;
   color: #999;
+  margin-top: 3px;
 }
 
-.order-totals-wrapper {
-  margin-bottom: 30px;
+.items-ordered .table a {
+  color: #0071dc;
+  text-decoration: none;
+  font-weight: 500;
 }
+
+.items-ordered .table a:hover {
+  color: #005bb5;
+  text-decoration: underline;
+}
+
+.items-ordered .table .text-muted {
+  color: #999;
+  font-size: 12px;
+}
+
 
 .order-totals-container {
   display: flex;
   justify-content: flex-end;
+  padding: 20px 0;
 }
 
 .order-totals {
-  width: 350px;
-  margin-right: 15px;
+  width: 450px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .order-totals .table {
-  border: 1px solid #f4f4f4;
+  margin-bottom: 0;
 }
 
 .order-totals .table td {
-  padding: 12px 15px;
+  padding: 14px 24px;
+  border-top: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.order-totals .table tbody tr:first-child td {
+  border-top: none;
+}
+
+.order-totals .table td:first-child {
+  width: 60%;
+  color: #555;
+  font-weight: 500;
+}
+
+.order-totals .table td:last-child {
+  width: 40%;
+  color: #333;
+  font-weight: 500;
 }
 
 .order-totals .table tr:last-child {
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
+  border-top: 2px solid #d1d5db;
 }
 
 .order-totals .table tr:last-child td {
-  font-size: 16px;
+  font-size: 18px;
+  padding: 18px 24px;
+  color: #0071dc;
+  font-weight: 600;
+}
+
+.order-totals .table tr:last-child td:first-child {
+  color: #333;
 }
 
 .mt-3 {
@@ -689,12 +1057,34 @@ label {
   box-sizing: border-box;
 }
 
+/* Utility Classes */
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
 @media (max-width: 991px) {
   .col-md-6,
   .col-md-8,
   .col-md-10,
   .col-md-12 {
     width: 100%;
+  }
+
+  .order-totals-container {
+    justify-content: center;
+  }
+
+  .order-totals {
+    width: 100%;
+    max-width: 500px;
   }
 }
 
@@ -705,11 +1095,75 @@ label {
   }
 }
 
+@media (max-width: 768px) {
+  .page-form-footer {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .page-form-footer .btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .order-totals {
+    width: 100%;
+  }
+}
+
 @media print {
   .order-information-buttons,
   .breadcrumb,
-  .order-tracking-wrapper {
+  .page-form-footer {
     display: none;
   }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Page Form Footer */
+.page-form-footer {
+  margin: 20px -20px 0 -20px;
+  padding: 20px;
+  background: #f5f5f5;
+  text-align: right;
+  border-top: 1px solid #e8e8e8;
+}
+
+.page-form-footer .btn {
+  margin-left: 10px;
+}
+
+.page-form-footer .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

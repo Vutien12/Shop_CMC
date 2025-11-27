@@ -10,7 +10,7 @@
         @row-click="handleRowClick"
     >
         <!-- Custom cell for Customer Name column with link -->
-        <template #cell-customer_name="{ row, value }">
+        <template #cell-customer_name="{ value }">
             <span class="customer-name">
                 {{ value }}
             </span>
@@ -36,9 +36,11 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { useAdminOrderStore } from '@/Order/stores/adminOrderStore.js';
+import { deleteOrders } from '@/api/orderApi.js';
 
 export default {
     name: 'OrderPage',
@@ -47,8 +49,10 @@ export default {
     },
     setup() {
         const router = useRouter();
-        const orders = ref([]);
-        
+        const orderStore = useAdminOrderStore();
+        const orders = computed(() => orderStore.orders);
+        const isLoading = computed(() => orderStore.isLoading);
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '60px' },
             { key: 'customer_name', label: 'Customer Name', sortable: true, width: '170px' },
@@ -58,65 +62,27 @@ export default {
             { key: 'created_at', label: 'Created', sortable: true, width: '150px' }
         ];
 
-        const loadOrders = () => {
-            // Mock data - replace with actual API call
-            orders.value = [
-                { 
-                    id: 2335, 
-                    customer_name: 'Angelica Dodson', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending',
-                    total: 255.00,
-                    created_at: '2024-11-18T10:00:00'
-                },
-                { 
-                    id: 2328, 
-                    customer_name: 'Demo Admin', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending',
-                    total: 11.85,
-                    created_at: '2024-11-17T14:00:00'
-                },
-                { 
-                    id: 2327, 
-                    customer_name: 'Demo Admin', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending Payment',
-                    total: 11.85,
-                    created_at: '2024-11-17T14:00:00'
-                },
-                { 
-                    id: 2326, 
-                    customer_name: 'Demo Admin', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending Payment',
-                    total: 11.85,
-                    created_at: '2024-11-17T14:00:00'
-                },
-                { 
-                    id: 2325, 
-                    customer_name: 'Demo Admin', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending Payment',
-                    total: 11.85,
-                    created_at: '2024-11-17T14:00:00'
-                },
-                { 
-                    id: 2323, 
-                    customer_name: 'Angelica Dodson', 
-                    customer_email: 'admin@email.com',
-                    status: 'Pending',
-                    total: 14.42,
-                    created_at: '2024-11-17T14:00:00'
-                }
-            ];
+        const loadOrders = async () => {
+            try {
+                await orderStore.fetchOrders();
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+                alert('Failed to load orders. Please try again.');
+            }
         };
 
-        const handleDelete = (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} order(s)?`)) {
-                orders.value = orders.value.filter(
-                    order => !selectedIds.includes(order.id)
-                );
+        const handleDelete = async (selectedIds) => {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} order(s)?`)) {
+                return;
+            }
+
+            try {
+                await deleteOrders(selectedIds);
+                orderStore.removeOrders(selectedIds);
+                alert(`Successfully deleted ${selectedIds.length} order(s)`);
+            } catch (error) {
+                console.error('Failed to delete orders:', error);
+                alert('Failed to delete orders. Please try again.');
             }
         };
 
@@ -125,6 +91,10 @@ export default {
         };
 
         const formatCurrency = (amount) => {
+            // Check if VND currency by looking at amount size (VND amounts are typically large)
+            if (amount >= 10000) {
+                return `${amount.toLocaleString('vi-VN')}₫`;
+            }
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD'
@@ -142,21 +112,22 @@ export default {
             if (diffYears >= 1) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
             if (diffMonths >= 1) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
             if (diffDays >= 1) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            
+
             const diffHours = Math.floor(diffMs / 3600000);
             if (diffHours >= 1) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            
+
             const diffMins = Math.floor(diffMs / 60000);
             return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
         };
 
-        onMounted(() => {
-            loadOrders();
+        onMounted(async () => {
+            await loadOrders();
         });
 
         return {
             orders,
             columns,
+            isLoading,
             handleDelete,
             handleRowClick,
             formatCurrency,
@@ -183,14 +154,25 @@ export default {
     min-width: fit-content;
 }
 
-.status-completed {
+.status-completed,
+.status-delivered {
     background: #d1fae5;
     color: #065f46;
 }
 
 .status-pending {
-    background: #dbeafe;
-    color: #1e40af;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pending-payment {
+    background: #fed7aa;
+    color: #c2410c;
+}
+
+.status-paid {
+    background: #d1fae5;
+    color: #065f46;
 }
 
 .status-processing {
@@ -208,10 +190,9 @@ export default {
     color: #991b1b;
 }
 
-.status-pending_payment,
-.status-pending-payment {
-    background: #fed7aa;
-    color: #c2410c;
+.status-refunded {
+    background: #f3f4f6;
+    color: #374151;
 }
 </style>
 

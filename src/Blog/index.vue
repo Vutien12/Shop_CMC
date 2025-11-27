@@ -8,12 +8,12 @@
         @delete="handleDelete"
     >
         <!-- Custom cell for Featured Image column -->
-        <template #cell-featured_image="{ value }">
+        <template #cell-thumbnail="{ value }">
             <div class="featured-image-cell">
-                <img 
-                    v-if="value" 
-                    :src="value" 
-                    alt="Featured" 
+                <img
+                    v-if="value"
+                    :src="value"
+                    alt="Featured"
                     class="featured-thumbnail"
                 />
                 <span v-else class="no-image">No Image</span>
@@ -22,7 +22,7 @@
 
         <!-- Custom cell for Title column with link -->
         <template #cell-title="{ row, value }">
-            <router-link 
+            <router-link
                 :to="{ name: 'admin.blogs.edit', params: { id: row.id } }"
                 class="title-link"
             >
@@ -31,14 +31,14 @@
         </template>
 
         <!-- Custom cell for Publish Status column with badge -->
-        <template #cell-publish_status="{ value }">
-            <span :class="['status-badge', `status-${value.toLowerCase()}`]">
-                {{ value }}
+        <template #cell-isPublished="{ value }">
+            <span :class="['status-badge', value ? 'status-published' : 'status-draft']">
+                {{ value ? 'Published' : 'Draft' }}
             </span>
         </template>
 
         <!-- Custom cell for Created column with formatted date -->
-        <template #cell-created_at="{ value }">
+        <template #cell-createdAt="{ value }">
             {{ formatDate(value) }}
         </template>
     </DataTable>
@@ -47,6 +47,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { searchBlogs, deleteManyBlogs } from '@/api/blogApi.js';
 
 export default {
     name: 'BlogIndex',
@@ -55,59 +56,61 @@ export default {
     },
     setup() {
         const blogs = ref([]);
-        
+        const loading = ref(false);
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '60px' },
-            { key: 'featured_image', label: 'Featured Image', sortable: false, width: '120px' },
+            { key: 'thumbnail', label: 'Featured Image', sortable: false, width: '120px' },
             { key: 'title', label: 'Title', sortable: true },
-            { key: 'user', label: 'User', sortable: true, width: '150px' },
-            { key: 'publish_status', label: 'Publish Status', sortable: true, width: '140px' },
-            { key: 'created_at', label: 'Created', sortable: true, width: '150px' }
+            { key: 'author', label: 'Author', sortable: true, width: '150px' },
+            { key: 'isPublished', label: 'Status', sortable: true, width: '140px' },
+            { key: 'createdAt', label: 'Created', sortable: true, width: '150px' }
         ];
 
-        const loadBlogs = () => {
-            // Mock data - replace with actual API call
-            blogs.value = [
-                { 
-                    id: 1, 
-                    featured_image: 'https://via.placeholder.com/80x60',
-                    title: 'Getting Started with Vue.js',
-                    user: 'Admin User',
-                    publish_status: 'Published',
-                    created_at: '2024-11-20T08:00:00'
-                },
-                { 
-                    id: 2, 
-                    featured_image: 'https://via.placeholder.com/80x60',
-                    title: 'Advanced JavaScript Techniques',
-                    user: 'John Doe',
-                    publish_status: 'Draft',
-                    created_at: '2024-11-18T14:30:00'
-                },
-                { 
-                    id: 3, 
-                    featured_image: null,
-                    title: 'CSS Grid Layout Guide',
-                    user: 'Jane Smith',
-                    publish_status: 'Published',
-                    created_at: '2024-11-15T10:00:00'
-                },
-                { 
-                    id: 4, 
-                    featured_image: 'https://via.placeholder.com/80x60',
-                    title: 'Web Performance Optimization',
-                    user: 'Admin User',
-                    publish_status: 'Scheduled',
-                    created_at: '2024-11-10T16:45:00'
-                }
-            ];
+        const loadBlogs = async () => {
+            loading.value = true;
+            try {
+                const response = await searchBlogs({
+                    page: 0,
+                    size: 100,
+                    sortBy: 'createdAt',
+                    direction: 'DESC'
+                });
+
+                // Map API response to table format
+                const result = response.data.result;
+                blogs.value = (result.content || result).map(blog => ({
+                    id: blog.id,
+                    thumbnail: blog.thumbnail,
+                    title: blog.title,
+                    author: blog.authorName || 'Unknown',
+                    isPublished: blog.isPublished,
+                    createdAt: blog.createdAt
+                }));
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                alert('Error loading blogs: ' + (error.response?.data?.message || error.message));
+            } finally {
+                loading.value = false;
+            }
         };
 
-        const handleDelete = (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} blog(s)?`)) {
-                blogs.value = blogs.value.filter(
-                    blog => !selectedIds.includes(blog.id)
-                );
+        const handleDelete = async (selectedIds) => {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} blog(s)?`)) {
+                return;
+            }
+
+            loading.value = true;
+            try {
+                await deleteManyBlogs(selectedIds);
+                alert('Blogs deleted successfully!');
+                // Reload the list
+                await loadBlogs();
+            } catch (error) {
+                console.error('Error deleting blogs:', error);
+                alert('Error deleting blogs: ' + (error.response?.data?.message || error.message));
+            } finally {
+                loading.value = false;
             }
         };
 
@@ -122,10 +125,10 @@ export default {
             if (diffYears >= 1) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
             if (diffMonths >= 1) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
             if (diffDays >= 1) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            
+
             const diffHours = Math.floor(diffMs / 3600000);
             if (diffHours >= 1) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            
+
             const diffMins = Math.floor(diffMs / 60000);
             return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
         };
@@ -137,6 +140,7 @@ export default {
         return {
             blogs,
             columns,
+            loading,
             handleDelete,
             formatDate
         };
