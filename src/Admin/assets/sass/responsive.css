@@ -1,0 +1,149 @@
+/* Responsive CSS for Admin Layout */
+
+/* Mobile Styles (max-width: 767px) */
+@media (max-width: 767px) {
+  /* Sidebar mobile behavior */
+  .admin-scope .main-sidebar {
+    position: fixed !important;
+    left: -250px !important;
+    top: 0 !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    transition: left 0.3s ease-in-out !important;
+  }
+
+  .admin-scope.sidebar-open .main-sidebar {
+    left: 0 !important;
+  }
+
+  /* Content wrapper full width on mobile */
+  .admin-scope .wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .admin-scope .content-wrapper {
+    padding: 15px !important;
+  }
+
+  /* Navbar adjustments */
+  .admin-scope .navbar {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  /* Footer adjustments */
+  .admin-scope .main-footer {
+    padding: 15px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Sidebar menu items */
+  .admin-scope .sidebar-menu li a {
+    white-space: normal !important;
+    padding: 12px 15px !important;
+  }
+
+  .admin-scope .sidebar-menu .treeview-menu {
+    padding-left: 20px !important;
+  }
+
+  .admin-scope .sidebar-menu .treeview-menu li a {
+    padding: 10px 15px !important;
+  }
+
+  /* Hide sidebar toggle on mobile (use hamburger instead) */
+  .admin-scope .sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Sidebar header on mobile */
+  .admin-scope .main-header {
+    height: auto !important;
+    min-height: 56px !important;
+    width: 250px !important;
+  }
+
+  /* Tables responsive */
+  .admin-scope table {
+    font-size: 12px !important;
+  }
+
+  .admin-scope .table-responsive {
+    overflow-x: auto !important;
+  }
+
+  /* Form adjustments */
+  .admin-scope .form-group {
+    margin-bottom: 15px !important;
+  }
+
+  /* Buttons */
+  .admin-scope .btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* Cards and panels */
+  .admin-scope .panel {
+    margin-bottom: 15px !important;
+  }
+
+  /* Dropdown menus */
+  .admin-scope .dropdown-menu {
+    position: absolute !important;
+    max-width: 90vw !important;
+  }
+}
+
+/* Tablet Styles (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .admin-scope .content-wrapper {
+    padding: 20px !important;
+  }
+
+  .admin-scope .main-sidebar {
+    width: 200px !important;
+  }
+
+  .admin-scope .main-header {
+    width: 200px !important;
+  }
+}
+
+/* Desktop Styles (min-width: 992px) */
+@media (min-width: 992px) {
+  .admin-scope .main-sidebar {
+    position: relative !important;
+  }
+}
+
+/* Large Desktop (min-width: 1200px) */
+@media (min-width: 1200px) {
+  .admin-scope .container {
+    max-width: 1140px !important;
+  }
+}
+
+/* Extra Large Desktop (min-width: 1400px) */
+@media (min-width: 1400px) {
+  .admin-scope .container {
+    max-width: 1320px !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .admin-scope .main-sidebar,
+  .admin-scope .navbar,
+  .admin-scope .main-footer,
+  .admin-scope .sidebar-toggle {
+    display: none !important;
+  }
+
+  .admin-scope .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+

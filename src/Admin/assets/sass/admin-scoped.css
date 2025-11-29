@@ -1,4 +1,4 @@
-/* 
+/*
  * Admin Scoped CSS Wrapper
  * Tất cả CSS admin sẽ chỉ áp dụng bên trong .admin-scope
  * Không ảnh hưởng đến User folder
@@ -22,9 +22,11 @@
 .admin-scope .content-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 57px;
+  padding: 20px;
+  padding-bottom: 77px;
   background: #f1f1f1;
   transition: 0.3s ease-in-out;
+  min-height: calc(100vh - 56px - 57px);
 }
 
 .admin-scope .main-header {
@@ -49,6 +51,27 @@
   z-index: 15;
 }
 
+/* Mobile responsive for sidebar */
+@media (max-width: 767px) {
+  .admin-scope .main-sidebar {
+    position: fixed !important;
+    left: -250px !important;
+    top: 0 !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    transition: left 0.3s ease-in-out !important;
+  }
+
+  .admin-scope.sidebar-open .main-sidebar {
+    left: 0 !important;
+  }
+
+  .admin-scope .wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
 .admin-scope .sidebar-menu {
   list-style: none;
   margin: 0;
@@ -62,11 +85,29 @@
   background: #ffffff;
   border-bottom: 1px solid #d5dce6;
   margin-bottom: 0;
-  padding: 0;
-  height: 61px;
+  padding: 0 20px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (max-width: 767px) {
+  .admin-scope .navbar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000 !important;
+    width: 100%;
+    height: 61px;
+    background: #ffffff;
+    border-bottom: 1px solid #d5dce6;
+  }
+
+  .admin-scope .wrapper {
+    margin-top: 0 !important;
+  }
 }
 
 .admin-scope .main-footer {

@@ -29,53 +29,50 @@
         <li
           class="treeview"
           :class="{
-            [activeMenu('products')]: true,
-            [activeMenu('variations')]: true,
-            [activeMenu('options')]: true,
-            [activeMenu('brands')]: true,
-            [activeMenu('categories')]: true
+            'active': isAnyChildActive(['products', 'variations', 'options', 'brands', 'categories']),
+            'menu-open': openMenus.includes('products')
           }"
         >
           <a href="#" @click.prevent="toggleMenu('products')">
             <i class="fa fa-cube"></i>
             <span>Products</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <i class="fa fa-angle-left pull-right" :class="{ 'rotate-down': openMenus.includes('products') }"></i>
             </span>
           </a>
-          <ul class="treeview-menu">
+          <ul class="treeview-menu" :style="{ display: openMenus.includes('products') ? 'block' : 'none' }">
             <li :class="activeMenu('products', 'create')">
-              <router-link :to="{ name: 'admin.products.create' }">
+              <router-link :to="{ name: 'admin.products.create' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Create Product</span>
               </router-link>
             </li>
             <li :class="activeMenu('products')">
-              <router-link :to="{ name: 'admin.products.index' }">
+              <router-link :to="{ name: 'admin.products.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>All Products</span>
               </router-link>
             </li>
             <li :class="activeMenu('categories')">
-              <router-link :to="{ name: 'admin.categories.index' }">
+              <router-link :to="{ name: 'admin.categories.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Categories</span>
               </router-link>
             </li>
             <li :class="activeMenu('brands')">
-              <router-link :to="{ name: 'admin.brands.index' }">
+              <router-link :to="{ name: 'admin.brands.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Brands</span>
               </router-link>
             </li>
             <li :class="activeMenu('variations')">
-              <router-link :to="{ name: 'admin.variations.index' }">
+              <router-link :to="{ name: 'admin.variations.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Variations</span>
               </router-link>
             </li>
             <li :class="activeMenu('options')">
-              <router-link :to="{ name: 'admin.options.index' }">
+              <router-link :to="{ name: 'admin.options.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Options</span>
               </router-link>
@@ -83,17 +80,17 @@
           </ul>
         </li>
 
-        <li class="treeview" :class="activeMenu('orders')">
+        <li class="treeview" :class="{ 'active': activeMenu('orders'), 'menu-open': openMenus.includes('orders') }">
           <a href="#" @click.prevent="toggleMenu('orders')">
             <i class="fa fa-dollar"></i>
             <span>{{ menuItems.sales }}</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <i class="fa fa-angle-left pull-right" :class="{ 'rotate-down': openMenus.includes('orders') }"></i>
             </span>
           </a>
-          <ul class="treeview-menu">
+          <ul class="treeview-menu" :style="{ display: openMenus.includes('orders') ? 'block' : 'none' }">
             <li :class="activeMenu('orders')">
-              <router-link :to="{ name: 'admin.orders.index' }">
+              <router-link :to="{ name: 'admin.orders.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>Orders</span>
               </router-link>
@@ -101,15 +98,15 @@
           </ul>
         </li>
 
-        <li class="treeview" :class="activeMenu('users')">
+        <li class="treeview" :class="{ 'active': activeMenu('users'), 'menu-open': openMenus.includes('users') }">
           <a href="#" @click.prevent="toggleMenu('users')">
             <i class="fa fa-users"></i>
             <span>Users</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <i class="fa fa-angle-left pull-right" :class="{ 'rotate-down': openMenus.includes('users') }"></i>
             </span>
           </a>
-          <ul class="treeview-menu">
+          <ul class="treeview-menu" :style="{ display: openMenus.includes('users') ? 'block' : 'none' }">
             <li :class="activeMenu('users')">
               <a href="#" @click.prevent>
                 <i class="fa fa-angle-double-right"></i>
@@ -120,19 +117,19 @@
         </li>
 
         <li class="treeview" :class="activeMenu('media')">
-          <router-link :to="{ name: 'admin.media.index' }">
+          <router-link :to="{ name: 'admin.media.index' }" @click="closeSidebarOnMobile">
             <i class="fa fa-camera"></i>
             <span>Media</span>
           </router-link>
         </li>
         <li class="treeview" :class="activeMenu('coupons')">
-          <router-link :to="{ name: 'admin.coupons.index' }">
+          <router-link :to="{ name: 'admin.coupons.index' }" @click="closeSidebarOnMobile">
             <i class="fa fa-tags"></i>
             <span>Coupons</span>
           </router-link>
         </li>
         <li class="treeview" :class="activeMenu('blogs')">
-          <router-link :to="{ name: 'admin.blogs.index' }">
+          <router-link :to="{ name: 'admin.blogs.index' }" @click="closeSidebarOnMobile">
             <i class="fa fa-pencil-square-o"></i>
             <span>Blogs</span>
           </router-link>
@@ -143,6 +140,7 @@
 </template>
 
 <script>
+import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -165,8 +163,10 @@ export default {
       default: '/'
     }
   },
-  setup() {
+  emits: ['toggle-sidebar'],
+  setup(props, { emit }) {
     const route = useRoute();
+    const openMenus = ref([]);
 
     const activeMenu = (item, subItem = '') => {
       const routeName = route.name || '';
@@ -188,23 +188,105 @@ export default {
       return isIndexRoute ? 'active' : '';
     };
 
-    const toggleMenu = (menu) => {
-      // Toggle submenu visibility (optional)
-      console.log('Toggle menu:', menu);
+    const isAnyChildActive = (items) => {
+      const routeName = route.name || '';
+      return items.some(item => routeName.includes(item));
     };
+
+    const toggleMenu = (menu) => {
+      const index = openMenus.value.indexOf(menu);
+      if (index > -1) {
+        openMenus.value.splice(index, 1);
+      } else {
+        openMenus.value.push(menu);
+      }
+      // Save to localStorage
+      localStorage.setItem('openMenus', JSON.stringify(openMenus.value));
+    };
+
+    const closeSidebarOnMobile = () => {
+      // Close sidebar on mobile when clicking a link
+      if (window.innerWidth < 768) {
+        emit('toggle-sidebar');
+      }
+    };
+
+    // Auto-open menu based on current route
+    const autoOpenMenu = () => {
+      const routeName = route.name || '';
+
+      if (routeName.includes('products') || routeName.includes('variations') ||
+          routeName.includes('options') || routeName.includes('brands') ||
+          routeName.includes('categories')) {
+        if (!openMenus.value.includes('products')) {
+          openMenus.value.push('products');
+        }
+      }
+
+      if (routeName.includes('orders')) {
+        if (!openMenus.value.includes('orders')) {
+          openMenus.value.push('orders');
+        }
+      }
+
+      if (routeName.includes('users')) {
+        if (!openMenus.value.includes('users')) {
+          openMenus.value.push('users');
+        }
+      }
+    };
+
+    // Load saved state on mount
+    onMounted(() => {
+      const savedMenus = localStorage.getItem('openMenus');
+      if (savedMenus) {
+        try {
+          openMenus.value = JSON.parse(savedMenus);
+        } catch (e) {
+          console.error('Failed to parse openMenus:', e);
+        }
+      }
+
+      // Auto-open menu based on current route
+      autoOpenMenu();
+    });
+
+    // Watch route changes to auto-open relevant menu
+    watch(() => route.name, () => {
+      autoOpenMenu();
+    });
 
     return {
       activeMenu,
-      toggleMenu
+      isAnyChildActive,
+      toggleMenu,
+      openMenus,
+      closeSidebarOnMobile
     };
   }
 };
 </script>
 <style scoped>
+/* Treeview menu animations */
 .sidebar-menu .treeview-menu {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  max-height: 0;
+  opacity: 0;
+}
+
+.sidebar-menu .treeview.menu-open .treeview-menu {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Arrow rotation animation */
+.pull-right-container .fa-angle-left {
+  transition: transform 0.3s ease-in-out;
+}
+
+.pull-right-container .fa-angle-left.rotate-down {
+  transform: rotate(-90deg) !important;
 }
 
 /* Logo and Shop Name */
@@ -298,4 +380,59 @@ export default {
   padding: 12px 15px !important;
 }
 
+/* Responsive styles for mobile */
+@media (max-width: 767px) {
+  .main-sidebar {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0 !important;
+    width: 250px !important;
+    max-width: 250px !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    overflow: hidden !important;
+    background: #222530 !important;
+    transform: translateZ(0);
+  }
+
+  .sidebar {
+    height: calc(100vh - 56px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    padding: 10px 0;
+  }
+
+  /* Make sure sidebar menu items are clickable on mobile */
+  .sidebar-menu {
+    width: 100% !important;
+  }
+
+  .sidebar-menu li a {
+    white-space: normal !important;
+  }
+
+  .sidebar-menu .treeview-menu {
+    padding-left: 20px !important;
+  }
+
+  /* Show the sidebar header (logo) on mobile */
+  .main-header {
+    display: flex !important;
+  }
+
+  /* Prevent any content from showing outside sidebar */
+  .main-sidebar * {
+    max-width: 100%;
+  }
+}
+
+/* Tablet and Desktop */
+@media (min-width: 768px) {
+  .main-sidebar {
+    position: relative !important;
+  }
+}
 </style>

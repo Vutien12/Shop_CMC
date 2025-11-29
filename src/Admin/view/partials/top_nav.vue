@@ -1,21 +1,27 @@
 <template>
   <nav class="navbar navbar-static-top clearfix">
-    <ul style="display: flex;justify-content: flex-end;flex-direction: row;" class="nav navbar-nav clearfix">
-      <li class="fullscreen-mode">
-        <a class="fullscreen-mode-open" href="#" @click.prevent="toggleFullscreen">
-          <svg class="fullscreen-one exit-full-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/></svg>
-          <svg class="fullscreen-two" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/></svg>
-        </a>
-      </li>
-      <li class="user dropdown top-nav-menu pull-right">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-          <span>{{ adminLabel }}</span>
-          <div class="dropdown-arrow-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9" fill="none">
-              <path d="M16.9201 0.949951L10.4001 7.46995C9.63008 8.23995 8.37008 8.23995 7.60008 7.46995L1.08008 0.949951" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </a>
+    <div class="navbar-container">
+      <!-- Mobile hamburger menu button -->
+      <button class="mobile-menu-toggle" @click="$emit('toggle-sidebar')">
+        <i class="fa fa-bars"></i>
+      </button>
+
+      <ul class="nav navbar-nav clearfix">
+        <li class="fullscreen-mode">
+          <a class="fullscreen-mode-open" href="#" @click.prevent="toggleFullscreen">
+            <svg class="fullscreen-one exit-full-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/></svg>
+            <svg class="fullscreen-two" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/></svg>
+          </a>
+        </li>
+        <li class="user dropdown top-nav-menu pull-right">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <span>{{ adminLabel }}</span>
+            <div class="dropdown-arrow-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9" fill="none">
+                <path d="M16.9201 0.949951L10.4001 7.46995C9.63008 8.23995 8.37008 8.23995 7.60008 7.46995L1.08008 0.949951" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
 
         <ul class="dropdown-menu">
           <li class="profile-details">
@@ -53,13 +59,14 @@
         </ul>
       </li>
     </ul>
+    </div>
   </nav>
 
-  <form 
+  <form
     v-if="logoutRoute"
-    id="logout-form" 
-    :action="logoutRoute" 
-    method="POST" 
+    id="logout-form"
+    :action="logoutRoute"
+    method="POST"
     style="display: none;"
   >
     <input type="hidden" name="_token" :value="csrfToken">
@@ -69,6 +76,7 @@
 <script>
 export default {
   name: 'Topnav',
+  emits: ['toggle-sidebar', 'toggle-fullscreen', 'logout-requested'],
   props: {
     // Label cho bảng điều khiển (vd: 'Admin Panel')
     adminLabel: {
@@ -107,7 +115,7 @@ export default {
       if (this.adminLabel) {
         return this.adminLabel.charAt(0).toUpperCase();
       }
-      return 'A'; 
+      return 'A';
     }
   },
   methods: {
@@ -116,13 +124,13 @@ export default {
       // Tùy chọn 1: Kích hoạt form submit (giống code gốc)
       document.getElementById('logout-form').submit();
 
-      /* Tùy chọn 2 (Hiện đại hơn): Gửi request POST/GET bằng Axios/Fetch 
-      
+      /* Tùy chọn 2 (Hiện đại hơn): Gửi request POST/GET bằng Axios/Fetch
+
       this.$emit('logout-requested'); // Phát ra sự kiện để component cha xử lý đăng xuất AJAX
-      
+
       */
     },
-    
+
     // Phương thức xử lý toàn màn hình (Placeholder)
     toggleFullscreen() {
         // Cần triển khai logic JS để chuyển đổi toàn màn hình (dùng Fullscreen API)
@@ -135,5 +143,111 @@ export default {
 </script>
 
 <style scoped>
-/* Thêm CSS scoped nếu cần thiết */
+/* Navbar container */
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  gap: 10px;
+}
+
+.navbar .nav.navbar-nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+/* Mobile menu toggle button */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #333;
+  font-size: 24px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.mobile-menu-toggle:hover {
+  color: #475aff;
+  background: rgba(71, 90, 255, 0.1);
+}
+
+.mobile-menu-toggle:active {
+  background: rgba(71, 90, 255, 0.2);
+  transform: scale(0.95);
+}
+
+/* Desktop: hide hamburger menu */
+@media (min-width: 768px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Mobile: show hamburger menu and adjust layout */
+@media (max-width: 767px) {
+  .mobile-menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navbar {
+    padding: 0 10px !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10001 !important;
+    background: #ffffff;
+    border-bottom: 1px solid #d5dce6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Adjust navbar items spacing on mobile */
+  .navbar .nav.navbar-nav {
+    flex: 1;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .navbar .nav.navbar-nav li {
+    margin: 0;
+  }
+
+  /* Make sure fullscreen and profile icons are visible */
+  .navbar .nav.navbar-nav .fullscreen-mode,
+  .navbar .nav.navbar-nav .top-nav-menu {
+    display: flex !important;
+  }
+
+  /* Adjust dropdown positioning on mobile */
+  .navbar .dropdown-menu {
+    right: 0;
+    left: auto;
+  }
+
+  /* Hide admin label text on very small screens */
+  @media (max-width: 360px) {
+    .navbar .top-nav-menu span:first-child {
+      display: none;
+    }
+  }
+}
 </style>
