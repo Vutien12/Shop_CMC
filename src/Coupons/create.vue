@@ -1,5 +1,9 @@
 <template>
     <section class="content">
+        <div v-if="isLoading" class="loading-overlay">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+        
         <form @submit.prevent="onSubmit" class="form-horizontal" id="coupon-create-form" novalidate>
             <input type="hidden" name="_token" :value="csrfToken" autocomplete="off" />
             <div class="accordion-content clearfix">
@@ -10,7 +14,7 @@
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
-                                        <a>Brand Information</a>
+                                        <a>{{ isEditMode ? 'Edit Coupon' : 'Coupon Information' }}</a>
                                     </h4>
                                 </div>
 
@@ -20,11 +24,11 @@
                                             <li :class="{ active: activeTab === 'general' }">
                                                 <a href="#general" @click.prevent="activeTab = 'general'">General</a>
                                             </li>
-                                            <li :class="{ active: activeTab === 'images' }">
-                                                <a href="#images" @click.prevent="activeTab = 'images'">Usage Restrictions</a>
+                                            <li :class="{ active: activeTab === 'usage_restrictions' }">
+                                                <a href="#usage_restrictions" @click.prevent="activeTab = 'usage_restrictions'">Usage Time</a>
                                             </li>
-                                            <li :class="{ active: activeTab === 'seo' }">
-                                                <a href="#seo" @click.prevent="activeTab = 'seo'">Usage Limits</a>
+                                            <li :class="{ active: activeTab === 'usage_limits' }">
+                                                <a href="#usage_limits" @click.prevent="activeTab = 'usage_limits'">Usage Limits</a>
                                             </li>
                                         </ul>
                                     </div>
@@ -39,65 +43,50 @@
                     <div class="accordion-box-content">
                         <div class="tab-content clearfix">
                             <!-- GENERAL -->
-                                <div v-show="activeTab === 'general'" class="tab-pane fade in active" id="general">
-                                    <h4 class="tab-content-title">General</h4>
-                                    <div class="row">
+                            <div v-show="activeTab === 'general'" class="tab-pane fade in" id="general">
+                                <h4 class="tab-content-title">General</h4>
+                                <div class="row">
                                     <div class="col-md-8">
-                                        <div class="form-group" :class="{ 'has-error': errors.name }">
-                                            <label for="name" class="col-md-3 control-label text-left">Name<span class="m-l-5 text-red">*</span></label>
+                                        <div class="form-group" :class="{ 'has-error': errors.description }">
+                                            <label for="description" class="col-md-3 control-label text-left">Description<span class="m-l-5 text-red">*</span></label>
                                             <div class="col-md-9">
-                                                <input id="name" v-model.trim="form.name" name="name" class="form-control" type="text" />
-                                                <small v-if="errors.name" class="text-danger">{{ errors.name }}</small>
+                                                <textarea id="description" v-model.trim="form.description" name="description" class="form-control" rows="3"></textarea>
+                                                <small v-if="errors.description" class="text-danger">{{ errors.description }}</small>
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label for="code" class="col-md-3 control-label text-left">Code<span class="m-l-5 text-red">*</span></label>
+                                        <div class="form-group" :class="{ 'has-error': errors.discountValue }">
+                                            <label for="discountType" class="col-md-3 control-label text-left">Discount Type<span class="m-l-5 text-red">*</span></label>
                                             <div class="col-md-9">
-                                                <input id="code" v-model.trim="form.code" name="code" class="form-control" type="text" />
-                                                <small v-if="errors.code" class="text-danger">{{ errors.code }}</small>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="is_percent" class="col-md-3 control-label text-left">Discount Type</label>
-                                            <div class="col-md-9">
-                                                <select id="is_percent" v-model.number="form.is_percent" name="is_percent" class="form-control custom-select-black">
-                                                    <option :value="0">Fixed</option>
-                                                    <option :value="1">Percent</option>
+                                                <select id="discountType" v-model="form.discountType" name="discountType" class="form-control custom-select-black">
+                                                    <option value="PERCENT">Percent</option>
+                                                    <option value="FIXED">Fixed</option>
                                                 </select>
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label for="value" class="col-md-3 control-label text-left">Value</label>
+                                        <div class="form-group" :class="{ 'has-error': errors.discountValue }">
+                                            <label for="discountValue" class="col-md-3 control-label text-left">Discount Value<span class="m-l-5 text-red">*</span></label>
                                             <div class="col-md-9">
-                                                <input id="value" v-model.number="form.value" name="value" class="form-control" min="0" type="number" />
+                                                <input id="discountValue" v-model.number="form.discountValue" name="discountValue" class="form-control" min="0" type="number" />
+                                                <small v-if="errors.discountValue" class="text-danger">{{ errors.discountValue }}</small>
+                                                <small v-else class="text-muted">{{ form.discountType === 'PERCENT' ? 'Enter percentage (e.g., 10 for 10%)' : 'Enter fixed amount' }}</small>
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="free_shipping" class="col-md-3 control-label text-left">Free Shipping</label>
+                                            <label for="maxDiscount" class="col-md-3 control-label text-left">Max Discount</label>
                                             <div class="col-md-9">
-                                                <div class="checkbox">
-                                                    <input type="hidden" value="0" name="free_shipping" />
-                                                    <input id="free_shipping" type="checkbox" v-model="form.free_shipping" />
-                                                    <label for="free_shipping">Allow free shipping</label>
-                                                </div>
+                                                <input id="maxDiscount" v-model.number="form.maxDiscount" name="maxDiscount" class="form-control" min="0" type="number" />
+                                                <small class="text-muted">Maximum discount amount (leave empty for no limit)</small>
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="start_date" class="col-md-3 control-label text-left">Start date</label>
+                                            <label for="minOrderAmount" class="col-md-3 control-label text-left">Min Order Amount</label>
                                             <div class="col-md-9">
-                                                <input id="start_date" v-model="form.start_date" name="start_date" class="form-control" type="datetime-local" />
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="end_date" class="col-md-3 control-label text-left">End date</label>
-                                            <div class="col-md-9">
-                                                <input id="end_date" v-model="form.end_date" name="end_date" class="form-control" type="datetime-local" />
+                                                <input id="minOrderAmount" v-model.number="form.minOrderAmount" name="minOrderAmount" class="form-control" min="0" type="number" />
+                                                <small class="text-muted">Minimum order amount to use this coupon</small>
                                             </div>
                                         </div>
 
@@ -106,7 +95,7 @@
                                             <div class="col-md-9">
                                                 <div class="checkbox">
                                                     <input type="hidden" value="0" name="is_active" />
-                                                    <input id="is_active" type="checkbox" v-model="form.is_active" />
+                                                    <input id="is_active" type="checkbox" v-model="form.isActive" />
                                                     <label for="is_active">Enable the coupon</label>
                                                 </div>
                                             </div>
@@ -117,50 +106,20 @@
 
                             <!-- USAGE RESTRICTIONS -->
                             <div v-show="activeTab === 'usage_restrictions'" class="tab-pane fade in" id="usage_restrictions">
-                                <h4 class="tab-content-title">Usage Restrictions</h4>
+                                <h4 class="tab-content-title">Usage Time</h4>
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label for="minimum_spend" class="col-md-3 control-label text-left">Minimum Spend</label>
+                                            <label for="start_date" class="col-md-3 control-label text-left">Start Date</label>
                                             <div class="col-md-9">
-                                                <input id="minimum_spend" v-model.number="form.minimum_spend" name="minimum_spend" class="form-control" min="0" type="number" />
+                                                <input id="start_date" v-model="form.startDate" name="start_date" class="form-control" type="datetime-local" />
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="maximum_spend" class="col-md-3 control-label text-left">Maximum Spend</label>
+                                            <label for="end_date" class="col-md-3 control-label text-left">End Date</label>
                                             <div class="col-md-9">
-                                                <input id="maximum_spend" v-model.number="form.maximum_spend" name="maximum_spend" class="form-control" min="0" type="number" />
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label class="col-md-3 control-label text-left">Products</label>
-                                            <div class="col-md-9">
-                                                <select multiple v-model="form.products" class="form-control" style="min-height:120px">
-                                                    <option disabled value="">-- select products (placeholder) --</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label class="col-md-3 control-label text-left">Exclude Products</label>
-                                            <div class="col-md-9">
-                                                <select multiple v-model="form.exclude_products" class="form-control" style="min-height:120px"></select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label class="col-md-3 control-label text-left">Categories</label>
-                                            <div class="col-md-9">
-                                                <select multiple v-model="form.categories" class="form-control" style="min-height:120px"></select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label class="col-md-3 control-label text-left">Exclude Categories</label>
-                                            <div class="col-md-9">
-                                                <select multiple v-model="form.exclude_categories" class="form-control" style="min-height:120px"></select>
+                                                <input id="end_date" v-model="form.endDate" name="end_date" class="form-control" type="datetime-local" />
                                             </div>
                                         </div>
                                     </div>
@@ -173,35 +132,32 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label for="usage_limit_per_coupon" class="col-md-3 control-label text-left">Usage Limit Per Coupon</label>
+                                            <label for="usageLimit" class="col-md-3 control-label text-left">Usage Limit</label>
                                             <div class="col-md-9">
-                                                <input id="usage_limit_per_coupon" v-model.number="form.usage_limit_per_coupon" name="usage_limit_per_coupon" class="form-control" type="number" />
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="usage_limit_per_customer" class="col-md-3 control-label text-left">Usage Limit Per Customer</label>
-                                            <div class="col-md-9">
-                                                <input id="usage_limit_per_customer" v-model.number="form.usage_limit_per_customer" name="usage_limit_per_customer" class="form-control" type="number" />
+                                                <input id="usageLimit" v-model.number="form.usageLimit" name="usageLimit" class="form-control" min="0" type="number" />
+                                                <small class="text-muted">Total number of times this coupon can be used</small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Form Footer -->
-                            <div class="form-group">
-                                <div class="col-md-10 col-md-offset-2">
-                                    <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-                                        <span v-if="isSubmitting">Saving...</span>
-                                        <span v-else>Save</span>
-                                    </button>
-                                    <span v-if="submitMessage" :class="{'text-success': submitSuccess, 'text-danger': !submitSuccess}" style="margin-left:1rem">{{ submitMessage }}</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="page-form-footer">
+                <div v-if="submitMessage" class="alert-message" :class="submitSuccess ? 'alert-success' : 'alert-error'">
+                    {{ submitMessage }}
+                </div>
+                <button type="submit" class="btn btn-default save-btn" :disabled="isSubmitting">
+                    <span v-if="isSubmitting">Saving...</span>
+                    <span v-else>Save</span>
+                </button>
+                <button type="button" class="btn btn-primary save-exit-btn" @click="saveAndExit" :disabled="isSubmitting">
+                    Save &amp; Exit
+                </button>
             </div>
         </form>
 
@@ -210,121 +166,227 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-
-// CSRF token (inject from server if available)
-const csrfToken = ''
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { createCoupon, getCouponById, updateCoupon } from '@/api/couponsApi'
 
 const router = useRouter()
-const activeTab = ref('usage_limits')
+const route = useRoute()
+const activeTab = ref('general')
 const isSubmitting = ref(false)
 const submitMessage = ref('')
 const submitSuccess = ref(false)
+const shouldExit = ref(false)
+const isLoading = ref(false)
+const isEditMode = ref(false)
+const couponId = ref(null)
 
 const form = reactive({
-    name: '',
-    code: '',
-    is_percent: 0,
-    value: 0,
-    free_shipping: false,
-    start_date: '',
-    end_date: '',
-    is_active: false,
-    minimum_spend: null,
-    maximum_spend: null,
-    products: [],
-    exclude_products: [],
-    categories: [],
-    exclude_categories: [],
-    usage_limit_per_coupon: null,
-    usage_limit_per_customer: null,
+    description: '',
+    discountType: 'PERCENT',
+    discountValue: 0,
+    maxDiscount: null,
+    minOrderAmount: null,
+    startDate: '',
+    endDate: '',
+    usageLimit: null,
+    isActive: false,
 })
 
-const errors = reactive({ name: '', code: '' })
+const errors = reactive({ 
+    description: '',
+    discountValue: ''
+})
+
+// Load coupon data if editing
+const loadCoupon = async () => {
+    if (!couponId.value) return
+    
+    isLoading.value = true
+    try {
+        const response = await getCouponById(couponId.value)
+        console.log('Loaded coupon:', response)
+        
+        // Handle different response structures
+        const data = response.result || response.data || response
+        
+        // Populate form with coupon data
+        form.description = data.description || ''
+        form.discountType = data.discountType || 'PERCENT'
+        form.discountValue = data.discountValue || 0
+        form.maxDiscount = data.maxDiscount || null
+        form.minOrderAmount = data.minOrderAmount || null
+        form.usageLimit = data.usageLimit || null
+        form.isActive = data.isActive || false
+        
+        // Format dates for datetime-local input
+        if (data.startDate) {
+            const startDate = new Date(data.startDate)
+            form.startDate = startDate.toISOString().slice(0, 16)
+        }
+        
+        if (data.endDate) {
+            const endDate = new Date(data.endDate)
+            form.endDate = endDate.toISOString().slice(0, 16)
+        }
+        
+    } catch (error) {
+        console.error('Failed to load coupon:', error)
+        submitMessage.value = 'Failed to load coupon data'
+        submitSuccess.value = false
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// Check if in edit mode on mount
+onMounted(() => {
+    if (route.params.id) {
+        isEditMode.value = true
+        couponId.value = route.params.id
+        loadCoupon()
+    }
+})
 
 function validate() {
-    errors.name = ''
-    errors.code = ''
+    errors.description = ''
+    errors.discountValue = ''
     let ok = true
-    if (!form.name || form.name.trim() === '') {
-        errors.name = 'Name is required.'
+    
+    if (!form.description || form.description.trim() === '') {
+        errors.description = 'Description is required.'
         ok = false
     }
-    if (!form.code || form.code.trim() === '') {
-        errors.code = 'Code is required.'
+    
+    if (!form.discountValue || form.discountValue <= 0) {
+        errors.discountValue = 'Discount value must be greater than 0'
         ok = false
     }
+    
     return ok
+}
+
+function saveAndExit() {
+    shouldExit.value = true
+    onSubmit()
 }
 
 async function onSubmit() {
     submitMessage.value = ''
     submitSuccess.value = false
-    if (!validate()) return
+    
+    if (!validate()) {
+        return
+    }
 
     isSubmitting.value = true
+    
     try {
-        const fd = new FormData()
-        fd.append('_token', csrfToken)
-        fd.append('name', form.name)
-        fd.append('code', form.code)
-        fd.append('is_percent', String(form.is_percent))
-        fd.append('value', String(form.value || 0))
-        fd.append('free_shipping', form.free_shipping ? '1' : '0')
-        if (form.start_date) fd.append('start_date', form.start_date)
-        if (form.end_date) fd.append('end_date', form.end_date)
-        fd.append('is_active', form.is_active ? '1' : '0')
-        if (form.minimum_spend !== null) fd.append('minimum_spend', String(form.minimum_spend))
-        if (form.maximum_spend !== null) fd.append('maximum_spend', String(form.maximum_spend))
-        form.products.forEach((p) => fd.append('products[]', p))
-        form.exclude_products.forEach((p) => fd.append('exclude_products[]', p))
-        form.categories.forEach((c) => fd.append('categories[]', c))
-        form.exclude_categories.forEach((c) => fd.append('exclude_categories[]', c))
-        if (form.usage_limit_per_coupon !== null) fd.append('usage_limit_per_coupon', String(form.usage_limit_per_coupon))
-        if (form.usage_limit_per_customer !== null) fd.append('usage_limit_per_customer', String(form.usage_limit_per_customer))
+        // Prepare data for API
+        const couponData = {
+            description: form.description,
+            discountType: form.discountType,
+            discountValue: Number(form.discountValue),
+            isActive: form.isActive
+        }
 
-        // POST to server (example action URL from your snippet)
-        const actionUrl = 'https://asia.fleetcart.envaysoft.com/en/admin/coupons?tab=usage_limits'
+        // Only add optional fields if they have values
+        if (form.maxDiscount && form.maxDiscount > 0) {
+            couponData.maxDiscount = Number(form.maxDiscount)
+        }
+        
+        if (form.minOrderAmount && form.minOrderAmount > 0) {
+            couponData.minOrderAmount = Number(form.minOrderAmount)
+        }
+        
+        if (form.startDate && form.startDate.trim() !== '') {
+            couponData.startDate = form.startDate
+        }
+        
+        if (form.endDate && form.endDate.trim() !== '') {
+            couponData.endDate = form.endDate
+        }
+        
+        if (form.usageLimit && form.usageLimit > 0) {
+            couponData.usageLimit = Number(form.usageLimit)
+        }
 
-        const res = await fetch(actionUrl, {
-            method: 'POST',
-            body: fd,
-            credentials: 'include',
-        })
+        console.log('Sending coupon data:', couponData)
 
-        if (!res.ok) {
-            const text = await res.text().catch(() => '')
-            submitMessage.value = `Server error: ${res.status} ${res.statusText} ${text ? '- ' + text : ''}`
-            submitSuccess.value = false
+        // Call API (create or update)
+        let response
+        if (isEditMode.value) {
+            response = await updateCoupon(couponId.value, couponData)
+            submitMessage.value = 'Coupon updated successfully!'
         } else {
-            submitMessage.value = 'Coupon saved successfully.'
-            submitSuccess.value = true
-            // dispatch a global event so the index can reload immediately
+            response = await createCoupon(couponData)
+            submitMessage.value = 'Coupon created successfully!'
+        }
+        
+        console.log('API Response:', response)
+        submitSuccess.value = true
+        
+        // Dispatch event for list to reload (only on create)
+        if (!isEditMode.value) {
             try {
-                // build a new coupon object (mock) so index can insert it locally when API not used
                 const newCoupon = {
-                    id: Date.now(),
-                    name: form.name,
-                    code: form.code,
-                    value: form.value || 0,
-                    is_percent: form.is_percent ? 1 : 0,
-                    is_active: form.is_active ? true : false,
-                    created_at: new Date().toISOString(),
+                    id: response.id || Date.now(),
+                    description: form.description,
+                    code: response.code || '',
+                    discountType: form.discountType,
+                    discountValue: form.discountValue,
+                    isActive: form.isActive,
+                    createdAt: response.createdAt || new Date().toISOString(),
                 }
                 window.dispatchEvent(new CustomEvent('coupons:created', { detail: newCoupon }))
             } catch (e) {
-                // ignore if window not available
-            }
-            // navigate back to coupons index and include a timestamp so index can refresh
-            try {
-                router.push({ name: 'admin.coupons.index', query: { refreshed: Date.now() } })
-            } catch (e) {
-                // ignore
+                console.error('Error dispatching event:', e)
             }
         }
-    } catch (err) {
-        submitMessage.value = 'Request failed: ' + (err && err.message ? err.message : String(err))
+        
+        // Navigate if shouldExit is true
+        if (shouldExit.value) {
+            setTimeout(() => {
+                router.push({ name: 'admin.coupons.index', query: { refreshed: Date.now() } })
+            }, 500)
+        } else if (isEditMode.value) {
+            // In edit mode, stay on page after save
+            setTimeout(() => {
+                submitMessage.value = ''
+            }, 3000)
+        } else {
+            // Reset form for new entry
+            Object.assign(form, {
+                description: '',
+                discountType: 'PERCENT',
+                discountValue: 0,
+                maxDiscount: null,
+                minOrderAmount: null,
+                startDate: '',
+                endDate: '',
+                usageLimit: null,
+                isActive: false,
+            })
+            activeTab.value = 'general'
+        }
+        
+    } catch (error) {
+        console.error('Error saving coupon:', error)
+        console.error('Error response:', error.response?.data)
+        
+        // Show detailed error message
+        let errorMsg = isEditMode.value ? 'Failed to update coupon. ' : 'Failed to create coupon. '
+        if (error.response?.data?.message) {
+            errorMsg += error.response.data.message
+        } else if (error.response?.data?.errors) {
+            // Handle validation errors
+            const errors = error.response.data.errors
+            errorMsg += Object.values(errors).flat().join(', ')
+        } else if (error.message) {
+            errorMsg += error.message
+        }
+        
+        submitMessage.value = errorMsg
         submitSuccess.value = false
     } finally {
         isSubmitting.value = false
@@ -333,6 +395,31 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    font-size: 18px;
+    color: #0071a1;
+    font-weight: 600;
+}
+
+/* Content Section */
+.content {
+    padding-bottom: 80px;
+}
+
 /* Accordion Layout */
 .accordion-content {
     display: flex;
@@ -432,6 +519,15 @@ async function onSubmit() {
     background: transparent;
     border: none;
     padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane[style*="display: block"],
+.tab-pane:not([style*="display: none"]) {
+    display: block !important;
 }
 
 .tab-content-title {
@@ -617,6 +713,49 @@ textarea.form-control {
     margin: 30px 0;
 }
 
+/* Page Form Footer */
+.page-form-footer {
+    position: fixed;
+    bottom: 0;
+    left: 250px;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 15px 30px;
+    text-align: right;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.alert-message {
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-right: auto;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@media (max-width: 991px) {
+    .page-form-footer {
+        left: 0;
+    }
+}
+
 /* Buttons */
 .btn {
     padding: 8px 16px;
@@ -664,6 +803,80 @@ textarea.form-control {
 @media (max-width: 991px) {
     .accordion-content {
         flex-direction: column;
+    }
+    
+    .page-form-footer {
+        left: 0;
+        padding: 10px 15px;
+    }
+    
+    .col-md-3,
+    .col-md-8,
+    .col-md-9 {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .form-horizontal .form-group {
+        flex-direction: column;
+    }
+    
+    .control-label {
+        text-align: left !important;
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding-bottom: 100px;
+    }
+    
+    .accordion-content {
+        margin: 0;
+        gap: 15px;
+    }
+    
+    .col-lg-3,
+    .col-lg-9,
+    .col-md-4 {
+        width: 100%;
+        padding: 0;
+    }
+    
+    .tab-content-title {
+        font-size: 16px;
+    }
+    
+    .page-form-footer {
+        padding: 8px 10px;
+    }
+    
+    .page-form-footer .btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        margin-left: 5px;
+    }
+}
+
+@media (max-width: 575px) {
+    .accordion-tab li a {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+    
+    .form-control {
+        height: 36px;
+        font-size: 13px;
+    }
+    
+    textarea.form-control {
+        font-size: 13px;
+    }
+    
+    .page-form-footer .btn {
+        padding: 5px 10px;
+        font-size: 12px;
     }
 }
 </style>

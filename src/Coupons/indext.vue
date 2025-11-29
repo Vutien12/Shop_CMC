@@ -8,7 +8,7 @@
         @delete="handleDelete"
     >
         <!-- Custom cell for Name column with link to edit (route optional) -->
-        <template #cell-name="{ row, value }">
+        <template #cell-description="{ row, value }">
             <router-link 
                 :to="{ name: 'admin.coupons.edit', params: { id: row.id } }"
                 class="name-link"
@@ -18,17 +18,17 @@
         </template>
 
         <!-- Custom cell for Created column with formatted date -->
-        <template #cell-created_at="{ value }">
+        <template #cell-createdAt="{ value }">
             {{ formatDate(value) }}
         </template>
 
         <!-- Custom cell for Discount to show value and type -->
-        <template #cell-value="{ row }">
+        <template #cell-discountValue="{ row }">
             <span>{{ formatDiscount(row) }}</span>
         </template>
 
         <!-- Custom cell for Status -->
-        <template #cell-is_active="{ value }">
+        <template #cell-isActive="{ value }">
             <span :class="value ? 'text-success' : 'text-muted'">{{ value ? 'Active' : 'Disabled' }}</span>
         </template>
     </DataTable>
@@ -38,6 +38,7 @@
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router'
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { getCoupons, deleteCoupon, deleteCoupons } from '@/api/couponsApi';
 
 export default {
     name: 'CouponsPage',
@@ -49,28 +50,53 @@ export default {
         
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
-            { key: 'name', label: 'Name', sortable: true },
+            { key: 'description', label: 'Description', sortable: true },
             { key: 'code', label: 'Code', sortable: true },
-            { key: 'value', label: 'Discount', sortable: true, width: '140px' },
-            { key: 'is_active', label: 'Status', sortable: true, width: '120px' },
-            { key: 'created_at', label: 'Created', sortable: true, width: '180px' }
+            { key: 'discountValue', label: 'Discount Value', sortable: true, width: '140px' },
+            { key: 'isActive', label: 'Status', sortable: true, width: '120px' },
+            { key: 'createdAt', label: 'Created', sortable: true, width: '180px' }
         ];
 
-        const loadCoupons = () => {
-            // Mock data matching screenshot (relative dates will show as years ago)
-            coupons.value = [
-                { id: 2, name: 'Percent Discount', code: '10PERCENT', value: 10, is_percent: 1, is_active: true, created_at: '2020-10-01T09:12:00' },
-                { id: 1, name: 'Anniversary', code: 'HAPPY2020', value: 20, is_percent: 0, is_active: true, created_at: '2020-10-01T09:12:00' }
-            ];
+        const loadCoupons = async () => {
+            try {
+                const response = await getCoupons();
+                console.log('API Response:', response);
+                
+                // Handle different response structures
+                const data = Array.isArray(response) ? response : (response.data || response.result || []);
+                
+                coupons.value = data.map(coupon => ({
+                    id: coupon.id,
+                    description: coupon.description,
+                    code: coupon.code,
+                    discountValue: coupon.discountValue,
+                    discountType: coupon.discountType,
+                    isActive: coupon.isActive,
+                    createdAt: coupon.createdAt
+                }));
+            } catch (error) {
+                console.error('Failed to load coupons:', error);
+                // Fallback to empty array if API fails
+                coupons.value = [];
+            }
         };
 
         const route = useRoute()
 
-        const handleDelete = (selectedIds) => {
+        const handleDelete = async (selectedIds) => {
             if (confirm(`Are you sure you want to delete ${selectedIds.length} coupon(s)?`)) {
-                coupons.value = coupons.value.filter(
-                    c => !selectedIds.includes(c.id)
-                );
+                try {
+                    if (selectedIds.length === 1) {
+                        await deleteCoupon(selectedIds[0]);
+                    } else {
+                        await deleteCoupons(selectedIds);
+                    }
+                    // Reload after successful delete
+                    await loadCoupons();
+                } catch (error) {
+                    console.error('Failed to delete coupons:', error);
+                    alert('Failed to delete coupons. Please try again.');
+                }
             }
         };
 
@@ -96,14 +122,12 @@ export default {
 
         const formatDiscount = (row) => {
             if (!row) return '';
-            if (row.is_percent) {
-                // show percentage with 4 decimal places like the screenshot (e.g. 10.0000%)
-                const num = Number(row.value) || 0;
-                return `${num.toFixed(4)}%`;
+            const num = Number(row.discountValue) || 0;
+            if (row.discountType === 'PERCENT') {
+                return `${num}%`;
             }
-            // fixed amount with 2 decimals
-            const amt = Number(row.value) || 0;
-            return `$${amt.toFixed(2)}`;
+            // fixed amount
+            return `${num.toLocaleString('vi-VN')}₫`;
         };
 
         onMounted(() => {
@@ -141,9 +165,9 @@ export default {
         return {
             coupons,
             columns,
-                handleDelete,
-                formatDate,
-                formatDiscount
+            handleDelete,
+            formatDate,
+            formatDiscount
         };
     }
 };
