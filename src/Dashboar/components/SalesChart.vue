@@ -4,7 +4,12 @@
             <h5>Sales Analytics</h5>
         </div>
         <div class="canvas" ref="canvasWrapper">
-            <canvas ref="chartCanvas" class="chart"></canvas>
+            <div v-if="!hasDataRef" class="empty-chart">
+                <div class="empty-icon">📈</div>
+                <div class="empty-title">No sales data</div>
+                <div class="empty-sub">No sales analytics available for the selected period.</div>
+            </div>
+            <canvas v-else ref="chartCanvas" class="chart"></canvas>
 
             <!-- Tooltip overlay shown on hover -->
             <div
@@ -12,7 +17,7 @@
                 ref="tooltipEl"
                 class="chart-tooltip"
                 :style="{ left: tooltipLeft + 'px', top: tooltipTop + 'px' }"
-                role="status"
+                aria-live="polite"
             >
                 <div class="tt-line tt-title">{{ tooltipLabel }}</div>
                 <div class="tt-line">Orders: {{ tooltipOrdersDisplay }}</div>
@@ -23,7 +28,7 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+    import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue';
 
     const chartCanvas = ref(null);
     const canvasWrapper = ref(null);
@@ -46,6 +51,16 @@
         }
     });
 
+    // Determine if there is meaningful sales data to render
+    const hasDataRef = computed(() => {
+        const vals = props.data?.values || [];
+        const labels = props.data?.labels || [];
+        if (!Array.isArray(labels) || labels.length === 0) return false;
+        if (!Array.isArray(vals) || vals.length === 0) return false;
+        // consider data meaningful if at least one value > 0
+        return vals.some(v => Number(v) > 0);
+    });
+
     // Tooltip state
     const tooltipVisible = ref(false);
     const tooltipLeft = ref(0);
@@ -58,8 +73,8 @@
     const tooltipOrdersDisplay = computed(() => tooltipOrders.value == null ? '-' : tooltipOrders.value);
     const tooltipSalesDisplay = computed(() => {
         if (tooltipSales.value == null) return '-';
-        // Format currency with commas and 2 decimals
-        return `$${Number(tooltipSales.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Format currency with commas and 2 decimals using 'đ'
+        return new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(tooltipSales.value)) + ' đ';
     });
 
     let resizeObserver = null;
@@ -140,7 +155,9 @@
 
             // Y label
             ctx.fillStyle = '#777';
-            ctx.fillText(`$${Math.round(yVal).toLocaleString()}`, padding.left - 10, y + 4);
+            // Format Y label as VND using 'đ'
+            const vnd = new Intl.NumberFormat('vi-VN').format(Math.round(yVal));
+            ctx.fillText(vnd + ' đ', padding.left - 10, y + 4);
         }
 
         // Bars
@@ -197,7 +214,8 @@
     const barIndexAt = (offsetX, offsetY) => {
         const metrics = getChartMetrics();
         if (!metrics) return -1;
-        const { padding, chartHeight, step, barWidth, labels, data, topMax } = metrics;
+        const { padding, chartHeight, step, labels, data, topMax } = metrics;
+        const bw = metrics.barWidth;
 
         // offsetX/offsetY are relative to canvas element's top-left in CSS pixels
         // compute relative to chart area
@@ -211,18 +229,17 @@
 
         for (let i = 0; i < labels.length; i++) {
             const xCenter = padding.left + step * i + step / 2;
-            const barX = xCenter - barWidth / 2;
+            const barX = xCenter - bw / 2;
             const val = data[i] || 0;
             const h = (val / topMax) * chartHeight;
             const barY = padding.top + chartHeight - h;
-            const barH = h;
 
-            if (x >= barX && x <= barX + barWidth && y >= barY && y <= barY + barH) {
-                return i;
-            }
-        }
-        return -1;
-    };
+            if (x >= barX && x <= barX + bw && y >= barY && y <= barY + h) {
+                 return i;
+             }
+         }
+         return -1;
+     };
 
     const repositionTooltip = () => {
         const canvas = chartCanvas.value;
@@ -230,7 +247,7 @@
         const rect = wrapper.getBoundingClientRect();
         const metrics = getChartMetrics();
         if (!metrics) return;
-        const { padding, chartHeight, step, barWidth } = metrics;
+        const { padding, chartHeight, step } = metrics;
 
         // find index currently stored in tooltipLabel by matching label text
         const idx = props.data.labels.indexOf(tooltipLabel.value);
@@ -289,110 +306,100 @@
         tooltipSales.value = props.data.values && props.data.values[idx] != null ? props.data.values[idx] : null;
 
         // position tooltip centered at bar
-        // set label/data then position using repositionTooltip which measures tooltip
         tooltipVisible.value = true;
         // next tick ensure tooltip element exists, then compute
         setTimeout(() => repositionTooltip(), 0);
-    };
+     }
 
-    const onMouseLeave = () => {
-        tooltipVisible.value = false;
-    };
+     const onMouseLeave = () => {
+         tooltipVisible.value = false;
+     };
 
-    onMounted(() => {
-        drawChart();
-        window.addEventListener('resize', resizeHandler);
-        // also observe parent size changes
-        if (chartCanvas.value && window.ResizeObserver) {
-            resizeObserver = new ResizeObserver(() => drawChart());
-            resizeObserver.observe(chartCanvas.value.parentElement);
-        }
+     onMounted(() => {
+         // attempt to draw if data already present after mount
+         nextTick(() => {
+             if (hasDataRef.value) drawChart();
+         });
+         window.addEventListener('resize', resizeHandler);
+         // also observe parent size changes
+         if (chartCanvas.value && window.ResizeObserver) {
+             resizeObserver = new ResizeObserver(() => drawChart());
+             resizeObserver.observe(chartCanvas.value.parentElement);
+         }
 
-        // attach mouse events
-        if (chartCanvas.value) {
-            chartCanvas.value.addEventListener('mousemove', onMouseMove);
-            chartCanvas.value.addEventListener('mouseleave', onMouseLeave);
-        }
-    });
+         // attach mouse events
+         if (chartCanvas.value) {
+             chartCanvas.value.addEventListener('mousemove', onMouseMove);
+             chartCanvas.value.addEventListener('mouseleave', onMouseLeave);
+         }
+     });
 
-    onBeforeUnmount(() => {
-        window.removeEventListener('resize', resizeHandler);
-        if (resizeObserver && chartCanvas.value) resizeObserver.disconnect();
-        if (chartCanvas.value) {
-            chartCanvas.value.removeEventListener('mousemove', onMouseMove);
-            chartCanvas.value.removeEventListener('mouseleave', onMouseLeave);
-        }
-    });
+     onBeforeUnmount(() => {
+         window.removeEventListener('resize', resizeHandler);
+         if (resizeObserver && chartCanvas.value) resizeObserver.disconnect();
+         if (chartCanvas.value) {
+             chartCanvas.value.removeEventListener('mousemove', onMouseMove);
+             chartCanvas.value.removeEventListener('mouseleave', onMouseLeave);
+         }
+     });
 
-    watch(() => props.data, () => drawChart(), { deep: true });
+     // Watch the nested data and redraw after DOM updates so canvas exists
+     watch(() => props.data, async () => {
+         await nextTick();
+         if (hasDataRef.value) drawChart();
+     }, { deep: true });
 
-</script>
+    // When hasData toggles, redraw or clear (wait for DOM updates)
+    watch(hasDataRef, async (val) => {
+         if (val) {
+             await nextTick();
+             drawChart();
+         } else {
+             const canvas = chartCanvas.value;
+             if (canvas) {
+                 const ctx = canvas.getContext('2d');
+                 ctx.clearRect(0,0,canvas.width,canvas.height);
+             }
+         }
+     });
+
+ </script>
 
 <style scoped>
-.dashboard-panel {
-    background: #fff;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
+ .dashboard-panel {
+     background: #fff;
+     border: 1px solid #e8e8e8;
+     border-radius: 8px;
+     padding: 20px;
+     margin-bottom: 20px;
+ }
 
-.grid-header {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e8e8e8;
-    padding-bottom: 15px;
-}
+ .grid-header {
+     margin-bottom: 20px;
+     border-bottom: 1px solid #e8e8e8;
+     padding-bottom: 15px;
+ }
 
-.grid-header h5 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-}
+ .canvas { position: relative; width: 100%; overflow: hidden }
 
-.canvas {
-    width: 100%;
-    overflow: hidden;
-}
+ .empty-chart { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px; color:#666 }
+ .empty-icon { font-size:34px; margin-bottom:8px }
+ .empty-title { font-weight:700; margin-bottom:6px }
+ .empty-sub { font-size:13px }
 
-.chart {
-    width: 100%;
-    height: auto;
-}
+ .chart { width:100%; height:auto }
 
-.canvas {
-    position: relative; /* for tooltip positioning */
-}
+ .chart-tooltip {
+     position: absolute;
+     pointer-events: none;
+     background: rgba(38,36,36,0.96);
+     color: #fff;
+     padding: 8px 10px;
+     border-radius: 6px;
+     box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+     font-size: 12px;
+     z-index: 20;
+ }
 
-.chart-tooltip {
-    position: absolute;
-    z-index: 20;
-    width: 160px;
-    pointer-events: none;
-    background: rgba(38,36,36,0.96);
-    color: #fff;
-    padding: 8px 10px;
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    transform: translateX(0);
-    font-size: 12px;
-    transition: transform 120ms ease, opacity 120ms ease;
-}
-
-.chart-tooltip .tt-line { margin: 2px 0; }
-.chart-tooltip .tt-title { font-weight: 600; margin-bottom: 6px; }
-
-/* small caret pointing down from tooltip */
-.chart-tooltip::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: -6px; /* sits just below the tooltip box */
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid rgba(38,36,36,0.96);
-}
-</style>
+ .tt-line { margin: 2px 0 }
+ </style>

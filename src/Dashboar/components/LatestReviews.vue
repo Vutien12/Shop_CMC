@@ -17,18 +17,26 @@
                 </thead>
                 <tbody>
                     <tr v-if="reviews.length === 0">
-                        <td class="empty" colspan="3">No data available!</td>
+                        <td class="empty" colspan="3">
+                            <div class="empty-inner">
+                                <div class="empty-icon">💬</div>
+                                <div>
+                                    <div class="empty-title">No reviews yet</div>
+                                    <div class="empty-sub">Customers haven't reviewed any product yet.</div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
-                    <tr v-for="(review, index) in reviews" :key="index">
-                        <td>{{ review.product }}</td>
-                        <td>{{ review.customer }}</td>
+                    <tr v-for="(review, index) in reviews" :key="review.id || index">
+                        <td>{{ review.productName ?? review.product ?? '—' }}</td>
+                        <td>{{ review.userFullName ?? review.customer ?? '—' }}</td>
                         <td>
                             <div class="rating">
-                                <span 
-                                    v-for="star in 5" 
+                                <span
+                                    v-for="star in 5"
                                     :key="star"
                                     class="star"
-                                    :class="{ active: star <= review.rating }"
+                                    :class="{ active: star <= (Number(review.rating) || 0) }"
                                 >
                                     ★
                                 </span>
@@ -42,7 +50,7 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
     reviews: {
         type: Array,
         default: () => []
@@ -118,5 +126,26 @@ const props = defineProps({
     text-align: center;
     color: #888;
     padding: 30px !important;
+}
+
+.empty-inner {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    justify-content:center;
+    padding:18px;
+}
+
+.empty-icon {
+    font-size:28px;
+}
+
+.empty-title {
+    font-weight:700;
+    margin-bottom:4px
+}
+
+.empty-sub {
+    color:#666
 }
 </style>

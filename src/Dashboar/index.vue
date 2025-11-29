@@ -4,100 +4,115 @@
             <h2 class="page-title">Dashboard</h2>
         </div>
 
+        <!-- Loading overlay -->
+        <div v-if="isLoading" class="dashboard-loading-overlay">
+            <div class="loader">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading dashboard...</div>
+            </div>
+        </div>
+
         <!-- Statistics Cards Grid -->
         <div class="grid clearfix">
             <div class="row">
-                <StatCard
-                    title="Total Sales"
-                    :value="statistics.totalSales"
-                    cardClass="total-sales"
-                    format="currency"
-                    :icon="icons.sales"
-                />
-                
-                <StatCard
-                    title="Total Orders"
-                    :value="statistics.totalOrders"
-                    cardClass="total-orders"
-                    :icon="icons.orders"
-                />
-                
-                <StatCard
-                    title="Total Products"
-                    :value="statistics.totalProducts"
-                    cardClass="total-products"
-                    :icon="icons.products"
-                />
-                
-                <StatCard
-                    title="Total Customers"
-                    :value="statistics.totalCustomers"
-                    cardClass="total-customers"
-                    :icon="icons.customers"
-                />
+                <template v-if="isLoading">
+                    <div class="stat-skeleton" v-for="n in 4" :key="n">
+                        <div class="skeleton-rect skeleton-large"></div>
+                    </div>
+                </template>
+
+                <template v-else>
+                    <StatCard
+                        title="Total Sales"
+                        :value="statistics.totalSales"
+                        cardClass="total-sales"
+                        format="currency"
+                        :icon="icons.sales"
+                    />
+
+                    <StatCard
+                        title="Total Orders"
+                        :value="statistics.totalOrders"
+                        cardClass="total-orders"
+                        :icon="icons.orders"
+                    />
+
+                    <StatCard
+                        title="Total Products"
+                        :value="statistics.totalProducts"
+                        cardClass="total-products"
+                        :icon="icons.products"
+                    />
+
+                    <StatCard
+                        title="Total Customers"
+                        :value="statistics.totalCustomers"
+                        cardClass="total-customers"
+                        :icon="icons.customers"
+                    />
+                </template>
             </div>
         </div>
 
         <!-- Charts and Tables -->
         <div class="row">
             <div class="col-md-7">
-                <SalesChart :data="salesData" />
-                <LatestOrders :orders="latestOrders" @view-order="handleViewOrder" />
+                <template v-if="isLoading">
+                    <div class="panel-skeleton chart-skeleton"></div>
+                    <div class="panel-skeleton list-skeleton"></div>
+                </template>
+                <template v-else>
+                    <SalesChart :data="salesData" />
+                    <LatestOrders :orders="latestOrders" @view-order="handleViewOrder" />
+                </template>
             </div>
 
             <div class="col-md-5">
-                <LatestSearches :searches="latestSearches" />
-                <LatestReviews :reviews="latestReviews" />
+                <template v-if="isLoading">
+                    <div class="panel-skeleton small-skeleton"></div>
+                    <div class="panel-skeleton small-skeleton"></div>
+                </template>
+                <template v-else>
+                    <LatestReviews :reviews="latestReviews" />
+                    <TopProducts :products="bestSellingProducts" />
+                </template>
             </div>
         </div>
     </section>
 </template>
 
 <script setup>
+defineOptions({ name: 'DashboardPage' })
 import { ref, onMounted } from 'vue';
 import StatCard from './components/StatCard.vue';
 import SalesChart from './components/SalesChart.vue';
 import LatestOrders from './components/LatestOrders.vue';
-import LatestSearches from './components/LatestSearches.vue';
 import LatestReviews from './components/LatestReviews.vue';
+import TopProducts from './components/TopProducts.vue';
+import dashboardApi from '@/api/dashboardApi.js';
 
-// Statistics Data
+// Loading / Error state
+const isLoading = ref(true);
+const error = ref(null);
+
+// Replace hardcoded demo data with reactive state populated from API
 const statistics = ref({
-    totalSales: 525518.68,
-    totalOrders: 434,
-    totalProducts: 140,
-    totalCustomers: 39
+    totalSales: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    totalCustomers: 0
 });
 
-// Sales Chart Data (weekday style to match image)
 const salesData = ref({
     labels: ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'],
-    values: [0, 4271.08, 2500, 500, 20000, 3000, 0],
+    values: [0, 0, 0, 0, 0, 0, 0],
     colors: ['#6f8bff','#b99bff','#ffb0d6','#ff8b6b','#9be09a','#b59bff','#cfd8e3'],
-    // orders aligned with labels (demo/sample)
-    orders: [0, 2, 1, 1, 8, 3, 0]
+    orders: [0,0,0,0,0,0,0]
 });
 
-// Latest Orders
-const latestOrders = ref([
-    { id: 2245, customer: 'John Doe', status: 'Pending', total: 155.00 },
-    { id: 2239, customer: 'gbh bhbhb', status: 'Pending', total: 3040.00 },
-    { id: 2235, customer: 'Demo Admin', status: 'Pending', total: 1299.00 },
-    { id: 2234, customer: 'dgxcfgc cgccf', status: 'Processing', total: 5899.00 },
-    { id: 2233, customer: 'Robiul Hossain', status: 'Completed', total: 2895.54 }
-]);
-
-// Latest Searches
-const latestSearches = ref([
-    { keyword: 'apple', results: 20, hits: 10 },
-    { keyword: 'Apple AirPods Pro', results: 20, hits: 1 },
-    { keyword: 'bose', results: 0, hits: 1 },
-    { keyword: 'headphones', results: 0, hits: 1 },
-    { keyword: 'tv', results: 0, hits: 4 }
-]);
-
-// Latest Reviews
+const latestOrders = ref([]);
 const latestReviews = ref([]);
+const bestSellingProducts = ref([]);
 
 // Icons
 const icons = {
@@ -111,7 +126,7 @@ const icons = {
         <path d="M216,144h16a8,8,0,0,0,0-16h-8v-8a8,8,0,0,0-16,0v9.376A24,24,0,0,0,216,176a8,8,0,0,1,0,16H200a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-9.376A24,24,0,0,0,216,160a8,8,0,0,1,0-16Z"></path>
         <path d="M488,48H440a8,8,0,0,0,0,16h28.686l-112,112H311.664c.219-2.639.336-5.306.336-8a96,96,0,1,0-113.677,94.362L164.687,296H104a8,8,0,0,0-5.657,2.343l-80,80a8,8,0,0,0,11.314,11.314L107.313,312H168a8,8,0,0,0,5.657-2.343l45.723-45.723A96.19,96.19,0,0,0,308.963,192H360a8,8,0,0,0,5.657-2.343L480,75.314V104a8,8,0,0,0,16,0V56A8,8,0,0,0,488,48ZM216,248a80,80,0,1,1,80-80A80.091,80.091,0,0,1,216,248Z"></path>
     </svg>`,
-    
+
     orders: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12.85 17.81">
         <g id="Layer_2" data-name="Layer 2">
             <g id="Layer_1-2" data-name="Layer 1">
@@ -119,13 +134,13 @@ const icons = {
             </g>
         </g>
     </svg>`,
-    
+
     products: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
         <g><g> <path d="M491.729,112.971L259.261,0.745c-2.061-0.994-4.461-0.994-6.521,0L20.271,112.971c-2.592,1.251-4.239,3.876-4.239,6.754    v272.549c0,2.878,1.647,5.503,4.239,6.754l232.468,112.226c1.03,0.497,2.146,0.746,3.261,0.746s2.23-0.249,3.261-0.746    l232.468-112.226c2.592-1.251,4.239-3.876,4.239-6.754V119.726C495.968,116.846,494.32,114.223,491.729,112.971z M256,15.828    l215.217,103.897l-62.387,30.118c-0.395-0.301-0.812-0.579-1.27-0.8L193.805,45.853L256,15.828z M176.867,54.333l214.904,103.746    l-44.015,21.249L132.941,75.624L176.867,54.333z M396.799,172.307v78.546l-41.113,19.848v-78.546L396.799,172.307z     M480.968,387.568L263.5,492.55V236.658l51.873-25.042c3.73-1.801,5.294-6.284,3.493-10.015    c-1.801-3.729-6.284-5.295-10.015-3.493L256,223.623l-20.796-10.04c-3.731-1.803-8.214-0.237-10.015,3.493    c-1.801,3.73-0.237,8.214,3.493,10.015l19.818,9.567V492.55L31.032,387.566V131.674l165.6,79.945    c1.051,0.508,2.162,0.748,3.255,0.748c2.788,0,5.466-1.562,6.759-4.241c1.801-3.73,0.237-8.214-3.493-10.015l-162.37-78.386    l74.505-35.968L340.582,192.52c0.033,0.046,0.07,0.087,0.104,0.132v89.999c0,2.581,1.327,4.98,3.513,6.353    c1.214,0.762,2.599,1.147,3.988,1.147c1.112,0,2.227-0.247,3.26-0.746l56.113-27.089c2.592-1.251,4.239-3.875,4.239-6.754v-90.495    l69.169-33.392V387.568z"></path></g></g>
         <g><g><path d="M92.926,358.479L58.811,342.01c-3.732-1.803-8.214-0.237-10.015,3.493c-1.801,3.73-0.237,8.214,3.493,10.015    l34.115,16.469c1.051,0.508,2.162,0.748,3.255,0.748c2.788,0,5.466-1.562,6.759-4.241    C98.22,364.763,96.656,360.281,92.926,358.479z"></path></g></g>
         <g><g><path d="M124.323,338.042l-65.465-31.604c-3.731-1.801-8.214-0.237-10.015,3.494c-1.8,3.73-0.236,8.214,3.494,10.015    l65.465,31.604c1.051,0.507,2.162,0.748,3.255,0.748c2.788,0,5.466-1.562,6.759-4.241    C129.617,344.326,128.053,339.842,124.323,338.042z"></path></g></g>
     </svg>`,
-    
+
     customers: `<svg xmlns="http://www.w3.org/2000/svg" height="496pt" viewBox="0 -72 496 496" width="496pt">
         <path d="m98.113281 168.125c-31.730469 0-57.542969-25.578125-57.542969-57.007812 0-31.433594 25.8125-57.011719 57.542969-57.011719 31.726563 0 57.535157 25.574219 57.535157 57.011719 0 31.433593-25.808594 57.007812-57.535157 57.007812zm0-98.019531c-22.910156 0-41.542969 18.398437-41.542969 41.011719 0 22.609374 18.632813 41.007812 41.542969 41.007812 22.902344 0 41.535157-18.398438 41.535157-41.007812 0-22.613282-18.632813-41.011719-41.535157-41.011719zm0 0"></path>
         <path d="m121.261719 325.96875h-100.351563c-11.53125 0-20.910156-9.320312-20.910156-20.777344v-26.167968c0-53.570313 44.011719-97.15625 98.113281-97.15625 21.277344 0 41.53125 6.640624 58.554688 19.199218 3.554687 2.625 4.3125 7.632813 1.6875 11.191406-2.625 3.550782-7.628907 4.308594-11.1875 1.6875-14.253907-10.515624-31.214844-16.078124-49.054688-16.078124-45.277343 0-82.113281 36.410156-82.113281 81.15625v26.167968c0 2.632813 2.203125 4.777344 4.910156 4.777344h100.355469c4.414063 0 8 3.582031 8 8 0 4.414062-3.585937 8-8.003906 8zm0 0"></path>
@@ -138,14 +153,53 @@ const icons = {
 // Methods
 const handleViewOrder = (orderId) => {
     console.log('View order:', orderId);
-    // Navigate to order detail page
-    // router.push({ name: 'admin.orders.detail', params: { id: orderId } });
 };
 
-// Fetch data on mount (Replace with API calls)
+async function fetchDashboard() {
+    isLoading.value = true;
+    error.value = null;
+    try {
+        const statsRes = await dashboardApi.getStats();
+        // statsRes could be { totalSales, totalOrders, ... } or nested
+        statistics.value.totalSales = Number(statsRes.totalSales ?? statsRes.total_sales ?? 0);
+        statistics.value.totalOrders = Number(statsRes.totalOrders ?? statsRes.total_orders ?? statsRes.totalOrdersCount ?? 0);
+        statistics.value.totalProducts = Number(statsRes.totalProducts ?? statsRes.total_products ?? 0);
+        statistics.value.totalCustomers = Number(statsRes.totalCustomers ?? statsRes.total_customers ?? 0);
+
+        const sales = await dashboardApi.getSalesAnalytics();
+        if (Array.isArray(sales) && sales.length) {
+            // Map backend analytics to chart shape if possible
+            // backend may return items like { label/period, value/sales, orders } or {date, totalSales}
+            const labels = [];
+            const values = [];
+            const orders = [];
+            for (const item of sales) {
+                // prefer explicit fields returned by backend
+                labels.push(item.label ?? item.period ?? item.date ?? '');
+                values.push(Number(item.value ?? item.sales ?? item.totalSales ?? 0));
+                orders.push(Number(item.orders ?? item.count ?? 0));
+            }
+            salesData.value.labels = labels;
+            salesData.value.values = values;
+            salesData.value.orders = orders;
+        }
+
+        latestOrders.value = await dashboardApi.getLatestOrders(5);
+        // fetch latest reviews
+        latestReviews.value = await dashboardApi.getLatestReviews(5);
+        // fetch best selling products
+        bestSellingProducts.value = await dashboardApi.getBestSellingProducts(5);
+
+    } catch (err) {
+        console.error('Failed to load dashboard', err);
+        error.value = err?.message || 'Failed to load dashboard';
+    } finally {
+        isLoading.value = false;
+    }
+}
+
 onMounted(() => {
-    // TODO: Fetch real data from API
-    console.log('Dashboard mounted');
+    fetchDashboard();
 });
 </script>
 
@@ -191,4 +245,42 @@ onMounted(() => {
     display: table;
     clear: both;
 }
+
+/* Loading overlay */
+.dashboard-loading-overlay {
+  position: absolute;
+  inset: 0 0 0 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+.loader { display:flex; flex-direction:column; align-items:center; gap:10px }
+.spinner {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 4px solid rgba(0,0,0,0.08); border-top-color: #2563eb;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+.loading-text { color:#333; font-weight:600 }
+
+/* Skeletons */
+.stat-skeleton { width: calc(25% - 20px); margin-left:10px; margin-right:10px; }
+.stat-skeleton .skeleton-rect { background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6); height:76px; border-radius:8px; animation: shimmer 1.2s linear infinite; }
+.stat-skeleton .skeleton-large { height:86px }
+
+.panel-skeleton { background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite; margin-bottom:16px }
+.chart-skeleton { height: 320px }
+.list-skeleton { height: 220px }
+.small-skeleton { height: 160px; margin-bottom:12px }
+
+@keyframes shimmer {
+  0% { background-position: -200px 0 }
+  100% { background-position: calc(200px + 100%) 0 }
+}
+.skeleton-rect, .panel-skeleton { background-size: 200px 100%; }
+
+/* make skeletons responsive like stat cards */
+@media (max-width: 768px) { .stat-skeleton { width: 100%; margin: 8px 0 } }
 </style>

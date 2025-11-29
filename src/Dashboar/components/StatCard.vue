@@ -40,20 +40,18 @@ const props = defineProps({
 
 const displayValue = computed(() => {
     if (props.format === 'currency') {
-        const num = parseFloat(props.value) || 0;
-        if (num >= 1000) {
-            return `${(num / 1000).toFixed(2)}K`;
-        }
-        return `${num.toFixed(2)}`;
+        const num = Number(props.value) || 0;
+        // Always show full formatted VND value
+        return new Intl.NumberFormat('vi-VN').format(num) + ' đ';
     }
     return props.value;
 });
 
 const fullValue = computed(() => {
     if (props.format === 'currency') {
-        return `$${parseFloat(props.value).toLocaleString()}`;
+        return new Intl.NumberFormat('vi-VN').format(Number(props.value) || 0) + ' đ';
     }
-    return props.value.toString();
+    return String(props.value);
 });
 </script>
 
