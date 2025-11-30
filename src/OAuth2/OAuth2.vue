@@ -19,7 +19,7 @@ const route = useRoute();
 onMounted(async () => {
   const code = route.query.code;
   const state = route.query.state;
-  const provider = route.path.includes('google') ? 'google' : 'facebook';
+  const provider = route.path.includes('google') ? 'google' : route.path.includes('github') ? 'github' : 'facebook';
   const savedState = localStorage.getItem('oauth_state');
 
   // Kiểm tra state (chống CSRF)

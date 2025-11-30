@@ -22,7 +22,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faGoogle,
-  faFacebook
+  faFacebook,
+  faGithub
 } from '@fortawesome/free-brands-svg-icons'
 
 // Add icons to library
@@ -38,7 +39,8 @@ library.add(
   faUser,
   faPhone,
   faGoogle,
-  faFacebook
+  faFacebook,
+  faGithub
 )
 
 const app = createApp(App)

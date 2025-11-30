@@ -7,5 +7,9 @@ export const OAuthProviders = {
   facebook: {
     clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
     redirectUri: `${window.location.origin}/oauth2/callback/facebook`
+  },
+  github: {
+    clientId: import.meta.env.VITE_GITHUB_CLIENT_ID,
+    redirectUri: `${window.location.origin}/oauth2/callback/github`
   }
 };

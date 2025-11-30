@@ -90,7 +90,7 @@
             </div>
 
             <!-- Social Login Buttons -->
-            <div class="social-login">
+            <div class="social-login" style="display: flex; flex-direction: column; gap: 16px; width: 100%; margin-bottom: 14px;">
               <button type="button" class="btn-social btn-google" @click="loginWithGoogle">
                 <font-awesome-icon :icon="['fab', 'google']" />
                 <span>Sign in with Google</span>
@@ -98,6 +98,10 @@
               <button type="button" class="btn-social btn-facebook" @click="loginWithFacebook">
                 <font-awesome-icon :icon="['fab', 'facebook']" />
                 <span>Sign in with Facebook</span>
+              </button>
+              <button type="button" class="btn-social btn-github" @click="loginWithGithub">
+                <font-awesome-icon :icon="['fab', 'github']" />
+                <span>Sign in with GitHub</span>
               </button>
             </div>
 
@@ -133,7 +137,7 @@ const password = ref('');
 const rememberMe = ref(false);
 const showPassword = ref(false);
 
-const { google, facebook } = OAuthProviders;
+const { google, facebook, github } = OAuthProviders;
 
 // Lỗi chung (401, server error)
 const generalError = ref('');
@@ -236,6 +240,20 @@ const loginWithFacebook = () => {
     `redirect_uri=${encodeURIComponent(redirectUri)}&` +
     `response_type=code&` +
     `scope=${scope}&` +
+    `state=${state}`;
+  window.location.href = url;
+};
+
+const loginWithGithub = () => {
+  const { clientId, redirectUri } = github;
+  const scope = 'read:user user:email';
+  const state = Math.random().toString(36).substring(7);
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://github.com/login/oauth/authorize?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `scope=${encodeURIComponent(scope)}&` +
     `state=${state}`;
   window.location.href = url;
 };

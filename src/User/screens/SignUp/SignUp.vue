@@ -153,7 +153,7 @@
           </div>
 
           <!-- Social Register Buttons -->
-          <div class="social-login">
+          <div class="social-login" style="display: flex; flex-direction: column; gap: 12px;">
             <button type="button" class="btn-social btn-google" @click="signupWithGoogle">
               <font-awesome-icon :icon="['fab', 'google']" />
               <span>Continue with Google</span>
@@ -161,6 +161,10 @@
             <button type="button" class="btn-social btn-facebook" @click="signupWithFacebook">
               <font-awesome-icon :icon="['fab', 'facebook']" />
               <span>Continue with Facebook</span>
+            </button>
+            <button type="button" class="btn-social btn-github" @click="signupWithGithub">
+              <font-awesome-icon :icon="['fab', 'github']" />
+              <span>Continue with GitHub</span>
             </button>
           </div>
 
@@ -199,7 +203,7 @@ const showPassword = ref(false);
 const confirmPassword = ref('');
 const agreeToPolicy = ref(false);
 
-const { google, facebook } = OAuthProviders;
+const { google, facebook, github } = OAuthProviders;
 
 // Errors
 const generalError = ref('');
@@ -302,6 +306,21 @@ const signupWithFacebook = () => {
     `scope=${scope}&` +
     `state=${state}`;
 
+  window.location.href = url;
+};
+
+// === ĐĂNG KÝ BẰNG GITHUB ===
+const signupWithGithub = () => {
+  const { clientId, redirectUri } = github;
+  const scope = 'read:user user:email';
+  const state = Math.random().toString(36).substring(7);
+  localStorage.setItem('oauth_state', state);
+
+  const url = `https://github.com/login/oauth/authorize?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `scope=${encodeURIComponent(scope)}&` +
+    `state=${state}`;
   window.location.href = url;
 };
 

@@ -76,19 +76,24 @@
   flex: 1;
   background: white;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+  height: 100vh;
 }
 
 .signup-content {
   width: 100%;
   max-width: 480px;
-  margin: 0 auto;
+  max-height: 100vh;
+  overflow-y: auto;
   padding: 30px 20px;
+  scrollbar-width: none; /* Firefox */
+}
+
+.signup-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 
 /* Title Section */
