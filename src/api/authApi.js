@@ -26,3 +26,11 @@ export const logout = async () => {
     await router.push('/login');
   }
 };
+
+export const forgotPassword = (email) => {
+  return api.post('/auth/forgot-password', null, { params: { email } })
+}
+
+export const resetPassword = (payload) => {
+  return api.post('/auth/reset-password', payload)
+}

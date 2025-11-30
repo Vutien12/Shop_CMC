@@ -8,6 +8,7 @@ import Blog from "../User/screens/Blog/Blog.vue";
 import Login from "../User/screens/Login/Login.vue";
 import SignUp from "../User/screens/SignUp/SignUp.vue";
 import Forgotpass from "../User/screens/ForgotPassword/Forgotpass.vue";
+import ResetPassword from "../User/screens/ForgotPassword/ResetPassword.vue";
 import UserAccount from "../User/screens/Account/UserAccount.vue";
 import Wishlist from "../User/components/Wishlist/Wishlist.vue";
 import CartPage from "../User/screens/Cart/CartPage.vue";
@@ -57,6 +58,7 @@ const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
+  { path: '/reset-password', name: 'ResetPassword', component: ResetPassword },
   { path: "/oauth2/callback/:provider", name: "OAuth2Callback", component: OAuth2 },
   { path: '/header', name: 'Header', component: Header},
 
