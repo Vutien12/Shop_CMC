@@ -5,6 +5,7 @@ export const createReview = async (reviewData) => {
   try {
     const payload = {
       userId: reviewData.userId,
+      productId: reviewData.productId, // include productId so backend validation succeeds
       orderId: reviewData.orderId,
       rating: reviewData.rating,
       title: reviewData.title,
@@ -92,6 +93,4 @@ export const deleteReview = async (reviewId) => {
     throw error;
   }
 };
-
-
 

@@ -21,6 +21,7 @@
               {{ prod.productName }}
             </option>
           </select>
+          <span v-if="errors.productId" class="error-message">{{ errors.productId }}</span>
         </div>
 
         <!-- Selected Product Display -->
@@ -61,7 +62,7 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn-submit">
+        <button type="submit" class="btn-submit" :disabled="submitting || !isFormValid">
           {{ existingReview ? 'Update Review' : 'Submit Review' }}
         </button>
       </form>
@@ -73,6 +74,9 @@
 import { ref, computed, watch } from 'vue'
 import { createReview, updateReview } from '@/api/reviewApi.js'
 import { getMyInfo } from '@/api/accountApi.js'
+
+// Name the component to satisfy eslint multi-word rule
+defineOptions({ name: 'ReviewModal' })
 
 const props = defineProps({
   isOpen: {
@@ -100,12 +104,14 @@ const hoverRating = ref(0)
 const name = ref('')
 const comment = ref('')
 const selectedProductId = ref('')
+const submitting = ref(false)
 
 // Validation errors from backend
 const errors = ref({
   rating: '',
   title: '',
-  comment: ''
+  comment: '',
+  productId: ''
 })
 
 // Get all products from order
@@ -128,10 +134,58 @@ const selectedProduct = computed(() => {
     return props.product
   }
 
+  // If only one available product and none selected, return it
   if (!selectedProductId.value && availableProducts.value.length === 1) {
     return availableProducts.value[0]
   }
-  return products.value.find((p) => p.id === selectedProductId.value)
+
+  // Use loose equality to handle string/number ids from select v-model
+  return products.value.find((p) => p.id == selectedProductId.value)
+})
+
+// Compute canonical productId to send to backend (handle different shapes)
+const productIdValue = computed(() => {
+  // If parent explicitly provided productId prop, use it first
+  if (props.productId) return Number(props.productId)
+
+  // Try selected product
+  let p = selectedProduct.value
+
+  // If still not found, fallback to first order product (common case for single-product orders)
+  if (!p && props.order && Array.isArray(props.order.orderProducts) && props.order.orderProducts.length === 1) {
+    p = props.order.orderProducts[0]
+  }
+
+  if (!p) return null
+
+  // Support various shapes that may come from backend: productId, product_id, id, nested product
+  const id = (
+    p.productId ??
+    p.product_id ??
+    (p.product && (p.product.productId ?? p.product.id)) ??
+    p.id ??
+    null
+  )
+
+  return id != null ? Number(id) : null
+})
+
+// Compute variant id similarly
+const variantIdValue = computed(() => {
+  // Try selected product first
+  let p = selectedProduct.value
+  if (!p && props.order && Array.isArray(props.order.orderProducts) && props.order.orderProducts.length === 1) {
+    p = props.order.orderProducts[0]
+  }
+  if (!p) return null
+  const vid = (
+    p.productVariantId ??
+    p.variantId ??
+    p.product_variant_id ??
+    (p.variant && (p.variant.id ?? p.variant.variantId)) ??
+    null
+  )
+  return vid != null ? Number(vid) : null
 })
 
 // Check if selected product has existing review
@@ -144,7 +198,7 @@ const isFormValid = computed(() => {
     rating.value > 0 &&
     name.value.trim() !== '' &&
     comment.value.trim() !== '' &&
-    selectedProduct.value
+    productIdValue.value
   )
 })
 
@@ -197,26 +251,35 @@ const resetForm = () => {
   name.value = ''
   comment.value = ''
   selectedProductId.value = ''
-  errors.value = { rating: '', title: '', comment: '' }
+  errors.value = { rating: '', title: '', comment: '', productId: '' }
 }
 
 const handleSubmit = async () => {
   try {
+    // Basic frontend validation for productId
+    if (!productIdValue.value) {
+      errors.value.productId = 'Vui lòng chọn sản phẩm.'
+      return
+    }
+
+    submitting.value = true
+
     // Get userId from API first to satisfy backend validation
     const userInfoResponse = await getMyInfo()
     const userId = userInfoResponse.data?.result?.id
 
     if (!userId) {
       alert('Unable to get user information. Please try again.')
+      submitting.value = false
       return
     }
 
     // Backend validates with @Valid, just send the data
     const reviewData = {
       userId: parseInt(userId),
-      productId: parseInt(selectedProduct.value.productId),
+      productId: parseInt(productIdValue.value),
       orderId: parseInt(props.order?.id),
-      variantId: selectedProduct.value.productVariantId ? parseInt(selectedProduct.value.productVariantId) : null,
+      variantId: variantIdValue.value ? parseInt(variantIdValue.value) : null,
       rating: parseInt(rating.value) || 0,
       title: name.value.trim(),
       comment: comment.value.trim(),
@@ -254,7 +317,7 @@ const handleSubmit = async () => {
       const fieldErrors = error.response.data.result
 
       // Clear previous errors
-      errors.value = { rating: '', title: '', comment: '' }
+      errors.value = { rating: '', title: '', comment: '', productId: '' }
 
       // Map backend field errors to form errors
       if (fieldErrors.rating) {
@@ -266,10 +329,15 @@ const handleSubmit = async () => {
       if (fieldErrors.comment) {
         errors.value.comment = fieldErrors.comment
       }
+      if (fieldErrors.productId) {
+        errors.value.productId = fieldErrors.productId
+      }
     } else {
       // Other errors
       alert(error.response?.data?.message || 'Failed to submit review.')
     }
+  } finally {
+    submitting.value = false
   }
 }
 </script>
