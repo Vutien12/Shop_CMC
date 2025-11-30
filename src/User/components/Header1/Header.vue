@@ -7,10 +7,10 @@
     <div class="top-bar">
       <div class="container">
         <div class="top-links">
-          <a href="#" class="top-link">
+          <router-link to="/contact" class="top-link">
             <i class="las la-envelope"></i>
             <span>Contact</span>
-          </a>
+          </router-link>
           <div class="dropdown">
             <span class="dropdown-trigger">
               <i class="las la-language"></i>

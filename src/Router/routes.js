@@ -45,6 +45,7 @@ import CouponCreate from "../Coupons/create.vue";
 import CouponIndex from "../Coupons/indext.vue";
 import BlogIndex from "../Blog/index.vue";
 import BlogCreate from "../Blog/create.vue";
+import Contact from "../User/screens/Contact/Contact.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -55,6 +56,7 @@ const routes = [
   { path: '/productdetail/:id', name: 'ProductDetail', component: ProductDetail },
   { path: '/blog', name: 'Blog', component: Blog },
   { path: '/blogdetail/:id', name: 'BlogDetail', component: Blogdetail },
+  { path: '/contact', name: 'Contact', component: Contact },
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'SignUp', component: SignUp },
   { path: '/forgotpass', name: 'Forgotpass', component: Forgotpass },
