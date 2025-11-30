@@ -49,8 +49,15 @@
           </div>
 
           <div class="action-buttons">
-            <button class="btn-wishlist" type="button" @click="addToWishlist">
-              <i class="fa-regular fa-heart"></i> Wishlist
+            <button
+              class="btn-wishlist"
+              :class="{ liked: product?.isWishlisted }"
+              type="button"
+              @click="toggleWishlist"
+              :aria-pressed="product?.isWishlisted ? 'true' : 'false'"
+            >
+              <i :class="product?.isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+              Wishlist
             </button>
             <button class="btn-compare" type="button">
               <i class="fa-solid fa-code-compare"></i> Compare
@@ -536,7 +543,6 @@ export default {
         console.log('✅ Product detail API response:', response)
 
         if (response.code === 200 && response.result) {
-          console.log('✅ Product loaded successfully');
           this.productData = response.result
           this.processProductData(response.result)
 
@@ -610,6 +616,8 @@ export default {
         variants,
         basePrice: variants[0]?.sellingPrice || data.minPrice || 0,
         baseOriginalPrice: variants[0]?.price || null,
+        // reflect API-provided wishlisted flag
+        isWishlisted: (data.isWishlisted !== undefined) ? data.isWishlisted : false
       }
 
       this.buildVariantLookup(variants)
@@ -839,35 +847,47 @@ export default {
         this.isSubmitting = false
       }
     },
-    async addToWishlist() {
+    async toggleWishlist() {
       if (!this.product) return;
 
+      const currentlyWishlisted = !!this.product.isWishlisted;
       try {
-        // Import API
-        const { addToWishlist } = await import('@/api/accountApi.js');
+        const api = await import('@/api/accountApi.js');
+        const { getProductById } = await import('@/api/productApi.js');
 
-        // Get variant ID - use selected variant or first variant
+        // Determine variant id to operate on
         const variantId = this.selectedVariant?.id || this.product.variants?.[0]?.id;
-
         if (!variantId) {
-          alert('Cannot add to wishlist: No variant available');
+          alert('Cannot update wishlist: No variant available');
           return;
         }
 
-        await addToWishlist(variantId);
-
-        console.log('✅ Added to wishlist:', this.product.name);
-        alert('Added to wishlist!');
-
-        // Dispatch event để update wishlist icon
-        window.dispatchEvent(new Event('wishlistChanged'));
-      } catch (error) {
-        console.error('❌ Failed to add to wishlist:', error);
-
-        if (error.response?.status === 401) {
-          alert('Please login to add items to wishlist');
+        if (!currentlyWishlisted) {
+          if (typeof api.addToWishlist === 'function') {
+            await api.addToWishlist(variantId);
+            this.product.isWishlisted = true;
+            alert('Added to wishlist!');
+            window.dispatchEvent(new Event('wishlistChanged'));
+          } else {
+            alert('Add to wishlist API not available.');
+          }
         } else {
-          alert('Failed to add to wishlist. Please try again.');
+          if (typeof api.removeFromWishlist === 'function') {
+            await api.removeFromWishlist(variantId);
+            this.product.isWishlisted = false;
+            alert('Removed from wishlist!');
+            window.dispatchEvent(new Event('wishlistChanged'));
+          } else {
+            // Fallback: inform user removal may be managed elsewhere
+            alert('Remove from wishlist not implemented. Please manage wishlist from the Wishlist page.');
+          }
+        }
+      } catch (error) {
+        console.error('Wishlist toggle failed', error);
+        if (error.response?.status === 401) {
+          alert('Please login to manage wishlist');
+        } else {
+          alert('Failed to update wishlist. Please try again.');
         }
       }
     },
@@ -1082,3 +1102,25 @@ export default {
 </script>
 
 <style src="./ProductDetail.css"></style>
+
+<!-- new localized style to make the liked heart red -->
+<style scoped>
+/* filepath: D:\PVVU\Test\Shop_CMC\Shop_CMC\src\User\screens\ProductDetail\ProductDetail.vue */
+.btn-wishlist {
+  /* keep base button color as-is (inherited) */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Make the heart icon red when the product is wishlisted */
+.btn-wishlist.liked i.fa-heart,
+.btn-wishlist.liked .fa-heart {
+  color: #e0245e; /* red - adjust if you prefer a different shade */
+}
+
+/* Optional: slightly emphasize the button when liked */
+.btn-wishlist.liked {
+  font-weight: 600;
+}
+</style>

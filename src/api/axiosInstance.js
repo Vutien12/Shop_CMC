@@ -9,7 +9,6 @@ const PUBLIC_ENDPOINT_RULES = [
   { path: '/blogs/**', methods: ['GET'] },
   { path: '/brands/**', methods: ['GET'] },
   { path: '/categories/**', methods: ['GET'] },
-  { path: '/products/**', methods: ['GET'] },
   { path: '/options/**', methods: ['GET'] },
   { path: '/variations/**', methods: ['GET'] },
   { path: '/reviews/**', methods: ['GET'] },
@@ -17,6 +16,10 @@ const PUBLIC_ENDPOINT_RULES = [
   { path: '/entity-files/**', methods: ['GET'] },
   { path: '/ws/**', methods: ['ALL'] },
   { path: '/uploads/**', methods: ['ALL'] },
+]
+
+const OPTIONAL_JWT_ENDPOINTS = [
+  { path: '/products/**', methods: ['GET'] },
 ]
 
 const api = axios.create({
@@ -60,13 +63,29 @@ function isPublicEndpoint(url, method) {
   return false
 }
 
+function isOptionalJwtEndpoint(url, method) {
+  const reqPath = normalizeUrlForMatch(url)
+  const reqMethod = (method || 'GET').toUpperCase()
+
+  for (const rule of OPTIONAL_JWT_ENDPOINTS) {
+    if (matchesRule(rule.path, reqPath)) {
+      if (rule.methods.includes('ALL')) return true
+      if (rule.methods.map(m => m.toUpperCase()).includes(reqMethod)) return true
+    }
+  }
+  return false
+}
+
 // Request interceptor: add Authorization only when endpoint is not public (and token exists)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
   const url = config.url || ''
   const method = (config.method || 'GET').toUpperCase()
 
-  if (!isPublicEndpoint(url, method) && token) {
+  const sendOptionalJwt = token && isOptionalJwtEndpoint(url, method)
+  const sendTokenForNonPublic = !isPublicEndpoint(url, method) && token
+
+  if (sendOptionalJwt || sendTokenForNonPublic) {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }

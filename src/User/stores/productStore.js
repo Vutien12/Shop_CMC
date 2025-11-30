@@ -91,7 +91,8 @@ export const useProductStore = defineStore('product', () => {
           badge: !p.inStock ? 'Out of Stock' : (isNew ? 'New' : null),
           badgeColor: !p.inStock ? 'red' : (isNew ? 'green' : null),
           image: p.thumbnail || '/placeholder.png',
-          isLiked: isInWishlist(p.id)
+          // Use API flag if provided, otherwise fallback to localStorage-based check
+          isWishlisted: (p.isWishlisted !== undefined) ? p.isWishlisted : isInWishlist(p.id)
         };
       });
 
@@ -214,52 +215,67 @@ export const useProductStore = defineStore('product', () => {
   };
 
   const toggleLike = async (product) => {
-    const wasLiked = product.isLiked;
-    product.isLiked = !product.isLiked;
+    const wasWishlisted = product.isWishlisted;
+    product.isWishlisted = !product.isWishlisted;
 
     try {
-      if (product.isLiked) {
-        // Import APIs dynamically
+      if (product.isWishlisted) {
         const { addToWishlist } = await import('@/api/accountApi.js');
         const { getProductById } = await import('@/api/productApi.js');
 
-        // Fetch product detail to get first variant ID
         const productDetail = await getProductById(product.id);
-
         if (productDetail.code !== 200 || !productDetail.result) {
           throw new Error('Failed to fetch product detail');
         }
 
         const variants = productDetail.result.variants || [];
         const firstVariantId = variants[0]?.id;
-
         if (!firstVariantId) {
           alert('This product has no variants available for wishlist');
-          product.isLiked = wasLiked;
+          product.isWishlisted = wasWishlisted;
           return;
         }
 
-        // Add to wishlist with variant ID
         await addToWishlist(firstVariantId);
-
         console.log('✅ Added to wishlist:', product.name);
         alert('Added to wishlist!');
-
         window.dispatchEvent(new Event('wishlistChanged'));
       } else {
-        // Remove from wishlist - need to implement
-        alert('Remove from wishlist not implemented yet. Please go to Wishlist page.');
-        product.isLiked = wasLiked;
+        // Try to call removeFromWishlist if available; otherwise revert and inform user
+        try {
+          const { removeFromWishlist } = await import('@/api/accountApi.js');
+          if (typeof removeFromWishlist === 'function') {
+            // If API expects variantId or productVariantId, we attempt to fetch variant id
+            const { getProductById } = await import('@/api/productApi.js');
+            const productDetail = await getProductById(product.id);
+            const variants = productDetail.result?.variants || [];
+            const firstVariantId = variants[0]?.id;
+            if (firstVariantId) {
+              await removeFromWishlist(firstVariantId);
+              window.dispatchEvent(new Event('wishlistChanged'));
+              console.log('✅ Removed from wishlist:', product.name);
+              alert('Removed from wishlist!');
+            } else {
+              throw new Error('No variant id available to remove from wishlist');
+            }
+          } else {
+            throw new Error('removeFromWishlist not implemented');
+          }
+        } catch (err) {
+          // If removal not implemented, revert and notify
+          product.isWishlisted = wasWishlisted;
+          alert('Remove from wishlist is not available. Please manage wishlist from the Wishlist page.');
+          console.warn('Remove from wishlist failed or not implemented', err);
+        }
       }
     } catch (error) {
-      // Revert on error
-      product.isLiked = wasLiked;
+      product.isWishlisted = wasWishlisted;
       console.error('❌ Failed to toggle wishlist:', error);
 
       if (error.response?.status === 401) {
         alert('Please login to add items to wishlist');
       } else {
-        alert('Failed to add to wishlist: ' + (error.message || 'Unknown error'));
+        alert('Failed to update wishlist: ' + (error.message || 'Unknown error'));
       }
     }
   };
