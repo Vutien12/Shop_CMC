@@ -7,10 +7,10 @@
     <div class="top-bar">
       <div class="container">
         <div class="top-links">
-          <a href="#" class="top-link">
+          <router-link to="/contact" class="top-link">
             <i class="las la-envelope"></i>
             <span>Contact</span>
-          </a>
+          </router-link>
           <div class="dropdown">
             <span class="dropdown-trigger">
               <i class="las la-language"></i>
@@ -46,7 +46,7 @@
           <div class="logo-icon">
             <img src="../../../assets/sidebar-logo-mini copy.svg" alt="FleetCart Logo" />
           </div>
-          <span class="logo-text">FleetCart</span>
+          <span class="logo-text">ShopCMC</span>
         </div>
 
         <!-- Mobile Menu Toggle Button -->

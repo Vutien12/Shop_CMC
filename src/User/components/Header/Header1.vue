@@ -1,5 +1,40 @@
 <template>
   <header class="header-main">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="container">
+        <div class="top-links">
+          <router-link to="/contact" class="top-link">
+            <i class="las la-envelope"></i>
+            <span>Contact</span>
+          </router-link>
+          <div class="dropdown">
+            <span class="dropdown-trigger">
+              <i class="las la-language"></i>
+              <span>English</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </span>
+          </div>
+          <div class="dropdown">
+            <span class="dropdown-trigger">
+              <i class="las la-money-bill"></i>
+              <span>USD</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </span>
+          </div>
+          <!-- Login/Logout Link -->
+          <router-link v-if="!isLoggedIn" to="/login" class="top-link">
+            <i class="las la-sign-in-alt"></i>
+            <span>Login / Register</span>
+          </router-link>
+          <router-link v-else to="/account" class="top-link">
+            <i class="las la-user"></i>
+            <span>Account</span>
+          </router-link>
+        </div>
+      </div>
+    </div>
+
     <!-- Top Section: Logo, Search, Icons -->
     <div class="header-top">
       <div class="container">
@@ -14,7 +49,7 @@
             <div class="logo-icon">
               <i class="material-icons">shopping_cart</i>
             </div>
-            <span class="logo-text">FleetCart</span>
+            <span class="logo-text">CMC SHOP</span>
           </router-link>
         </div>
 
@@ -245,11 +280,22 @@ onMounted(() => {
   // Check login status
   const token = localStorage.getItem('token');
   isLoggedIn.value = !!token;
+
+  // Listen for login status changes
+  window.addEventListener('storage', checkLoginStatus);
+  window.addEventListener('loginStatusChanged', checkLoginStatus);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('storage', checkLoginStatus);
+  window.removeEventListener('loginStatusChanged', checkLoginStatus);
 });
+
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token');
+  isLoggedIn.value = !!token || localStorage.getItem('isLoggedIn') === 'true';
+};
 </script>
 
 <style scoped>
