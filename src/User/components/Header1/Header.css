@@ -338,7 +338,7 @@ a {
   align-items: center;
   justify-content: space-between;
   min-width: 200px;
-  gap: 15px;
+  gap: 80px;
   border-radius: 8px;
   transition: background-color 0.3s;
   margin-left: 4px;
