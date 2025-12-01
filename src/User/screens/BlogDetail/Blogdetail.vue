@@ -1,6 +1,6 @@
 <template>
   <div class="blog-detail-page">
-    <Header1 />
+    <Header />
 
     <Loading v-if="isLoading" />
 
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import Header1 from '../../components/Header/Header1.vue'
+import Header from '@/User/components/Header1/Header.vue'
 import Footer from '../../components/Footer/Footer.vue'
 import Loading from '../../components/Loading/Loading.vue'
 import axiosInstance from '@/api/axiosInstance'
@@ -66,7 +66,7 @@ import DOMPurify from 'dompurify'
 export default {
   name: 'BlogDetail',
   components: {
-    Header1,
+    Header,
     Footer,
     Loading
   },

@@ -82,8 +82,8 @@
             ></textarea>
           </div>
 
-          <button type="submit" class="btn-submit" :disabled="!isFormValid">
-            SEND MESSAGE
+          <button type="submit" class="btn-submit" :disabled="!isFormValid || isSubmitting">
+            {{ isSubmitting ? 'SENDING...' : 'SEND MESSAGE' }}
           </button>
         </form>
       </div>
@@ -98,6 +98,7 @@ import { ref, computed } from 'vue';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import { useToast } from '@/User/components/Toast/useToast.js';
+import { sendContactSupport } from '@/api/contactApi.js';
 
 const { add: toast } = useToast();
 
@@ -107,23 +108,36 @@ const formData = ref({
   message: ''
 });
 
+const isSubmitting = ref(false);
+
 const isFormValid = computed(() => {
   return formData.value.email &&
          formData.value.subject &&
          formData.value.message;
 });
 
-const handleSubmit = () => {
-  if (isFormValid.value) {
-    console.log('Form submitted:', formData.value);
-    toast('Tin nhắn của bạn đã được gửi!', 'success');
+const handleSubmit = async () => {
+  if (isFormValid.value && !isSubmitting.value) {
+    isSubmitting.value = true;
 
-    // Reset form
-    formData.value = {
-      email: '',
-      subject: '',
-      message: ''
-    };
+    try {
+      const response = await sendContactSupport(formData.value);
+
+      toast(response.message || 'Yêu cầu hỗ trợ của bạn đã được gửi thành công!', 'success');
+
+      // Reset form
+      formData.value = {
+        email: '',
+        subject: '',
+        message: ''
+      };
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      const errorMessage = error.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại sau!';
+      toast(errorMessage, 'error');
+    } finally {
+      isSubmitting.value = false;
+    }
   }
 };
 </script>

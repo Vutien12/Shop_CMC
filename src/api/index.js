@@ -68,3 +68,6 @@ export * from './blogApi.js';
 // File APIs
 export * from './fileApi.js';
 
+// Contact APIs
+export * from './contactApi.js';
+

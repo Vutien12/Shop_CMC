@@ -16,6 +16,7 @@ const PUBLIC_ENDPOINT_RULES = [
   { path: '/entity-files/**', methods: ['GET'] },
   { path: '/ws/**', methods: ['ALL'] },
   { path: '/uploads/**', methods: ['ALL'] },
+  { path: '/contact', methods: ['POST'] },
 ]
 
 const OPTIONAL_JWT_ENDPOINTS = [
