@@ -91,8 +91,8 @@ export default {
     sanitizedContent() {
       // Sanitize HTML content to prevent XSS attacks
       return DOMPurify.sanitize(this.blogPost.content || '', {
-        ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'u', 'a', 'img', 'br', 'div', 'span', 'blockquote', 'pre', 'code'],
-        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'style', 'class', 'id']
+        ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'u', 'a', 'img', 'br', 'div', 'span', 'blockquote', 'pre', 'code', 'iframe'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'style', 'class', 'id', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow']
       })
     }
   },

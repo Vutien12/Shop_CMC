@@ -53,12 +53,15 @@ import Footer from '../../components/Footer/Footer.vue';
 import Loading from '../../components/Loading/Loading.vue';
 import { searchBlogs } from '@/api/blogApi.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 const isLoading = ref(true);
 const blogPosts = ref([]);
 const page = ref(0);
 const size = ref(8);
 const totalPages = ref(0);
+
 
 const fetchBlogs = async () => {
   isLoading.value = true;
@@ -89,6 +92,11 @@ const changePage = (newPage) => {
 
 const goNext = () => changePage(page.value + 1);
 const goPrev = () => changePage(page.value - 1);
+
+const goToBlogDetail = (id) => {
+  router.push({ name: 'BlogDetail', params: { id } });
+};
+
 
 onMounted(() => {
   fetchBlogs();
