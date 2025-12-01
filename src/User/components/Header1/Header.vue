@@ -46,7 +46,7 @@
           <div class="logo-icon">
             <img src="../../../assets/sidebar-logo-mini copy.svg" alt="FleetCart Logo" />
           </div>
-          <span class="logo-text">FleetCart</span>
+          <span class="logo-text">ShopCMC</span>
         </div>
 
         <!-- Mobile Menu Toggle Button -->
