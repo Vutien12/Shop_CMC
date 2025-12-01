@@ -1,6 +1,15 @@
 import api from './axiosInstance.js'
 
 /**
+ * Get contact information (phone, email, address, social links)
+ * @returns {Promise<Object>} API response with contact information
+ */
+export const getContactInfo = async () => {
+  const response = await api.get('/contact')
+  return response.data
+}
+
+/**
  * Send contact support request
  * @param {Object} contactData - Contact request data
  * @param {string} contactData.email - Sender's email

@@ -10,31 +10,31 @@
         <div class="contact-details">
           <div class="contact-item">
             <i class="fa-solid fa-phone"></i>
-            <span>+990123456789</span>
+            <span>{{ contactInfo.phone }}</span>
           </div>
 
           <div class="contact-item">
             <i class="fa-solid fa-envelope"></i>
-            <span>admin@email.com</span>
+            <span>{{ contactInfo.email }}</span>
           </div>
 
           <div class="contact-item">
             <i class="fa-solid fa-map-marker-alt"></i>
-            <span>Dhaka, Mohammadpur</span>
+            <span>{{ contactInfo.address }}</span>
           </div>
         </div>
 
         <div class="social-links">
-          <a href="#" class="social-icon">
+          <a :href="contactInfo.facebook" class="social-icon" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-facebook-f"></i>
           </a>
-          <a href="#" class="social-icon">
+          <a :href="contactInfo.twitter" class="social-icon" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-x-twitter"></i>
           </a>
-          <a href="#" class="social-icon">
+          <a :href="contactInfo.instagram" class="social-icon" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-instagram"></i>
           </a>
-          <a href="#" class="social-icon">
+          <a :href="contactInfo.youtube" class="social-icon" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-youtube"></i>
           </a>
         </div>
@@ -94,11 +94,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import { useToast } from '@/User/components/Toast/useToast.js';
-import { sendContactSupport } from '@/api/contactApi.js';
+import { sendContactSupport, getContactInfo } from '@/api/contactApi.js';
 
 const { add: toast } = useToast();
 
@@ -108,13 +108,47 @@ const formData = ref({
   message: ''
 });
 
+const contactInfo = ref({
+  phone: '+990123456789',
+  email: 'admin@email.com',
+  address: 'Dhaka, Mohammadpur',
+  facebook: '#',
+  twitter: '#',
+  instagram: '#',
+  youtube: '#'
+});
+
 const isSubmitting = ref(false);
+const isLoadingInfo = ref(false);
 
 const isFormValid = computed(() => {
   return formData.value.email &&
          formData.value.subject &&
          formData.value.message;
 });
+
+const fetchContactInfo = async () => {
+  isLoadingInfo.value = true;
+  try {
+    const response = await getContactInfo();
+    if (response.code === 200 && response.result) {
+      contactInfo.value = {
+        phone: response.result.phone || contactInfo.value.phone,
+        email: response.result.email || contactInfo.value.email,
+        address: response.result.address?.fullAddress || response.result.address || contactInfo.value.address,
+        facebook: response.result.facebook || contactInfo.value.facebook,
+        twitter: response.result.twitter || contactInfo.value.twitter,
+        instagram: response.result.instagram || contactInfo.value.instagram,
+        youtube: response.result.youtube || contactInfo.value.youtube
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching contact info:', error);
+    // Keep default values if API fails
+  } finally {
+    isLoadingInfo.value = false;
+  }
+};
 
 const handleSubmit = async () => {
   if (isFormValid.value && !isSubmitting.value) {
@@ -140,6 +174,10 @@ const handleSubmit = async () => {
     }
   }
 };
+
+onMounted(() => {
+  fetchContactInfo();
+});
 </script>
 
 <style src="./Contact.css" scoped></style>
