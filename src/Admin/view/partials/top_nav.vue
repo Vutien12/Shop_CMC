@@ -7,15 +7,25 @@
       </button>
 
       <ul class="nav navbar-nav clearfix">
+        <!-- Storefront button to go to home page -->
+        <li class="visit-store hidden-sm hidden-xs">
+          <a href="/" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shop-window" viewBox="0 0 16 16">
+              <path d="M2.97 1.35A1 1 0 0 1 3.73 1h8.54a1 1 0 0 1 .76.35l2.609 3.044A1.5 1.5 0 0 1 16 5.37v.255a2.375 2.375 0 0 1-4.25 1.458A2.37 2.37 0 0 1 9.875 8 2.37 2.37 0 0 1 8 7.083 2.37 2.37 0 0 1 6.125 8a2.37 2.37 0 0 1-1.875-.917A2.375 2.375 0 0 1 0 5.625V5.37a1.5 1.5 0 0 1 .361-.976zm1.78 4.275a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 1 0 2.75 0V5.37a.5.5 0 0 0-.12-.325L12.27 2H3.73L1.12 5.045A.5.5 0 0 0 1 5.37v.255a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0M1.5 8.5A.5.5 0 0 1 2 9v6h12V9a.5.5 0 0 1 1 0v6h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1V9a.5.5 0 0 1 .5-.5m2 .5a.5.5 0 0 1 .5.5V13h8V9.5a.5.5 0 0 1 1 0V13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a.5.5 0 0 1 .5-.5"></path>
+            </svg>
+            Storefront
+          </a>
+        </li>
+        
         <li class="fullscreen-mode">
           <a class="fullscreen-mode-open" href="#" @click.prevent="toggleFullscreen">
             <svg class="fullscreen-one exit-full-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/></svg>
             <svg class="fullscreen-two" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/></svg>
           </a>
         </li>
-        <li class="user dropdown top-nav-menu pull-right">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            <span>{{ adminLabel }}</span>
+        <li class="user dropdown top-nav-menu pull-right" :class="{ open: isDropdownOpen }">
+          <a href="#" class="dropdown-toggle" @click.prevent="toggleDropdown">
+            <span class="user-avatar">{{ profileFirstLetter }}</span>
             <div class="dropdown-arrow-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9" fill="none">
                 <path d="M16.9201 0.949951L10.4001 7.46995C9.63008 8.23995 8.37008 8.23995 7.60008 7.46995L1.08008 0.949951" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
@@ -23,16 +33,16 @@
             </div>
           </a>
 
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" v-show="isDropdownOpen">
           <li class="profile-details">
             <span class="profile-first-letter">{{ profileFirstLetter }}</span>
 
             <div class="profile-info">
               <h4>
-                <span>{{ adminLabel }}</span>
-                <span>{{ userRole }}</span>
+                <span>{{ displayName }}</span>
+                <span>{{ displayRole }}</span>
               </h4>
-              <span class="profile-email">{{ userEmail }}</span>
+              <span class="profile-email">{{ displayEmail }}</span>
             </div>
           </li>
 
@@ -61,22 +71,23 @@
     </ul>
     </div>
   </nav>
-
-  <form
-    v-if="logoutRoute"
-    id="logout-form"
-    :action="logoutRoute"
-    method="POST"
-    style="display: none;"
-  >
-    <input type="hidden" name="_token" :value="csrfToken">
-    <input type="hidden" name="_method" value="GET"> </form>
 </template>
 
 <script>
+import { getCurrentUser } from '@/api/profileApi'
+import { logout as logoutApi } from '@/api/authApi'
+
 export default {
   name: 'Topnav',
   emits: ['toggle-sidebar', 'toggle-fullscreen', 'logout-requested'],
+  data() {
+    return {
+      isDropdownOpen: false,
+      isFullscreen: false,
+      currentUser: null,
+      isLoading: false
+    }
+  },
   props: {
     // Label cho bảng điều khiển (vd: 'Admin Panel')
     adminLabel: {
@@ -110,34 +121,118 @@ export default {
     }
   },
   computed: {
-    // Tính toán chữ cái đầu tiên cho biểu tượng hồ sơ
     profileFirstLetter() {
-      if (this.adminLabel) {
-        return this.adminLabel.charAt(0).toUpperCase();
+      if (this.currentUser?.firstName) {
+        return this.currentUser.firstName.charAt(0).toUpperCase();
       }
-      return 'A';
+      return this.adminLabel.charAt(0).toUpperCase();
+    },
+    
+    displayName() {
+      if (this.currentUser) {
+        return `${this.currentUser.firstName} ${this.currentUser.lastName}`.trim();
+      }
+      return this.adminLabel;
+    },
+    
+    displayRole() {
+      return this.currentUser?.role || this.userRole;
+    },
+    
+    displayEmail() {
+      return this.currentUser?.email || this.userEmail;
     }
   },
   methods: {
-    // Phương thức xử lý đăng xuất
-    logout() {
-      // Tùy chọn 1: Kích hoạt form submit (giống code gốc)
-      document.getElementById('logout-form').submit();
-
-      /* Tùy chọn 2 (Hiện đại hơn): Gửi request POST/GET bằng Axios/Fetch
-
-      this.$emit('logout-requested'); // Phát ra sự kiện để component cha xử lý đăng xuất AJAX
-
-      */
+    async loadUserData() {
+      this.isLoading = true;
+      try {
+        const response = await getCurrentUser();
+        console.log('📦 Full API Response:', response);
+        
+        // API trả về result là Array, lấy phần tử đầu tiên
+        let userData = response.result || response.data || response;
+        
+        // Nếu là array, lấy phần tử đầu tiên
+        if (Array.isArray(userData) && userData.length > 0) {
+          userData = userData[0];
+        }
+        
+        console.log('👤 User Data:', userData);
+        console.log('  - firstName:', userData.firstName);
+        console.log('  - lastName:', userData.lastName);
+        console.log('  - email:', userData.email);
+        console.log('  - role:', userData.role);
+        
+        this.currentUser = userData;
+        
+        // Log giá trị hiển thị
+        this.$nextTick(() => {
+          console.log('✅ Display Values:');
+          console.log('  - displayName:', this.displayName);
+          console.log('  - displayRole:', this.displayRole);
+          console.log('  - displayEmail:', this.displayEmail);
+        });
+      } catch (error) {
+        console.error('Failed to load user:', error);
+        this.currentUser = null;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    
+    handleClickOutside(event) {
+      const dropdown = this.$el.querySelector('.top-nav-menu');
+      if (dropdown && !dropdown.contains(event.target)) {
+        this.isDropdownOpen = false;
+      }
+    },
+    
+    async logout() {
+      try {
+        this.isDropdownOpen = false;
+        await logoutApi();
+      } catch (error) {
+        console.error('Logout error:', error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userEmail');
+        this.$router.push('/login');
+      }
     },
 
-    // Phương thức xử lý toàn màn hình (Placeholder)
     toggleFullscreen() {
-        // Cần triển khai logic JS để chuyển đổi toàn màn hình (dùng Fullscreen API)
-        console.log('Toggle Fullscreen clicked');
-        // Thường phát ra một sự kiện để component cha xử lý chức năng này
-        this.$emit('toggle-fullscreen');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          this.isFullscreen = true;
+        }).catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          this.isFullscreen = false;
+        }).catch(err => {
+          console.error('Error attempting to exit fullscreen:', err);
+        });
+      }
+    },
+    
+    handleFullscreenChange() {
+      this.isFullscreen = !!document.fullscreenElement;
     }
+  },
+  mounted() {
+    this.loadUserData();
+    document.addEventListener('click', this.handleClickOutside);
+    document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
+    document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
   }
 };
 </script>
@@ -249,5 +344,155 @@ export default {
       display: none;
     }
   }
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+}
+
+/* Visit store / Storefront button styles */
+.visit-store {
+  margin-right: auto;
+}
+
+.visit-store a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.visit-store a:hover {
+  background: #f5f5f5;
+  border-color: #475aff;
+  color: #475aff;
+}
+
+.visit-store svg {
+  flex-shrink: 0;
+}
+
+/* User avatar in top navbar */
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #475aff;
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown.open .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu li {
+  list-style: none;
+  margin: 0;
+}
+
+.dropdown-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.dropdown-menu li a:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-menu li a svg {
+  flex-shrink: 0;
+}
+
+/* Profile details in dropdown */
+.profile-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  background: #f9f9f9;
+}
+
+.profile-first-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #475aff;
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.profile-info h4 span:first-child {
+  display: block;
+}
+
+.profile-info h4 span:last-child {
+  display: block;
+  font-size: 12px;
+  font-weight: normal;
+  color: #666;
+  margin-top: 2px;
+}
+
+.profile-email {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

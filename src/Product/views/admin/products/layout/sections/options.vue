@@ -619,8 +619,6 @@ export default {
 
 .drag-handle {
     cursor: grab;
-    color: #999;
-    font-size: 12px;
     flex-shrink: 0;
 }
 
@@ -647,5 +645,299 @@ export default {
 
 .btn-delete-option:hover {
     color: #c82333;
+}
+
+/* Button Add row vừa đủ */
+.option-select > .btn-default {
+    width: auto;
+    padding: 8px 20px;
+}
+
+/* Responsive cho iPad và tablet (≤1024px) */
+@media (max-width: 1024px) {
+    .accordion-box-footer {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .insert-template select {
+        width: 180px !important;
+    }
+}
+
+/* Responsive cho iPad dọc và tablet nhỏ (≤768px) */
+@media (max-width: 768px) {
+    .box-header {
+        padding: 12px 15px !important;
+    }
+    
+    .box-header h5 {
+        font-size: 16px !important;
+    }
+    
+    .btn-accordion {
+        padding: 8px 12px;
+    }
+    
+    .option-header-content {
+        gap: 8px;
+    }
+    
+    .option-name {
+        font-size: 14px;
+    }
+    
+    .btn-delete-option {
+        padding: 4px 6px;
+        margin-left: 10px;
+        font-size: 13px;
+    }
+    
+    .new-option .row > .col-sm-5,
+    .new-option .row > .col-sm-4,
+    .new-option .row > .col-sm-3 {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .option-values table {
+        font-size: 14px;
+    }
+    
+    .option-values table th,
+    .option-values table td {
+        padding: 8px 6px;
+    }
+    
+    .option-values .btn.delete-row {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .option-select > .btn-default {
+        padding: 8px 18px;
+    }
+    
+    .accordion-box-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .accordion-box-footer > .btn {
+        width: 100%;
+    }
+    
+    .insert-template {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .insert-template select {
+        flex: 1;
+        max-width: 200px;
+        margin-right: 10px !important;
+    }
+    
+    .insert-template .btn {
+        flex-shrink: 0;
+        width: auto;
+        min-width: 100px;
+    }
+}
+
+/* Responsive cho điện thoại (≤576px) */
+@media (max-width: 576px) {
+    .box-header {
+        padding: 10px 12px !important;
+    }
+    
+    .box-header h5 {
+        font-size: 15px !important;
+    }
+    
+    .box-header .d-flex {
+        gap: 8px;
+    }
+    
+    .panel-heading {
+        padding: 0 !important;
+    }
+    
+    .panel-body {
+        padding: 12px !important;
+    }
+    
+    .btn-accordion {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .option-header-content {
+        gap: 6px;
+    }
+    
+    .drag-handle {
+        font-size: 12px;
+    }
+    
+    .option-name {
+        font-size: 13px;
+    }
+    
+    .btn-delete-option {
+        padding: 3px 5px;
+        margin-left: 8px;
+        font-size: 12px;
+    }
+    
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .form-control {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+    
+    .new-option .row > .col-sm-5,
+    .new-option .row > .col-sm-4,
+    .new-option .row > .col-sm-3 {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+    
+    .option-values {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .option-values table {
+        font-size: 13px;
+        min-width: 600px;
+    }
+    
+    .option-values table th,
+    .option-values table td {
+        padding: 6px 4px;
+    }
+    
+    .option-values table td input[type="text"],
+    .option-values table td input[type="number"] {
+        font-size: 13px;
+        padding: 5px 8px;
+        min-width: 80px;
+    }
+    
+    .option-values table td.text-center {
+        width: 40px !important;
+    }
+    
+    .option-values .btn.delete-row {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    
+    .option-select > .btn-default {
+        width: auto;
+        padding: 6px 16px;
+        font-size: 14px;
+    }
+    
+    .help-block {
+        font-size: 12px;
+    }
+    
+    .insert-template {
+        flex-wrap: wrap;
+    }
+    
+    .insert-template select {
+        flex: 1;
+        min-width: 150px;
+        max-width: none;
+    }
+    
+    .insert-template .btn {
+        flex: 1;
+        min-width: 100px;
+    }
+}
+
+/* Responsive cho điện thoại nhỏ (≤480px) */
+@media (max-width: 480px) {
+    .box-header {
+        padding: 8px 10px !important;
+    }
+    
+    .box-header h5 {
+        font-size: 14px !important;
+    }
+    
+    .panel-body {
+        padding: 10px !important;
+    }
+    
+    .btn-accordion {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+    
+    .option-name {
+        font-size: 12px;
+    }
+    
+    .drag-handle {
+        font-size: 11px;
+    }
+    
+    .btn-delete-option {
+        padding: 2px 4px;
+        margin-left: 6px;
+        font-size: 11px;
+    }
+    
+    .form-group label {
+        font-size: 12px;
+    }
+    
+    .form-control {
+        font-size: 13px;
+        padding: 5px 8px;
+    }
+    
+    .new-option .row > .col-sm-5,
+    .new-option .row > .col-sm-4,
+    .new-option .row > .col-sm-3 {
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+    
+    .option-values table {
+        font-size: 12px;
+    }
+    
+    .option-values table td input[type="text"],
+    .option-values table td input[type="number"] {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+    
+    .option-select > .btn-default {
+        padding: 5px 14px;
+        font-size: 13px;
+    }
+    
+    .insert-template select {
+        min-width: 120px;
+    }
+    
+    .insert-template .btn {
+        min-width: 80px;
+        padding: 6px 10px;
+        font-size: 13px;
+    }
 }
 </style>

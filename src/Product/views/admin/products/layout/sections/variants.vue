@@ -98,8 +98,6 @@
                                                     :checked="variant.is_selected"
                                                     disabled
                                                 >
-
-                                                <label :for="`variants-${variant.uid}-is-selected`"></label>
                                             </div>
 
                                             <span class="variant-name">{{ variant.name }}</span>
@@ -175,7 +173,7 @@
                                             <div class="variant-fields">
                                                 <div class="row">
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-sku`">
                                                                 {{ trans('product::products.form.variants.sku') }}
                                                             </label>
@@ -198,7 +196,7 @@
                                                     </div>
 
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-price`">
                                                                 {{ trans('product::products.form.variants.price') }}
                                                                 <span class="text-red">*</span>
@@ -234,7 +232,7 @@
 
                                                 <div class="row">
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-special-price`">
                                                                 {{ trans('product::products.form.variants.special_price') }}
                                                             </label>
@@ -263,7 +261,7 @@
                                                     </div>
 
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-special-price-type`">
                                                                 {{ trans('product::products.form.variants.special_price_type') }}
                                                             </label>
@@ -295,7 +293,7 @@
 
                                                 <div class="row">
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-special-price-start`">
                                                                 {{ trans('product::products.form.variants.special_price_start') }}
                                                             </label>
@@ -333,7 +331,7 @@
                                                     </div>
 
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-special-price-end`">
                                                                 {{ trans('product::products.form.variants.special_price_end') }}
                                                             </label>
@@ -371,7 +369,7 @@
 
                                                 <div class="row">
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-manage-stock`">
                                                                 {{ trans('product::products.form.variants.manage_stock') }}
                                                             </label>
@@ -405,7 +403,7 @@
                                                     </div>
 
                                                     <div v-if="variant.manage_stock == 1" class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-qty`">
                                                                 {{ trans('product::products.form.variants.qty') }}<span class="text-red">*</span>
                                                             </label>
@@ -431,7 +429,7 @@
                                                     </div>
 
                                                     <div class="col-sm-6">
-                                                        <div class="form-group row">
+                                                        <div class="form-group">
                                                             <label :for="`variants-${variant.uid}-in-stock`">
                                                                 {{ trans('product::products.form.variants.in_stock') }}
                                                             </label>
@@ -613,3 +611,136 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.panel-heading .collapsed::after,
+.panel-title .collapsed::after,
+.collapsed::after,
+.panel-title > div::after,
+[data-toggle="collapse"]::after {
+    content: none !important;
+    display: none !important;
+}
+</style>
+
+<style scoped>
+.panel-title > div {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-direction: row !important;
+    padding: 8px 12px !important;
+}
+
+.panel-title > div > .d-flex {
+    flex: 1 !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.panel-title > div > .switch {
+    margin-left: 12px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.variant-name {
+    margin-left: 10px !important;
+    word-break: break-word !important;
+}
+
+.variant-badge {
+    margin-left: 5px !important;
+    display: flex !important;
+    gap: 5px !important;
+    flex-wrap: wrap !important;
+}
+
+.variant-badge .label {
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    padding: 4px 10px !important;
+}
+
+/* Responsive form fields */
+.variant-fields .form-group {
+    margin-bottom: 20px !important;
+}
+
+.variant-fields .form-group label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: 500 !important;
+}
+
+.variant-fields .input-group {
+    width: 100% !important;
+}
+
+.variant-fields .form-control {
+    width: 100% !important;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+    .panel-title > div {
+        padding: 6px 8px !important;
+    }
+    
+    .panel-title > div > .d-flex {
+        gap: 6px !important;
+    }
+    
+    .variant-name {
+        margin-left: 6px !important;
+        font-size: 14px !important;
+    }
+    
+    .variant-badge {
+        margin-left: 3px !important;
+        gap: 3px !important;
+    }
+    
+    .variant-badge .label {
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+    }
+    
+    .panel-body .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    
+    .panel-body [class*="col-"] {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+    
+    .variant-fields .form-group {
+        margin-bottom: 15px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .panel-title > div {
+        align-items: flex-start !important;
+    }
+    
+    .panel-title > div > .switch {
+        margin-left: 0 !important;
+        align-self: flex-end !important;
+    }
+    
+    .panel-body .col-sm-4,
+    .panel-body .col-sm-6,
+    .panel-body .col-sm-8 {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .variant-fields .row > [class*="col-"] {
+        margin-bottom: 0 !important;
+    }
+}
+</style>

@@ -18,12 +18,13 @@ export const logout = async () => {
   } catch {
     console.warn('Logout API failed, proceeding with client cleanup');
   } finally {
-    // XÓA TOÀN BỘ dữ liệu người dùng
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
-    // Chuyển hướng về login
+    // XÓA TOÀN BỘ dữ liệu người dùng và session
+    localStorage.clear(); // Xóa tất cả localStorage
+    sessionStorage.clear(); // Xóa tất cả sessionStorage
+    
+    // Chuyển hướng về login và reload để reset state
     await router.push('/login');
+    window.location.reload(); // Force reload để clear tất cả state
   }
 };
 

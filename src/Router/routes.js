@@ -28,7 +28,6 @@ import Orderdetail from "../User/components/Orderdetail/Orderdetail.vue";
 import Layout from "../Admin/view/layout.vue";
 import ProductIndex from "../Product/views/admin/products/partials/index.vue";
 import ProductCreate from "../Product/views/admin/products/partials/create.vue";
-import ProductEdit from "../Product/views/admin/products/partials/edit.vue";
 import VariationIndex from "../Variation/index.vue";
 import VariationCreate from "../Variation/create.vue";
 import OptionIndex from "../Option/indext.vue";
@@ -84,6 +83,7 @@ const routes = [
   {
         path: '/admin',
         component: Layout,
+        meta: { requiresAuth: true, requiresAdmin: true },
         children: [
             {
                 name: 'admin.dashboard',
@@ -102,7 +102,7 @@ const routes = [
             },
             {
                 name: 'admin.products.edit',
-                component: ProductEdit,
+                component: ProductCreate,
                 path: 'products/:id/edit',
             },
             {
@@ -211,15 +211,28 @@ const router = createRouter ({
 // Navigation Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('accessToken');
+  
+  // Check if route requires authentication
   if (to.meta.requiresAuth && !token) {
     return next({
       path: '/login',
       query: { redirect: to.fullPath }
     });
   }
+  
+  // Check if route requires admin access
+  if (to.meta.requiresAdmin && !token) {
+    return next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    });
+  }
+  
+  // If already logged in and trying to access login page, redirect to home
   if (to.name === 'Login' && token) {
     return next({ path: '/' });
   }
+  
   next();
 });
 

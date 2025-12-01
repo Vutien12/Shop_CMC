@@ -1,5 +1,5 @@
 <template>
-  <aside class="main-sidebar">
+  <aside class="main-sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
     <header class="main-header clearfix">
       <!-- Logo khi expanded - click vào logo cũng toggle sidebar -->
       <a class="logo logo-expanded" href="#" @click.prevent="$emit('toggle-sidebar')" title="Click to collapse sidebar">
@@ -161,6 +161,10 @@ export default {
     baseUrl: {
       type: String,
       default: '/'
+    },
+    isSidebarOpen: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['toggle-sidebar'],
@@ -206,7 +210,7 @@ export default {
 
     const closeSidebarOnMobile = () => {
       // Close sidebar on mobile when clicking a link
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < 768 && props.isSidebarOpen) {
         emit('toggle-sidebar');
       }
     };
@@ -397,6 +401,10 @@ export default {
     transform: translateZ(0);
   }
 
+  .main-sidebar.sidebar-open {
+    left: 0 !important;
+  }
+
   .sidebar {
     height: calc(100vh - 56px) !important;
     overflow-y: auto !important;
@@ -434,5 +442,19 @@ export default {
   .main-sidebar {
     position: relative !important;
   }
+}
+
+.toggle-icon {
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+/* Main Header Layout */
+.main-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 12px 15px !important;
 }
 </style>
