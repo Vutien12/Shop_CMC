@@ -7,6 +7,7 @@
 export {
   searchProducts,
   getProductById,
+  getProductForEdit,
   createProduct,
   updateProduct,
   deleteProduct

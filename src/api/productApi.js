@@ -6,8 +6,14 @@ export const searchProducts = async (params = {}) => {
   return response.data;
 };
 
-// Get product detail by ID
+// Get product detail by ID (for viewing)
 export const getProductById = async (id) => {
+  const response = await api.get(`/products/${id}`);
+  return response.data;
+};
+
+// Get product detail for editing (admin)
+export const getProductForEdit = async (id) => {
   const response = await api.get(`/products/${id}`);
   return response.data;
 };
@@ -42,3 +48,13 @@ export const deleteProduct = async (id) => {
   const response = await api.delete(`/products/${id}`);
   return response.data;
 };
+
+export default {
+  searchProducts,
+  getProductById,
+  getProductForEdit,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+};
+

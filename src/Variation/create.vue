@@ -24,7 +24,7 @@
           <div class="spinner"></div>
           <p>Loading variation...</p>
         </div>
-        
+
         <form v-else class="form" @submit.prevent="saveForm">
           <!-- General -->
           <div class="row has-variation-type">
@@ -116,8 +116,8 @@
                               placeholder="#000000"
                               style="flex: 1; min-width: 80px; border: none; outline: none; border-radius: 0; padding: 6px 8px; font-size: 14px;"
                             />
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               :style="getColorButtonStyle(option.color)"
                               @click="openColorPicker(index)"
                               :title="'Pick color: ' + (option.color || 'Select a color')"
@@ -132,11 +132,26 @@
                         </td>
 
                         <td v-if="form.type === 'image'">
-                          <input
-                            type="file"
-                            class="form-control"
-                            @change="onFileChange($event, index)"
-                          />
+                          <div class="image-picker-cell">
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-default image-picker-btn"
+                              @click="openImagePicker(index)"
+                            >
+                              <i class="fa fa-folder-open"></i> Browse
+                            </button>
+                            <div v-if="option.imagePreview" class="image-preview-small">
+                              <img :src="option.imagePreview" alt="Preview">
+                              <button
+                                type="button"
+                                class="btn-remove-image-small"
+                                @click="removeImage(index)"
+                                title="Remove image"
+                              >
+                                <i class="fa fa-times"></i>
+                              </button>
+                            </div>
+                          </div>
                         </td>
 
                         <td class="text-center">
@@ -172,18 +187,30 @@
         </form>
       </div>
     </div>
+
+    <!-- File Manager Modal -->
+    <SelectImage
+      :isOpen="isFileManagerOpen"
+      @close="closeFileManager"
+      @select="handleImageSelect"
+    />
   </section>
 </template>
 
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { createVariation, getVariationById, updateVariation } from '@/api/variationApi';
+import { createVariation, getVariationById, updateVariation, attachFileToVariationValue } from '@/api/variationApi';
+import SelectImage from '@/Media/SelectImage.vue';
 
 const router = useRouter();
 const route = useRoute();
 const formSubmitting = ref(false);
 const loading = ref(false);
+
+// File manager state
+const isFileManagerOpen = ref(false);
+const currentImageIndex = ref(null); // Track which value row is selecting image
 
 // Kiểm tra có phải edit mode không
 const isEditMode = computed(() => !!route.params.id);
@@ -197,6 +224,8 @@ const form = reactive({
       label: "",
       color: "", // Ban đầu để rỗng để hiển thị checkerboard
       image: null,
+      imagePreview: null, // URL for preview
+      imageFileId: null, // File ID for API attachment
     },
   ],
 });
@@ -207,8 +236,8 @@ const colorInputs = ref([]);
 const getColorButtonStyle = (color) => {
   const isValidHex = color && /^#[0-9A-Fa-f]{6}$/.test(color); // Kiểm tra mã màu hex hợp lệ
   return {
-    backgroundImage: isValidHex 
-      ? 'none' 
+    backgroundImage: isValidHex
+      ? 'none'
       : 'repeating-linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%, #aaa), repeating-linear-gradient(45deg, #aaa 25%, #fff 25%, #fff 75%, #aaa 75%, #aaa)',
     backgroundColor: isValidHex ? color : 'transparent', // Chỉ áp dụng màu nếu hex hợp lệ
     backgroundSize: isValidHex ? 'auto' : '8px 8px, 8px 8px', // Chỉ cần khi có checkerboard
@@ -238,6 +267,8 @@ const addRow = () => {
     label: "",
     color: "", // Ban đầu để rỗng để hiển thị checkerboard
     image: null,
+    imagePreview: null,
+    imageFileId: null,
   });
 };
 
@@ -250,10 +281,31 @@ const removeRow = (index) => {
   }
 };
 
-// Xử lý upload ảnh
-const onFileChange = (event, index) => {
-  const file = event.target.files[0];
-  if (file) form.values[index].image = file;
+// File Manager Functions
+const openImagePicker = (index) => {
+  currentImageIndex.value = index;
+  isFileManagerOpen.value = true;
+};
+
+const closeFileManager = () => {
+  isFileManagerOpen.value = false;
+  currentImageIndex.value = null;
+};
+
+const handleImageSelect = (media) => {
+  if (currentImageIndex.value !== null) {
+    const index = currentImageIndex.value;
+    form.values[index].imagePreview = media.path;
+    form.values[index].imageFileId = media.id;
+    form.values[index].image = media.path; // Store path as value
+  }
+  closeFileManager();
+};
+
+const removeImage = (index) => {
+  form.values[index].imagePreview = null;
+  form.values[index].imageFileId = null;
+  form.values[index].image = null;
 };
 
 // Load variation data nếu đang edit
@@ -267,31 +319,43 @@ const loadVariation = async () => {
   try {
     const variationId = route.params.id;
     console.log('Loading variation:', variationId);
-    
+
     const response = await getVariationById(variationId);
-    
+
     if (response.code === 200 && response.result) {
       const data = response.result;
-      
+
       // Populate form với data từ API
       form.name = data.name;
       form.type = data.type.toLowerCase();
-      
+
       // Map variationValues
-      form.values = data.variationValues.map((v, index) => ({
-        id: v.id || Date.now() + index,
-        label: v.label,
-        color: (data.type.toLowerCase() === 'color') ? v.value : '',
-        image: null
-      }));
+      form.values = data.variationValues.map((v, index) => {
+        const value = {
+          id: v.id || Date.now() + index,
+          label: v.label,
+          color: (data.type.toLowerCase() === 'color') ? v.value : '',
+          image: null,
+          imagePreview: null,
+          imageFileId: null,
+        };
+
+        // If type is image, set preview
+        if (data.type.toLowerCase() === 'image' && v.value) {
+          value.image = v.value;
+          value.imagePreview = v.value;
+        }
+
+        return value;
+      });
     } else {
       alert('Failed to load variation');
-      router.push({ name: 'admin.variations.index' });
+      await router.push({ name: 'admin.variations.index' });
     }
   } catch (error) {
     console.error('Error loading variation:', error);
     alert('Error loading variation. Redirecting to list...');
-    router.push({ name: 'admin.variations.index' });
+    await router.push({ name: 'admin.variations.index' });
   } finally {
     loading.value = false;
   }
@@ -304,29 +368,29 @@ const saveForm = async () => {
     alert('Please enter variation name');
     return;
   }
-  
+
   if (!form.type) {
     alert('Please select variation type');
     return;
   }
-  
+
   if (form.values.length === 0 || !form.values.some(v => v.label.trim())) {
     alert('Please add at least one value with a label');
     return;
   }
 
   formSubmitting.value = true;
-  
+
   try {
     // Chuẩn bị dữ liệu theo format API
     const variationType = form.type.charAt(0).toUpperCase() + form.type.slice(1); // Text, Color, Image
-    
+
     // Xử lý variationValues dựa trên type
     const variationValues = form.values
       .filter(v => v.label.trim()) // Chỉ lấy values có label
       .map(v => {
         console.log('Processing value:', v); // Debug log
-        
+
         // Nếu type là Color, value là mã màu
         if (form.type === 'color') {
           return {
@@ -334,7 +398,7 @@ const saveForm = async () => {
             value: v.color || '#000000' // value là mã màu hex
           };
         }
-        
+
         // Nếu type là Text hoặc Image, value là slug từ label
         return {
           label: v.label,
@@ -350,15 +414,40 @@ const saveForm = async () => {
     };
 
     console.log('Creating variation:', variationData);
-    
+
     // Gọi API create hoặc update tùy theo mode
-    const response = isEditMode.value 
+    const response = isEditMode.value
       ? await updateVariation(route.params.id, variationData)
       : await createVariation(variationData);
-    
+
     if (response.code === 200) {
+      // Nếu type là Image, attach images cho variation values
+      if (form.type === 'image' && response.result?.variationValues) {
+        const variationValues = response.result.variationValues;
+
+        // Attach images for each value that has imageFileId
+        const attachPromises = form.values
+          .filter(v => v.imageFileId && v.label.trim())
+          .map((v) => {
+            // Find corresponding variation value ID from response
+            const matchingValue = variationValues.find(vv => vv.label === v.label);
+            if (matchingValue && matchingValue.id) {
+              return attachFileToVariationValue({
+                fileId: v.imageFileId,
+                entityId: matchingValue.id,
+                entityType: 'variation_value',
+                zone: 'variation'
+              });
+            }
+            return Promise.resolve();
+          });
+
+        // Wait for all attachments to complete
+        await Promise.all(attachPromises);
+      }
+
       alert(`Variation ${isEditMode.value ? 'updated' : 'created'} successfully!`);
-      router.push({ name: 'admin.variations.index' });
+      await router.push({ name: 'admin.variations.index' });
     } else {
       alert(`Failed to ${isEditMode.value ? 'update' : 'create'} variation: ` + (response.message || 'Unknown error'));
     }
@@ -470,5 +559,58 @@ onMounted(() => {
 .breadcrumb-home-icon svg {
   width: 20px;
   height: 20px;
+}
+
+/* Image picker styles */
+.image-picker-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.image-picker-btn {
+  white-space: nowrap;
+}
+
+.image-preview-small {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.image-preview-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-image-small {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.btn-remove-image-small:hover {
+  background: rgba(255, 0, 0, 1);
+}
+
+.btn-remove-image-small i {
+  margin: 0;
 }
 </style>

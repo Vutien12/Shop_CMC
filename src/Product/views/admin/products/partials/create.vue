@@ -1,7 +1,7 @@
 <template>
     <div class="product-create-page">
         <div class="page-header">
-            <h1>{{ trans('admin::resource.create', { resource: trans('product::products.product') }) }}</h1>
+            <h1>{{ isEditMode ? trans('admin::resource.edit', { resource: trans('product::products.product') }) : trans('admin::resource.create', { resource: trans('product::products.product') }) }}</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -10,7 +10,7 @@
                         </router-link>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        {{ trans('admin::resource.create', { resource: trans('product::products.product') }) }}
+                        {{ isEditMode ? trans('admin::resource.edit', { resource: trans('product::products.product') }) : trans('admin::resource.create', { resource: trans('product::products.product') }) }}
                     </li>
                 </ol>
             </nav>
@@ -37,7 +37,6 @@
                         :placeholderImage="placeholderImage"
                         @generate-variants="generateVariants"
                         @choose-variation-image="chooseVariationImage"
-                        @change-default-variant="changeDefaultVariant"
                         @change-variant-status="changeVariantStatus"
                         @add-variant-media="addVariantMedia"
                     />
@@ -52,7 +51,9 @@
                         :flatPickrConfig="flatPickrConfig"
                         :placeholderImage="placeholderImage"
                         @open-file-manager="openFileManager"
-                        @remove-media="removeGalleryImage"
+                        @remove-media="removeThumbnailHandler"
+                        @remove-gallery="removeGalleryHandler"
+                        @update-gallery="updateGalleryHandler"
                     />
                 </div>
             </div>
@@ -85,10 +86,13 @@ import products from '@/Product/lang/en/products.json';
 import admin from '@/Admin/lang/en/admin.json';
 import {
     createProduct,
+    updateProduct,
+    getProductForEdit,
     getBrands,
     getCategories,
     getGlobalVariations,
-    getGlobalOptions
+    getGlobalOptions,
+    attachFileToEntity
 } from '@/api';
 
 export default {
@@ -100,6 +104,8 @@ export default {
     },
     data() {
         return {
+            isEditMode: false,
+            productId: null,
             redirectAfterSave: '0',
             form: {
                 name: '',
@@ -124,7 +130,9 @@ export default {
                 variants: [],
                 attributes: [],
                 options: [],
-                media: [],
+                thumbnail: null, // Separate thumbnail
+                gallery: [], // Separate gallery array
+                media: [], // For backward compatibility with media section component
                 meta: {
                     meta_title: '',
                     meta_description: '',
@@ -161,10 +169,40 @@ export default {
             currentImageTarget: null, // 'thumbnail' or 'gallery'
         };
     },
+    computed: {
+        // Sync media array from thumbnail + gallery for compatibility with media section component
+        mediaArray() {
+            const result = [];
+            if (this.form.thumbnail) {
+                result.push(this.form.thumbnail);
+            }
+            if (this.form.gallery && this.form.gallery.length > 0) {
+                result.push(...this.form.gallery);
+            }
+            return result;
+        }
+    },
     mounted() {
+        // Check if we're in edit mode
+        this.productId = this.$route.params.id;
+        this.isEditMode = !!this.productId;
+
         this.loadInitialData();
     },
     watch: {
+        // Sync form.media with thumbnail and gallery
+        'form.thumbnail': {
+            handler() {
+                this.syncMediaArray();
+            },
+            deep: true
+        },
+        'form.gallery': {
+            handler() {
+                this.syncMediaArray();
+            },
+            deep: true
+        },
         'form.price'(newPrice) {
             // Auto-update variant price khi user thay đổi giá (chỉ cho simple product - không có variations)
             if (this.form.variations.length === 0 && this.form.variants.length > 0) {
@@ -245,12 +283,177 @@ export default {
                     options: this.globalOptions.length
                 });
 
-                // Generate default variant for simple product (no variations)
-                this.generateVariants();
+                // If in edit mode, load product data
+                if (this.isEditMode && this.productId) {
+                    await this.loadProductData();
+                } else {
+                    // Generate default variant for simple product (no variations)
+                    this.generateVariants();
+                }
             } catch (error) {
                 console.error('Error loading initial data:', error);
                 // Có thể show notification lỗi cho user
             }
+        },
+
+        async loadProductData() {
+            try {
+                const response = await getProductForEdit(this.productId);
+                const product = response.result;
+
+                console.log('Loaded product for editing:', product);
+
+                // Find brand by name
+                const brand = this.brands.find(b => b.name === product.brand);
+
+                // Transform API response to form format
+                this.form.name = product.name || '';
+                this.form.slug = product.slug || '';
+                this.form.description = product.description || '';
+                this.form.short_description = product.shortDescription || '';
+                this.form.brand_id = brand ? brand.id : '';
+                this.form.sku = product.sku || '';
+                this.form.manage_stock = product.manageStock ? 1 : 0;
+                this.form.qty = product.qty || 0;
+                this.form.in_stock = product.inStock ? 1 : 0;
+                this.form.is_active = product.isActive ? 1 : 0;
+                this.form.new_from = product.newFrom || '';
+                this.form.new_to = product.newTo || '';
+
+                // Map categories from names to IDs
+                if (product.categories && product.categories.length > 0) {
+                    this.form.categories = product.categories
+                        .map(categoryName => {
+                            const category = this.findCategoryByName(categoryName, this.rootCategories);
+                            return category ? category.id : null;
+                        })
+                        .filter(id => id !== null);
+                }
+
+                // Set thumbnail and gallery separately
+                if (product.thumbnail) {
+                    this.form.thumbnail = {
+                        path: product.thumbnail,
+                        filename: product.thumbnail.split('/').pop()
+                    };
+                }
+
+                if (product.gallery && product.gallery.length > 0) {
+                    this.form.gallery = product.gallery.map(imagePath => ({
+                        path: imagePath,
+                        filename: imagePath.split('/').pop()
+                    }));
+                }
+
+                // Transform variations
+                if (product.variations && product.variations.length > 0) {
+                    this.form.variations = product.variations.map(variation => ({
+                        id: variation.id,
+                        name: variation.name,
+                        type: variation.type?.toLowerCase() || 'text',
+                        isGlobal: variation.isGlobal || false,
+                        values: (variation.variationValues || []).map(value => {
+                            const valueObj = {
+                                id: value.id, // Preserve ID for update
+                                uid: this.generateUid(),
+                                label: value.label,
+                                value: value.value
+                            };
+
+                            // Set type-specific fields
+                            if (variation.type?.toLowerCase() === 'color') {
+                                valueObj.color = value.value;
+                            } else if (variation.type?.toLowerCase() === 'image') {
+                                valueObj.image = { path: value.value };
+                            }
+
+                            return valueObj;
+                        })
+                    }));
+                }
+
+                // Transform variants
+                if (product.variants && product.variants.length > 0) {
+                    this.form.variants = product.variants.map(variant => ({
+                        uid: this.generateUid(),
+                        id: variant.id,
+                        name: variant.name,
+                        price: variant.price || 0,
+                        special_price: variant.specialPrice || '',
+                        special_price_type: variant.specialPriceType?.toLowerCase() || 'fixed',
+                        special_price_start: variant.specialPriceStart || '',
+                        special_price_end: variant.specialPriceEnd || '',
+                        sku: variant.sku || '',
+                        manage_stock: variant.manageStock ? 1 : 0,
+                        qty: variant.qty || 0,
+                        in_stock: variant.inStock ? 1 : 0,
+                        is_active: variant.isActive ? 1 : 0,
+                        is_default: false,
+                        is_selected: true,
+                        is_open: false,
+                        media: [],
+                        position: 0,
+                    }));
+
+                    // Set price from first variant if exists
+                    if (this.form.variants[0]) {
+                        this.form.price = this.form.variants[0].price;
+                        this.form.special_price = this.form.variants[0].special_price;
+                        this.form.special_price_type = this.form.variants[0].special_price_type;
+                    }
+                }
+
+                // Transform options
+                if (product.options && product.options.length > 0) {
+                    this.form.options = product.options.map(option => ({
+                        id: option.id,
+                        name: option.name,
+                        type: this.mapOptionTypeFromAPI(option.type),
+                        is_required: option.isRequired || false,
+                        isGlobal: option.isGlobal || false,
+                        values: (option.optionValues || []).map(value => ({
+                            id: value.id, // Preserve ID for update
+                            label: value.label,
+                            price: value.price || 0,
+                            price_type: value.priceType?.toLowerCase() || 'fixed'
+                        }))
+                    }));
+                }
+
+                this.hasAnyVariant = this.form.variations.length > 0;
+
+            } catch (error) {
+                console.error('Error loading product data:', error);
+                alert('Error loading product data: ' + error.message);
+            }
+        },
+
+        findCategoryByName(name, categories) {
+            for (const category of categories) {
+                if (category.name === name) {
+                    return category;
+                }
+                if (category.children && category.children.length > 0) {
+                    const found = this.findCategoryByName(name, category.children);
+                    if (found) return found;
+                }
+            }
+            return null;
+        },
+
+        mapOptionTypeFromAPI(apiType) {
+            const typeMap = {
+                'SELECT': 'dropdown',
+                'TEXT': 'field',
+                'TEXTAREA': 'textarea',
+                'CHECKBOX': 'checkbox',
+                'RADIO': 'radio',
+                'MULTIPLE_SELECT': 'multiple_select',
+                'DATE': 'date',
+                'DATETIME': 'datetime',
+                'TIME': 'time'
+            };
+            return typeMap[apiType?.toUpperCase()] || 'field';
         },
 
         save() {
@@ -275,24 +478,57 @@ export default {
 
                 console.log('Submitting product data:', productData);
 
-                // Gọi API tạo sản phẩm
-                const response = await createProduct(productData);
+                let response;
+                if (this.isEditMode && this.productId) {
+                    // Update existing product
+                    response = await updateProduct(this.productId, productData);
+                    console.log('Product updated successfully:', response);
+                } else {
+                    // Create new product
+                    response = await createProduct(productData);
+                    console.log('Product created successfully:', response);
+                }
 
-                console.log('Product created successfully:', response);
+                // Get the product ID
+                const productId = this.productId || response.result?.id;
+
+                // Attach images to entity-files table
+                if (productId && this.form.media && this.form.media.length > 0) {
+                    for (let i = 0; i < this.form.media.length; i++) {
+                        const media = this.form.media[i];
+
+                        // Only attach if media has an id (from file manager)
+                        if (media.id) {
+                            try {
+                                // First image is thumbnail, rest are gallery
+                                const zone = i === 0 ? 'thumbnail' : 'gallery';
+
+                                await attachFileToEntity({
+                                    fileId: media.id,
+                                    entityId: productId,
+                                    entityType: 'product',
+                                    zone: zone
+                                });
+                                console.log(`${zone === 'thumbnail' ? 'Thumbnail' : 'Gallery'} image ${media.id} attached successfully`);
+                            } catch (error) {
+                                console.error(`Error attaching image ${media.id}:`, error);
+                            }
+                        }
+                    }
+                }
 
                 // Handle success
                 if (this.redirectAfterSave === '1') {
                     // Redirect to products list
                     this.$router.push({ name: 'admin.products.index' });
                 } else {
-                    // Redirect to edit page của product vừa tạo
-                    const productId = response.result?.id;
+                    // Redirect to edit page của product vừa tạo/cập nhật
                     if (productId) {
                         this.$router.push({ name: 'admin.products.edit', params: { id: productId } });
                     }
                 }
             } catch (error) {
-                console.error('Error creating product:', error);
+                console.error('Error saving product:', error);
 
                 // Handle validation errors từ API response
                 if (error.response && error.response.data) {
@@ -379,7 +615,7 @@ export default {
             return {
                 name: this.form.name || '',
                 slug: this.form.slug || '',
-                thumbnail: this.form.media && this.form.media.length > 0 ? this.form.media[0].path : null,
+                thumbnail: this.form.thumbnail ? this.form.thumbnail.path : null,
                 brandId: this.form.brand_id ? parseInt(this.form.brand_id) : null,
                 description: this.form.description || '',
                 shortDescription: this.form.short_description || '',
@@ -431,11 +667,16 @@ export default {
                             valueData.value = value.value || value.label || '';
                         }
 
+                        // Nếu có id (từ variation value đã có sẵn), thêm vào để backend biết là update
+                        if (value.id) {
+                            valueData.id = value.id;
+                        }
+
                         return valueData;
                     })
                 };
 
-                // Nếu có id (từ global), thêm vào
+                // Nếu có id (từ global variation), thêm vào
                 if (variation.id) {
                     transformed.id = variation.id;
                 }
@@ -473,7 +714,7 @@ export default {
                     variant.special_price_type || 'fixed'
                 );
 
-                return {
+                const variantData = {
                     sku: variant.sku || '',
                     price: price,
                     sellingPrice: sellingPrice,
@@ -481,9 +722,16 @@ export default {
                     qty: variant.qty ? parseInt(variant.qty) : 0,
                     inStock: variant.in_stock === 1,
                     isActive: variant.is_active === 1,
-                    isDefault: variant.is_default || false,
+                    isDefault: false, // No longer using default variant concept
                     media: variant.media || []
                 };
+
+                // Nếu có id (variant đã tồn tại), thêm vào để backend biết là update
+                if (variant.id) {
+                    variantData.id = variant.id;
+                }
+
+                return variantData;
             });
         },
 
@@ -511,14 +759,24 @@ export default {
                     type: mapOptionTypeToAPI(option.type), // Map từ UI format (dropdown) sang API format (SELECT)
                     isRequired: option.is_required || false,
                     isGlobal: option.isGlobal || false,
-                    optionValues: (option.values || []).map(value => ({
-                        label: value.label,
-                        price: value.price ? parseFloat(value.price) : 0,
-                        priceType: (value.price_type || 'fixed').toUpperCase() // API expect uppercase: FIXED, PERCENT
-                    }))
+                    optionValues: (option.values || []).map(value => {
+                        const valueData = {
+                            label: value.label,
+                            price: value.price ? parseFloat(value.price) : 0,
+                            priceType: (value.price_type || 'fixed').toUpperCase() // API expect uppercase: FIXED, PERCENT
+                        };
+
+                        // Nếu có id (từ option value đã có sẵn), thêm vào để backend biết là update
+                        // Nếu không có id, backend sẽ hiểu là tạo mới
+                        if (value.id) {
+                            valueData.id = value.id;
+                        }
+
+                        return valueData;
+                    })
                 };
 
-                // Nếu có id (từ global), thêm vào
+                // Nếu có id (từ global option), thêm vào
                 if (option.id) {
                     transformed.id = option.id;
                 }
@@ -547,14 +805,13 @@ export default {
                     qty: parseInt(this.form.qty) || 0,
                     in_stock: this.form.in_stock !== undefined ? this.form.in_stock : 1,
                     is_active: this.form.is_active !== undefined ? this.form.is_active : 1,
-                    is_default: true,
+                    is_default: false,
                     is_selected: true,
                     is_open: false,
                     media: [],
                     position: 0,
                 }];
                 this.hasAnyVariant = false; // Simple product không có variant trong UI
-                this.defaultVariantUid = defaultUid;
                 return;
             }
 
@@ -589,12 +846,6 @@ export default {
             });
 
             this.hasAnyVariant = this.form.variants.length > 0;
-
-            // Set first variant as default if none selected
-            if (this.hasAnyVariant && !this.defaultVariantUid) {
-                this.defaultVariantUid = this.form.variants[0].uid;
-                this.form.variants[0].is_default = true;
-            }
         },
 
         generateCombinations(variations) {
@@ -627,17 +878,12 @@ export default {
             console.log('Choose variation image:', data);
         },
 
-        changeDefaultVariant(uid) {
-            this.form.variants.forEach(variant => {
-                variant.is_default = variant.uid === uid;
-            });
-            this.defaultVariantUid = uid;
-        },
 
         changeVariantStatus(uid) {
             const variant = this.form.variants.find(v => v.uid === uid);
             if (variant) {
-                variant.is_active = !variant.is_active;
+                // Toggle between 0 and 1 (not boolean)
+                variant.is_active = variant.is_active === 1 ? 0 : 1;
             }
         },
 
@@ -658,29 +904,58 @@ export default {
         },
 
         handleImageSelect(media) {
+            const newImage = {
+                id: media.id,
+                path: media.path,
+                filename: media.filename
+            };
+
             if (this.currentImageTarget === 'thumbnail') {
-                // Set thumbnail
-                this.form.thumbnail = media.path;
+                // Set thumbnail directly
+                this.form.thumbnail = newImage;
             } else if (this.currentImageTarget === 'gallery') {
-                // Add to gallery
-                if (!this.form.media) {
-                    this.form.media = [];
+                // Add to gallery array
+                if (!this.form.gallery) {
+                    this.form.gallery = [];
                 }
-                this.form.media.push({
-                    id: media.id,
-                    path: media.path,
-                    filename: media.filename
-                });
+                this.form.gallery.push(newImage);
             }
+
+            // Sync to media array for component compatibility
+            this.syncMediaArray();
             this.closeFileManager();
         },
 
-        removeThumbnail() {
+        removeThumbnailHandler() {
+            // Remove thumbnail only
             this.form.thumbnail = null;
+            this.syncMediaArray();
         },
 
-        removeGalleryImage(index) {
-            this.form.media.splice(index, 1);
+        removeGalleryHandler(galleryIndex) {
+            // Remove gallery image at specific index
+            if (this.form.gallery && this.form.gallery.length > galleryIndex) {
+                this.form.gallery.splice(galleryIndex, 1);
+            }
+            this.syncMediaArray();
+        },
+
+        updateGalleryHandler(newGalleryArray) {
+            // Update gallery from drag and drop
+            this.form.gallery = newGalleryArray;
+            this.syncMediaArray();
+        },
+
+        syncMediaArray() {
+            // Sync form.media from thumbnail + gallery for component compatibility
+            const result = [];
+            if (this.form.thumbnail) {
+                result.push(this.form.thumbnail);
+            }
+            if (this.form.gallery && this.form.gallery.length > 0) {
+                result.push(...this.form.gallery);
+            }
+            this.form.media = result;
         },
     },
 };

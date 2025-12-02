@@ -34,8 +34,8 @@
                             class="form-control"
                             v-model="form.sku"
                         >
-                        <span 
-                            v-if="errors.has('sku')" 
+                        <span
+                            v-if="errors.has('sku')"
                             class="help-block text-red"
                             v-text="errors.get('sku')"
                         ></span>
@@ -48,11 +48,14 @@
                     </label>
 
                     <div class="col-sm-12">
-                        <select 
-                            name="manage_stock" 
-                            id="manage-stock" 
+                        <select
+                            name="manage_stock"
+                            id="manage-stock"
                             class="form-control custom-select-black"
-                            v-model.number="form.manage_stock"
+                            :value="form.manage_stock"
+                            @change="hasAnyVariant ? null : form.manage_stock = Number($event.target.value)"
+                            :disabled="hasAnyVariant"
+                            :style="hasAnyVariant ? 'pointer-events: none; opacity: 0.6; cursor: not-allowed; background-color: #f5f5f5;' : ''"
                         >
                             <option :value="0">
                                 {{ trans('product::products.form.manage_stock_states.0') }}
@@ -62,14 +65,17 @@
                                 {{ trans('product::products.form.manage_stock_states.1') }}
                             </option>
                         </select>
-                        <span class="help-block text-red"></span>
+                        <span v-if="hasAnyVariant" class="help-block text-muted" style="margin-top: 5px;">
+                            <i class="fa fa-info-circle"></i> Stock is managed per variant when variations are used.
+                        </span>
+                        <span v-else class="help-block text-red"></span>
                     </div>
                 </div>
 
                 <div class="form-group row" id="qty-group" v-show="form.manage_stock == 1">
                     <label for="qty" class="col-sm-12 control-label text-left">
                         {{ trans('product::attributes.qty') }}
-                        <span class="text-red">*</span>
+                        <span v-if="!hasAnyVariant" class="text-red">*</span>
                     </label>
 
                     <div class="col-sm-12">
@@ -79,11 +85,18 @@
                             step="1"
                             id="qty"
                             class="form-control"
-                            v-model.number="form.qty"
+                            :value="form.qty"
+                            @input="hasAnyVariant ? null : form.qty = Number($event.target.value)"
+                            :disabled="hasAnyVariant"
+                            :readonly="hasAnyVariant"
+                            :style="hasAnyVariant ? 'pointer-events: none; opacity: 0.6; cursor: not-allowed; background-color: #f5f5f5;' : ''"
                             @wheel="$event.target.blur()"
                         >
-                        <span 
-                            v-if="errors.has('qty')" 
+                        <span v-if="hasAnyVariant" class="help-block text-muted" style="margin-top: 5px;">
+                            <i class="fa fa-info-circle"></i> Quantity is calculated from variants.
+                        </span>
+                        <span
+                            v-else-if="errors.has('qty')"
                             class="help-block text-red"
                             v-text="errors.get('qty')"
                         ></span>
@@ -96,11 +109,14 @@
                     </label>
 
                     <div class="col-sm-12">
-                        <select 
-                            name="in_stock" 
-                            id="in-stock" 
+                        <select
+                            name="in_stock"
+                            id="in-stock"
                             class="form-control custom-select-black"
-                            v-model.number="form.in_stock"
+                            :value="form.in_stock"
+                            @change="hasAnyVariant ? null : form.in_stock = Number($event.target.value)"
+                            :disabled="hasAnyVariant"
+                            :style="hasAnyVariant ? 'pointer-events: none; opacity: 0.6; cursor: not-allowed; background-color: #f5f5f5;' : ''"
                         >
                             <option :value="0">
                                 {{ trans('product::products.form.stock_availability_states.0') }}
@@ -110,7 +126,10 @@
                                 {{ trans('product::products.form.stock_availability_states.1') }}
                             </option>
                         </select>
-                        <span class="help-block text-red"></span>
+                        <span v-if="hasAnyVariant" class="help-block text-muted" style="margin-top: 5px;">
+                            <i class="fa fa-info-circle"></i> Stock availability is calculated from variants.
+                        </span>
+                        <span v-else class="help-block text-red"></span>
                     </div>
                 </div>
             </template>

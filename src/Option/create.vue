@@ -89,8 +89,26 @@
                           required
                         >
                           <option value="">Please Select</option>
-                          <option value="text">Text</option>
-                          <option value="select">Select</option>
+
+                          <optgroup label="Text">
+                            <option value="field">Field</option>
+                            <option value="textarea">Textarea</option>
+                          </optgroup>
+
+                          <optgroup label="Select">
+                            <option value="dropdown">Dropdown</option>
+                            <option value="checkbox">Checkbox</option>
+                            <option value="checkbox_custom">Custom Checkbox</option>
+                            <option value="radio">Radio Button</option>
+                            <option value="radio_custom">Custom Radio Button</option>
+                            <option value="multiple_select">Multiple Select</option>
+                          </optgroup>
+
+                          <optgroup label="Date">
+                            <option value="date">Date</option>
+                            <option value="date_time">Date &amp; Time</option>
+                            <option value="time">Time</option>
+                          </optgroup>
                         </select>
                       </div>
                     </div>
@@ -251,6 +269,40 @@
                       Add Row
                     </button>
                   </div>
+
+                  <!-- Date Type (Date/DateTime/Time) -->
+                  <div v-if="isDateType" class="table-responsive option-date">
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Price</th>
+                          <th>Price Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <input
+                              type="number"
+                              v-model="form.optionValues[0].price"
+                              class="form-control"
+                              step="0.01"
+                              min="0"
+                            />
+                          </td>
+                          <td>
+                            <select
+                              v-model="form.optionValues[0].priceType"
+                              class="form-control custom-select-black"
+                            >
+                              <option value="FIXED">Fixed</option>
+                              <option value="PERCENT">Percent</option>
+                            </select>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -270,8 +322,6 @@
 </template>
 
 <script>
-import { computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
 import { getOptionById, createOption, updateOption } from '@/api/optionApi.js';
 
 export default {
@@ -294,10 +344,16 @@ export default {
       return !!this.$route.params.id;
     },
     isTextType() {
-      return this.form.type === 'text';
+      // Text types: field, textarea
+      return ['field', 'textarea'].includes(this.form.type);
     },
     isSelectType() {
-      return this.form.type === 'select';
+      // Select types: dropdown, checkbox, checkbox_custom, radio, radio_custom, multiple_select
+      return ['dropdown', 'checkbox', 'checkbox_custom', 'radio', 'radio_custom', 'multiple_select'].includes(this.form.type);
+    },
+    isDateType() {
+      // Date types: date, date_time, time
+      return ['date', 'date_time', 'time'].includes(this.form.type);
     }
   },
   methods: {
@@ -316,7 +372,10 @@ export default {
 
           // Populate form with loaded data
           this.form.name = data.name;
-          this.form.type = data.type.toLowerCase(); // text, select
+
+          // Map API type to form type
+          this.form.type = this.mapApiTypeToFormType(data.type);
+
           this.form.isRequired = data.isRequired || false;
           this.form.isGlobal = data.isGlobal !== undefined ? data.isGlobal : true;
 
@@ -339,12 +398,48 @@ export default {
         this.loading = false;
       }
     },
+    mapApiTypeToFormType(apiType) {
+      // Map API type (e.g., TEXT, SELECT, DATE) to form type (e.g., field, dropdown)
+      const typeMap = {
+        'TEXT': 'field',
+        'TEXTAREA': 'textarea',
+        'SELECT': 'dropdown',
+        'DROPDOWN': 'dropdown',
+        'CHECKBOX': 'checkbox',
+        'CHECKBOX_CUSTOM': 'checkbox_custom',
+        'RADIO': 'radio',
+        'RADIO_CUSTOM': 'radio_custom',
+        'MULTIPLE_SELECT': 'multiple_select',
+        'DATE': 'date',
+        'DATE_TIME': 'date_time',
+        'DATETIME': 'date_time',
+        'TIME': 'time'
+      };
+      return typeMap[apiType?.toUpperCase()] || 'field';
+    },
+    mapFormTypeToApiType(formType) {
+      // Map form type to API type
+      const typeMap = {
+        'field': 'TEXT',
+        'textarea': 'TEXTAREA',
+        'dropdown': 'SELECT',
+        'checkbox': 'CHECKBOX',
+        'checkbox_custom': 'CHECKBOX_CUSTOM',
+        'radio': 'RADIO',
+        'radio_custom': 'RADIO_CUSTOM',
+        'multiple_select': 'MULTIPLE_SELECT',
+        'date': 'DATE',
+        'date_time': 'DATETIME',
+        'time': 'TIME'
+      };
+      return typeMap[formType] || 'TEXT';
+    },
     onTypeChange() {
       // Reset values when type changes
       this.form.optionValues = [];
 
-      if (this.isTextType) {
-        // Add single value for text types
+      if (this.isTextType || this.isDateType) {
+        // Add single value for text and date types
         this.form.optionValues.push({
           label: '',
           price: 0,
@@ -390,17 +485,17 @@ export default {
 
       try {
         // Prepare data according to API format
-        const optionType = this.form.type.charAt(0).toUpperCase() + this.form.type.slice(1); // Text, Select
+        const apiType = this.mapFormTypeToApiType(this.form.type);
 
         const optionData = {
           name: this.form.name,
-          type: optionType,
+          type: apiType,
           isRequired: this.form.isRequired,
           isGlobal: this.form.isGlobal,
           optionValues: this.form.optionValues
-            .filter(v => this.isTextType || v.label.trim()) // Filter empty labels for select type
+            .filter(v => this.isTextType || this.isDateType || v.label.trim()) // Filter empty labels for select type only
             .map(v => ({
-              label: v.label || this.form.name, // Use name as label for text type
+              label: v.label || this.form.name, // Use name as label for text/date types
               price: parseFloat(v.price) || 0,
               priceType: v.priceType
             }))

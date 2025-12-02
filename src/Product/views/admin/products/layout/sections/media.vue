@@ -10,43 +10,75 @@
         </div>
 
         <div class="box-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <draggable
-                        animation="200"
-                        class="product-media-grid"
-                        force-fallback="true"
-                        handle=".handle"
-                        :move="preventLastSlideDrag"
-                        :list="form.media"
-                    >
-                        <div class="media-grid-item handle" v-for="(media, index) in form.media" :key="index">
-                            <div class="image-holder">
-                                <img :src="media.path" alt="product media">
-
-                                <button type="button" class="btn remove-image" @click="removeMedia(index)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path d="M6.00098 17.9995L17.9999 6.00053" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M17.9999 17.9995L6.00098 6.00055" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="media-grid-item media-picker" id="media-picker" v-show="showMediaPicker">
-                            <div class="image-holder">
-                                <button
-                                    type="button"
-                                    class="btn-add-media"
-                                    @click="openFileManager"
-                                >
-                                    <i class="fa fa-plus"></i>
-                                    <span>Add Image</span>
-                                </button>
-                            </div>
-                        </div>
-                    </draggable>
+            <!-- Main Thumbnail Section -->
+            <div class="media-section main-thumbnail-section">
+                <div class="section-label">
+                    <i class="fa fa-star"></i> Main Image (Thumbnail)
                 </div>
+                <div class="main-thumbnail-wrapper">
+                    <div v-if="thumbnailImage" class="main-thumbnail-item">
+                        <div class="image-holder">
+                            <img :src="thumbnailImage.path" alt="Main thumbnail">
+                            <div class="main-badge">Main</div>
+                            <button type="button" class="btn remove-image" @click="removeThumbnail">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6.00098 17.9995L17.9999 6.00053" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M17.9999 17.9995L6.00098 6.00055" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div v-else class="main-thumbnail-placeholder">
+                        <button
+                            type="button"
+                            class="btn-add-main-thumbnail"
+                            @click="openFileManagerForThumbnail"
+                        >
+                            <i class="fa fa-camera"></i>
+                            <span>Add Main Image</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Section -->
+            <div class="media-section gallery-section">
+                <div class="section-label">
+                    <i class="fa fa-images"></i> Gallery Images (Optional)
+                </div>
+                <draggable
+                    animation="200"
+                    class="product-media-grid"
+                    force-fallback="true"
+                    handle=".handle"
+                    :list="galleryImagesList"
+                    @end="onDragEnd"
+                >
+                    <div class="media-grid-item handle" v-for="(media, index) in galleryImagesList" :key="media.id || index">
+                        <div class="image-holder">
+                            <img :src="media.path" alt="Product gallery">
+                            <button type="button" class="btn remove-image" @click="removeGalleryImage(index)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6.00098 17.9995L17.9999 6.00053" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M17.9999 17.9995L6.00098 6.00055" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="media-grid-item media-picker">
+                        <div class="image-holder">
+                            <button
+                                type="button"
+                                class="btn-add-media"
+                                @click="openFileManagerForGallery"
+                            >
+                                <i class="fa fa-plus"></i>
+                                <span>Add More</span>
+                            </button>
+                        </div>
+                    </div>
+                </draggable>
             </div>
         </div>
     </div>
@@ -83,16 +115,33 @@ export default {
         return {
             showMediaPicker: true,
             placeholderImage: `${this.baseUrl}build/assets/placeholder_image.png`,
+            galleryImagesList: [], // Local mutable array for drag and drop
         };
     },
+    computed: {
+        thumbnailImage() {
+            // Use form.thumbnail directly (not from media array)
+            return this.form.thumbnail || null;
+        }
+    },
+    watch: {
+        'form.gallery': {
+            handler(newGallery) {
+                // Sync galleryImagesList with form.gallery directly
+                if (newGallery && newGallery.length > 0) {
+                    this.galleryImagesList = [...newGallery];
+                } else {
+                    this.galleryImagesList = [];
+                }
+            },
+            immediate: true,
+            deep: true
+        }
+    },
     mounted() {
-        // Nếu có thumbnail cũ, thêm vào đầu media list
-        if (this.product.thumbnail) {
-            this.form.media.unshift({
-                path: this.product.thumbnail,
-                isOld: true,
-            });
-            this.showMediaPicker = false;
+        // Initialize galleryImagesList from form.gallery
+        if (this.form.gallery && this.form.gallery.length > 0) {
+            this.galleryImagesList = [...this.form.gallery];
         }
     },
     methods: {
@@ -125,16 +174,26 @@ export default {
             return typeof result === 'string' ? result : key;
         },
 
-        preventLastSlideDrag() {
-            // Prevent dragging the media picker
-            return true;
+        onDragEnd() {
+            // Sync the reordered gallery images back to form.gallery
+            this.$emit('update-gallery', [...this.galleryImagesList]);
         },
 
-        removeMedia(index) {
-            this.$emit('remove-media', index);
+        removeThumbnail() {
+            // Remove only the first image (thumbnail)
+            this.$emit('remove-media', 0);
         },
 
-        openFileManager() {
+        removeGalleryImage(galleryIndex) {
+            // Emit gallery index directly (0-based in gallery array)
+            this.$emit('remove-gallery', galleryIndex);
+        },
+
+        openFileManagerForThumbnail() {
+            this.$emit('open-file-manager', 'thumbnail');
+        },
+
+        openFileManagerForGallery() {
             this.$emit('open-file-manager', 'gallery');
         },
     },
@@ -142,26 +201,136 @@ export default {
 </script>
 
 <style scoped>
-/* Media Grid Layout */
+/* Media Sections */
+.media-section {
+    margin-bottom: 25px;
+}
+
+.media-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.section-label i {
+    color: #007bff;
+}
+
+/* Main Thumbnail Section */
+.main-thumbnail-section {
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.main-thumbnail-wrapper {
+    max-width: 300px;
+}
+
+.main-thumbnail-item {
+    position: relative;
+    aspect-ratio: 1;
+    border: 3px solid #007bff;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.main-thumbnail-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.main-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.main-thumbnail-placeholder {
+    aspect-ratio: 1;
+    border: 3px dashed #007bff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.btn-add-main-thumbnail {
+    background: white;
+    border: none;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #007bff;
+    border-radius: 8px;
+}
+
+.btn-add-main-thumbnail:hover {
+    transform: scale(1.05);
+    color: #0056b3;
+}
+
+.btn-add-main-thumbnail i {
+    font-size: 32px;
+}
+
+.btn-add-main-thumbnail span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Gallery Section */
+.gallery-section {
+    padding-top: 20px;
+}
+
 .product-media-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
     padding: 10px 0;
 }
 
 .media-grid-item {
     position: relative;
     aspect-ratio: 1;
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
     background-color: #f9f9f9;
     transition: all 0.3s ease;
+    cursor: move;
 }
 
 .media-grid-item:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: #999;
+}
+
+.media-picker {
+    cursor: default;
 }
 
 .image-holder {
@@ -185,11 +354,11 @@ export default {
     position: absolute;
     top: 5px;
     right: 5px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border: none;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -197,15 +366,17 @@ export default {
     opacity: 0;
     transition: opacity 0.3s ease;
     padding: 0;
+    z-index: 10;
 }
 
+.main-thumbnail-item:hover .btn.remove-image,
 .media-grid-item:hover .btn.remove-image {
     opacity: 1;
 }
 
 .btn.remove-image:hover {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .btn-add-media {
@@ -213,12 +384,12 @@ export default {
     border: 2px dashed #ddd;
     width: 100%;
     height: 100%;
-    min-height: 150px;
+    min-height: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     color: #999;
@@ -227,14 +398,38 @@ export default {
 .btn-add-media:hover {
     border-color: #007bff;
     color: #007bff;
-    background-color: #f8f9fa;
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
 .btn-add-media i {
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .btn-add-media span {
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Drag indicator */
+.handle {
+    cursor: move;
+}
+
+.handle::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.handle:hover::before {
+    opacity: 1;
 }
 </style>

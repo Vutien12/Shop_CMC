@@ -82,6 +82,25 @@ export const deleteVariation = async (id) => {
 };
 
 /**
+ * Attach a file to a variation value (for image type)
+ * @param {Object} entityFileData - Entity file data
+ * @param {number} entityFileData.fileId - File ID
+ * @param {number} entityFileData.entityId - Variation value ID
+ * @param {string} entityFileData.entityType - "variation_value"
+ * @param {string} entityFileData.zone - "image"
+ * @returns {Promise}
+ */
+export const attachFileToVariationValue = async (entityFileData) => {
+  try {
+    const response = await api.post('/entity-files', entityFileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error attaching file to variation value:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete multiple variations
  */
 export const deleteManyVariations = async (ids) => {

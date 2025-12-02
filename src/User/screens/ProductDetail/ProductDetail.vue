@@ -308,43 +308,16 @@
           <!-- Description Tab -->
           <div v-if="activeTab === 'description'" class="tab-panel">
             <h3>{{ product.name }}</h3>
-            <p>{{ product.description }}</p>
+            <div
+              v-html="isDescriptionLong && !showFullDescription ? truncatedDescription : product.description"
+              class="product-description-html"
+              :class="{ 'description-collapsed': isDescriptionLong && !showFullDescription }"
+            ></div>
 
-            <div class="size-chart-section">
-              <h4>SIZE CHART</h4>
-              <p>
-                <em
-                  >Size information: unit cm (hand measured, actual size may have discrepancy about
-                  1-3cm)</em
-                >
-              </p>
-
-              <div class="size-chart-toggle">
-                <button @click="toggleSizeChart()" class="show-more-btn">
-                  {{ showSizeChart ? 'Show Less' : 'Show More' }}
-                </button>
-              </div>
-
-              <table class="size-chart-table" v-if="showSizeChart">
-                <thead>
-                  <tr>
-                    <th>US SIZE</th>
-                    <th>SHOULDER</th>
-                    <th>CHEST</th>
-                    <th>LENGTH</th>
-                    <th>SLEEVE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="size in sizeChart" :key="size.size">
-                    <td>{{ size.size }}</td>
-                    <td>{{ size.shoulder }}</td>
-                    <td>{{ size.chest }}</td>
-                    <td>{{ size.length }}</td>
-                    <td>{{ size.sleeve }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div v-if="isDescriptionLong" class="description-toggle">
+              <button @click="toggleDescription()" class="show-more-btn">
+                {{ showFullDescription ? 'Show Less' : 'Show More' }}
+              </button>
             </div>
           </div>
 
@@ -492,14 +465,8 @@ export default {
           rating: 4,
         },
       ],
-      sizeChart: [
-        { size: 'S', shoulder: 44, chest: 100, length: 65, sleeve: 19 },
-        { size: 'M', shoulder: 46, chest: 104, length: 67, sleeve: 20 },
-        { size: 'L', shoulder: 48, chest: 108, length: 69, sleeve: 21 },
-        { size: 'XL', shoulder: 50, chest: 112, length: 71, sleeve: 22 },
-        { size: 'XXL', shoulder: 52, chest: 116, length: 73, sleeve: 23 },
-      ],
-      showSizeChart: false,
+      showFullDescription: false,
+      descriptionMaxLength: 500,
       quantity: 1,
       activeTab: 'description',
       variations: [],
@@ -1018,8 +985,8 @@ export default {
     setActiveTab(tab) {
       this.activeTab = tab
     },
-    toggleSizeChart() {
-      this.showSizeChart = !this.showSizeChart
+    toggleDescription() {
+      this.showFullDescription = !this.showFullDescription
     },
     shareProduct(platform) {
       console.log('Sharing on', platform)
@@ -1096,6 +1063,26 @@ export default {
     },
     displayTotalPrice() {
       return this.currentPrice + this.optionsTotal
+    },
+    // Kiểm tra description có dài không (dựa vào plain text length)
+    isDescriptionLong() {
+      if (!this.product?.description) return false
+      const plainText = this.product.description.replace(/<[^>]*>/g, '')
+      return plainText.length > this.descriptionMaxLength
+    },
+    // Tạo version rút gọn của description
+    truncatedDescription() {
+      if (!this.product?.description) return ''
+      const plainText = this.product.description.replace(/<[^>]*>/g, '')
+      if (plainText.length <= this.descriptionMaxLength) {
+        return this.product.description
+      }
+      // Lấy khoảng 500 ký tự đầu của HTML
+      let tempDiv = document.createElement('div')
+      tempDiv.innerHTML = this.product.description
+      let text = tempDiv.textContent || tempDiv.innerText || ''
+      let truncated = text.substring(0, this.descriptionMaxLength) + '...'
+      return `<div>${truncated}</div>`
     },
   },
 }

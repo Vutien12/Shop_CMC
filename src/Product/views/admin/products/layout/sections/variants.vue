@@ -42,30 +42,6 @@
             </div>
 
             <template v-else>
-                <div class="form-group row">
-                    <label for="default-variant" class="col-sm-3 control-label text-left">
-                        {{ trans('product::products.form.variants.default_variant') }}
-                    </label>
-
-                    <div class="col-sm-5">
-                        <select
-                            name="default_variant"
-                            id="default-variant"
-                            class="form-control custom-select-black"
-                            @change="changeDefaultVariant($event.target.value)"
-                        >
-                            <option
-                                v-for="(variant, index) in form.variants"
-                                :key="variant.uid"
-                                :value="variant.uid"
-                                :selected="defaultVariantUid === variant.uid"
-                                :disabled="!isActiveVariant(index)"
-                            >
-                                {{ variant.name }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
 
                 <transition-group tag="div" name="variant" class="variants-group">
                     <div
@@ -103,12 +79,7 @@
                                             <span class="variant-name">{{ variant.name }}</span>
 
                                             <ul class="variant-badge list-inline d-flex">
-                                                <li v-if="variant.is_default">
-                                                    <span class="label label-primary">
-                                                        {{ trans('product::products.variants.default') }}
-                                                    </span>
-                                                </li>
-                                                <li v-else-if="!variant.is_active">
+                                                <li v-if="!variant.is_active">
                                                     <span class="label label-default">
                                                         {{ trans('product::products.variants.inactive') }}
                                                     </span>
@@ -126,11 +97,12 @@
                                                 type="checkbox"
                                                 :name="`variants.${variant.uid}.is_active`"
                                                 :id="`variants-${variant.uid}-is-active`"
-                                                :disabled="defaultVariantUid === variant.uid"
                                                 v-model="variant.is_active"
+                                                :true-value="1"
+                                                :false-value="0"
                                             >
 
-                                            <label :for="`variants-${variant.uid}-is-active`" @click="changeVariantStatus(variant.uid)"></label>
+                                            <label :for="`variants-${variant.uid}-is-active`"></label>
                                         </div>
                                     </div>
                                 </h4>
@@ -554,7 +526,7 @@ export default {
 
         toggleAccordions({ selector, state, data }) {
             this.isCollapsedVariantsAccordion = !state;
-            
+
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
                     item.is_open = this.isCollapsedVariantsAccordion;
@@ -566,22 +538,11 @@ export default {
             variant.is_open = !variant.is_open;
         },
 
-        changeDefaultVariant(uid) {
-            this.$emit('change-default-variant', uid);
-        },
-
-        isActiveVariant(index) {
-            return this.form.variants[index].is_active;
-        },
-
         hasAnyError({ name, uid }) {
             const prefix = `${name}.${uid}`;
             return this.errors.any(prefix);
         },
 
-        changeVariantStatus(uid) {
-            this.$emit('change-variant-status', uid);
-        },
 
         removeVariantMedia(variantIndex, mediaIndex) {
             this.form.variants[variantIndex].media.splice(mediaIndex, 1);
@@ -687,36 +648,36 @@ export default {
     .panel-title > div {
         padding: 6px 8px !important;
     }
-    
+
     .panel-title > div > .d-flex {
         gap: 6px !important;
     }
-    
+
     .variant-name {
         margin-left: 6px !important;
         font-size: 14px !important;
     }
-    
+
     .variant-badge {
         margin-left: 3px !important;
         gap: 3px !important;
     }
-    
+
     .variant-badge .label {
         padding: 3px 8px !important;
         font-size: 11px !important;
     }
-    
+
     .panel-body .row {
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
-    
+
     .panel-body [class*="col-"] {
         padding-left: 8px !important;
         padding-right: 8px !important;
     }
-    
+
     .variant-fields .form-group {
         margin-bottom: 15px !important;
     }
@@ -726,19 +687,19 @@ export default {
     .panel-title > div {
         align-items: flex-start !important;
     }
-    
+
     .panel-title > div > .switch {
         margin-left: 0 !important;
         align-self: flex-end !important;
     }
-    
+
     .panel-body .col-sm-4,
     .panel-body .col-sm-6,
     .panel-body .col-sm-8 {
         width: 100% !important;
         margin-bottom: 15px !important;
     }
-    
+
     .variant-fields .row > [class*="col-"] {
         margin-bottom: 0 !important;
     }
