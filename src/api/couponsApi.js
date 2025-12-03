@@ -65,3 +65,15 @@ export const deleteCoupons = async (ids) => {
         throw error;
     }
 };
+
+// Get coupon by code
+export const getCouponByCode = async (code) => {
+    try {
+        const response = await axiosInstance.get(`/coupons/code/${code}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching coupon by code:', error);
+        throw error;
+    }
+};
+

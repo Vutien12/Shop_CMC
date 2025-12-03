@@ -385,13 +385,44 @@
 
               <!-- Coupon Code -->
               <div class="coupon-section">
-                <input
-                  type="text"
-                  v-model="couponCode"
-                  placeholder="Enter coupon code"
-                  class="coupon-input"
-                />
-                <button class="btn-apply" @click="applyCoupon">Apply</button>
+                <div v-if="!appliedCoupon" class="coupon-input-wrapper">
+                  <input
+                    type="text"
+                    v-model="couponCode"
+                    placeholder="Enter coupon code"
+                    class="coupon-input"
+                    :disabled="isApplyingCoupon"
+                    @keyup.enter="applyCoupon"
+                  />
+                  <button
+                    class="btn-apply"
+                    @click="applyCoupon"
+                    :disabled="isApplyingCoupon || !couponCode.trim()"
+                  >
+                    <i v-if="isApplyingCoupon" class="fa-solid fa-spinner fa-spin"></i>
+                    <span v-else>Apply</span>
+                  </button>
+                </div>
+
+                <!-- Applied Coupon Display -->
+                <div v-else class="applied-coupon">
+                  <div class="coupon-info">
+                    <i class="fa-solid fa-tag"></i>
+                    <div class="coupon-details">
+                      <strong>{{ appliedCoupon.code }}</strong>
+                      <p class="coupon-desc">{{ appliedCoupon.description }}</p>
+                    </div>
+                  </div>
+                  <button class="btn-remove" @click="removeCoupon" title="Remove coupon">
+                    <i class="fa-solid fa-times"></i>
+                  </button>
+                </div>
+
+                <!-- Error Message -->
+                <div v-if="couponError && !appliedCoupon" class="coupon-error">
+                  <i class="fa-solid fa-exclamation-circle"></i>
+                  <span>{{ couponError }}</span>
+                </div>
               </div>
 
               <!-- Totals -->
@@ -403,6 +434,13 @@
                 <div class="total-row">
                   <span>Shipping Cost</span>
                   <span>{{ formatPrice(shippingCost) }}</span>
+                </div>
+                <div v-if="couponDiscount > 0" class="total-row discount">
+                  <span>
+                    <i class="fa-solid fa-tag"></i>
+                    Discount
+                  </span>
+                  <span class="discount-amount">-{{ formatPrice(couponDiscount) }}</span>
                 </div>
                 <div class="total-row final">
                   <span>Total</span>
@@ -473,6 +511,8 @@ import { useCartStore } from '@/User/stores/cartStore.js'
 import { useAccountStore } from '@/User/stores/accountStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 import { createOrder } from '@/api/orderApi.js'
+import { getCouponByCode } from '@/api/couponsApi.js'
+import { getCouponDisplayInfo } from '@/Utils/couponUtils.js'
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
@@ -518,6 +558,10 @@ const manualShipping = ref({
 const orderNote = ref('')
 const couponCode = ref('')
 const couponId = ref(null)
+const appliedCoupon = ref(null)
+const couponDiscount = ref(0)
+const couponError = ref('')
+const isApplyingCoupon = ref(false)
 const agreeToTerms = ref(false)
 const shippingCost = ref(0)
 const selectedPayment = ref('cod')
@@ -533,7 +577,10 @@ const currentOrderTotal = ref(0)
 
 // Computed
 const subtotal = computed(() => cartTotal.value || 0)
-const total = computed(() => subtotal.value + shippingCost.value)
+const total = computed(() => {
+  const totalBeforeDiscount = subtotal.value + shippingCost.value
+  return totalBeforeDiscount - couponDiscount.value
+})
 
 // Format price VND
 const formatPrice = (price) => {
@@ -596,12 +643,58 @@ const updateShippingCost = (cost) => {
 }
 
 
-const applyCoupon = () => {
-  if (couponCode.value) {
-    // TODO: Implement coupon validation API call
-    // After validation, set: couponId.value = validatedCouponId
-    toast('Tính năng mã giảm giá đang phát triển!', 'info')
+const applyCoupon = async () => {
+  if (!couponCode.value.trim()) {
+    toast('Vui lòng nhập mã giảm giá', 'error')
+    return
   }
+
+  isApplyingCoupon.value = true
+  couponError.value = ''
+
+  try {
+    // Fetch coupon by code from API
+    const response = await getCouponByCode(couponCode.value.trim())
+    const coupon = response.result
+
+    // Validate and calculate discount using utility function
+    const couponInfo = getCouponDisplayInfo(coupon, subtotal.value)
+
+    if (!couponInfo.isValid) {
+      // Invalid coupon - show error
+      couponError.value = couponInfo.error
+      toast(couponInfo.error, 'error')
+      appliedCoupon.value = null
+      couponDiscount.value = 0
+      couponId.value = null
+    } else {
+      // Valid coupon - apply discount
+      appliedCoupon.value = coupon
+      couponDiscount.value = couponInfo.discount
+      couponId.value = coupon.id
+      couponError.value = ''
+      toast(`Áp dụng mã giảm giá thành công! Giảm ${formatPrice(couponInfo.discount)}`, 'success')
+    }
+  } catch (error) {
+    console.error('[Checkout] Apply coupon failed:', error)
+    const errorMsg = error.response?.data?.message || 'Mã giảm giá không hợp lệ'
+    couponError.value = errorMsg
+    toast(errorMsg, 'error')
+    appliedCoupon.value = null
+    couponDiscount.value = 0
+    couponId.value = null
+  } finally {
+    isApplyingCoupon.value = false
+  }
+}
+
+const removeCoupon = () => {
+  appliedCoupon.value = null
+  couponDiscount.value = 0
+  couponId.value = null
+  couponCode.value = ''
+  couponError.value = ''
+  toast('Đã xóa mã giảm giá', 'info')
 }
 
 const processPayment = async () => {
