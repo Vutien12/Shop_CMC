@@ -29,7 +29,7 @@
         <li
           class="treeview"
           :class="{
-            'active': isAnyChildActive(['products', 'variations', 'options', 'brands', 'categories']),
+            'active': isAnyChildActive(['products', 'variations', 'options', 'brands', 'categories', 'reviews']),
             'menu-open': openMenus.includes('products')
           }"
         >
@@ -77,6 +77,12 @@
                 <span>Options</span>
               </router-link>
             </li>
+            <li :class="activeMenu('reviews')">
+              <router-link :to="{ name: 'admin.reviews.index' }" @click="closeSidebarOnMobile">
+                <i class="fa fa-angle-double-right"></i>
+                <span>Reviews</span>
+              </router-link>
+            </li>
           </ul>
         </li>
 
@@ -108,10 +114,10 @@
           </a>
           <ul class="treeview-menu" :style="{ display: openMenus.includes('users') ? 'block' : 'none' }">
             <li :class="activeMenu('users')">
-              <a href="#" @click.prevent>
+              <router-link :to="{ name: 'admin.users.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
                 <span>All Users</span>
-              </a>
+              </router-link>
             </li>
           </ul>
         </li>
@@ -132,6 +138,12 @@
           <router-link :to="{ name: 'admin.blogs.index' }" @click="closeSidebarOnMobile">
             <i class="fa fa-pencil-square-o"></i>
             <span>Blogs</span>
+          </router-link>
+        </li>
+        <li class="treeview" :class="activeMenu('flashsales')">
+          <router-link :to="{ name: 'admin.flashsales.index' }" @click="closeSidebarOnMobile">
+            <i class="fa fa-bolt"></i>
+            <span>Flash Sales</span>
           </router-link>
         </li>
       </ul>
@@ -221,7 +233,7 @@ export default {
 
       if (routeName.includes('products') || routeName.includes('variations') ||
           routeName.includes('options') || routeName.includes('brands') ||
-          routeName.includes('categories')) {
+          routeName.includes('categories') || routeName.includes('reviews')) {
         if (!openMenus.value.includes('products')) {
           openMenus.value.push('products');
         }

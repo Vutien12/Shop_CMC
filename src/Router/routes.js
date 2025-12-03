@@ -45,6 +45,11 @@ import CouponIndex from "../Coupons/indext.vue";
 import BlogIndex from "../Blog/index.vue";
 import BlogCreate from "../Blog/create.vue";
 import Contact from "../User/screens/Contact/Contact.vue";
+import UserIndex from "../Admin/view/form/user.vue";
+import ReviewIndex from "../Review/indext.vue";
+import ReviewEdit from "../Review/edit.vue";
+import FlashSaleIndex from "../Flashsale/indext.vue";
+import FlashSaleCreate from "../Flashsale/create.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -199,6 +204,46 @@ const routes = [
                 name: 'admin.blogs.edit',
                 component: BlogCreate,
                 path: 'blogs/:id/edit',
+            },
+            {
+                name: 'admin.users.index',
+                component: UserIndex,
+                path: 'users',
+            },
+            {
+                name: 'admin.users.create',
+                component: UserIndex,
+                path: 'users/create',
+            },
+            {
+                name: 'admin.users.edit',
+                component: UserIndex,
+                path: 'users/:id/edit',
+            },
+            {
+                name: 'admin.reviews.index',
+                component: ReviewIndex,
+                path: 'reviews',
+            },
+            {
+                name: 'admin.reviews.edit',
+                component: ReviewEdit,
+                path: 'reviews/:id/edit',
+            },
+            {
+                name: 'admin.flashsales.index',
+                component: FlashSaleIndex,
+                path: 'flashsales',
+            },
+            {
+                name: 'admin.flashsales.create',
+                component: FlashSaleCreate,
+                path: 'flashsales/create',
+            },
+            {
+                name: 'admin.flashsales.edit',
+                component: FlashSaleCreate,
+                path: 'flashsales/:id/edit',
             },
         ]
     },

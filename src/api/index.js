@@ -72,3 +72,5 @@ export * from './fileApi.js';
 // Contact APIs
 export * from './contactApi.js';
 
+// User APIs
+export * from './userApi.js';

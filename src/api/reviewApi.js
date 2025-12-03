@@ -65,7 +65,9 @@ export const updateReview = async (reviewId, reviewData) => {
       userId: reviewData.userId,
       orderId: reviewData.orderId,
       title: reviewData.title,
-      comment: reviewData.comment
+      comment: reviewData.comment,
+      rating: reviewData.rating,
+      isHidden: reviewData.isHidden
     };
 
     // Only add variantId if it exists
@@ -94,3 +96,13 @@ export const deleteReview = async (reviewId) => {
   }
 };
 
+// Get review by ID
+export const getReview = async (reviewId) => {
+  try {
+    const response = await api.get(`/reviews/${reviewId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting review:', error);
+    throw error;
+  }
+};
