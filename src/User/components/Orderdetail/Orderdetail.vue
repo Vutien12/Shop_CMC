@@ -284,7 +284,7 @@ const getStatusClass = (status) => {
     'PENDING': 'status-warning',
     'PROCESSING': 'status-info',
     'SHIPPED': 'status-info',
-    'DELIVERED': 'status-success',
+    'COMPLETED': 'status-success',
     'CANCELLED': 'status-danger',
     'REFUNDED': 'status-secondary'
   }
@@ -343,9 +343,9 @@ onMounted(async () => {
     const result = response.data?.result || response.data
     orderDetail.value = result
 
-    // Check if order can be reviewed - only DELIVERED status allowed
+    // Check if order can be reviewed - only COMPLETED status allowed
     if (result) {
-      canReview.value = result.status === 'DELIVERED'
+      canReview.value = result.status === 'COMPLETED'
     }
   } catch (error) {
     console.error('Error fetching order detail:', error)

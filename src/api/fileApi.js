@@ -66,12 +66,18 @@ export const deleteFiles = async (ids) => {
  * @param {Object} entityFileData - Entity file data
  * @param {number} entityFileData.fileId - The file ID
  * @param {number} entityFileData.entityId - The entity ID (blog ID, product ID, etc.)
- * @param {string} entityFileData.entityType - The entity type (e.g., 'blog', 'product', 'brand')
- * @param {string} entityFileData.zone - The zone/purpose (e.g., 'thumbnail', 'logo', 'gallery')
+ * @param {string} entityFileData.entityType - The entity type (e.g., 'product', 'brand', 'variation_value')
+ * @param {string} entityFileData.zone - The zone/purpose (e.g., 'thumbnail', 'logo', 'gallery', 'variation')
  * @returns {Promise}
  */
 export const attachFileToEntity = async (entityFileData) => {
-  const response = await api.post('/entity-files', entityFileData)
+  // Convert entityType and zone to uppercase (API requires uppercase values)
+  const normalizedData = {
+    ...entityFileData,
+    entityType: entityFileData.entityType.toUpperCase(),
+    zone: entityFileData.zone.toUpperCase()
+  }
+  const response = await api.post('/entity-files', normalizedData)
   return response.data
 }
 

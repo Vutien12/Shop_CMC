@@ -326,8 +326,8 @@ const validStatusTransitions = {
   'PENDING_PAYMENT': ['PAID', 'CANCELLED'],
   'PAID': ['PROCESSING', 'REFUNDED', 'CANCELLED'],
   'PROCESSING': ['SHIPPED', 'CANCELLED'],
-  'SHIPPED': ['DELIVERED', 'CANCELLED'],
-  'DELIVERED': ['REFUNDED'],
+  'SHIPPED': ['COMPLETED', 'CANCELLED'],
+  'COMPLETED': ['REFUNDED'],
   'CANCELLED': [], // Cannot transition from cancelled
   'REFUNDED': [] // Cannot transition from refunded
 };
@@ -339,7 +339,7 @@ const allStatuses = [
   { value: 'PAID', label: 'Paid' },
   { value: 'PROCESSING', label: 'Processing' },
   { value: 'SHIPPED', label: 'Shipped' },
-  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'COMPLETED', label: 'Completed'},
   { value: 'CANCELLED', label: 'Cancelled' },
   { value: 'REFUNDED', label: 'Refunded' }
 ];
@@ -497,7 +497,7 @@ const loadOrderData = async () => {
   } catch (error) {
     console.error('Failed to load order:', error);
     alert('Failed to load order details. Please try again.');
-    router.push({ name: 'admin.orders.index' });
+    await router.push({ name: 'admin.orders.index' });
   } finally {
     isLoading.value = false;
   }

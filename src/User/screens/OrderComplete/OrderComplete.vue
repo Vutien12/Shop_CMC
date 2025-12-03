@@ -198,7 +198,7 @@ const statusText = computed(() => {
     'CONFIRMED': 'Đã xác nhận',
     'PROCESSING': 'Đang xử lý',
     'SHIPPED': 'Đã gửi',
-    'DELIVERED': 'Đã giao',
+    'COMPLETED': 'Hoàn tất',
     'CANCELLED': 'Đã hủy'
   }
   return map[order.value?.status] || order.value?.status
@@ -210,7 +210,7 @@ const statusClass = computed(() => {
     'CONFIRMED': 'badge-info',
     'PROCESSING': 'badge-info',
     'SHIPPED': 'badge-primary',
-    'DELIVERED': 'badge-success',
+    'COMPLETED': 'badge-success',
     'CANCELLED': 'badge-danger'
   }
   return map[order.value?.status] || 'badge-secondary'
