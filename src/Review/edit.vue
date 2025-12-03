@@ -32,26 +32,35 @@
                         <h4 class="tab-content-title">General</h4>
                         <div class="row">
                             <div class="col-md-12">
-                                <!-- Rating Field -->
+                                <!-- Product Field -->
                                 <div class="form-group">
-                                    <label for="rating" class="col-md-3 control-label text-left">
-                                        Rating
-                                        <span class="m-l-5 text-red">*</span>
+                                    <label for="product" class="col-md-3 control-label text-left">
+                                        Product
                                     </label>
                                     <div class="col-md-9">
-                                        <select 
-                                            v-model.number="form.rating" 
-                                            name="rating" 
-                                            class="form-control custom-select-black" 
-                                            id="rating"
+                                        <input
+                                            v-model="form.product"
+                                            class="form-control"
+                                            id="product"
+                                            type="text"
                                             disabled
-                                        >
-                                            <option :value="1">1</option>
-                                            <option :value="2">2</option>
-                                            <option :value="3">3</option>
-                                            <option :value="4">4</option>
-                                            <option :value="5">5</option>
-                                        </select>
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Variant Field -->
+                                <div class="form-group">
+                                    <label for="variant" class="col-md-3 control-label text-left">
+                                        Variant
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            v-model="form.variant"
+                                            class="form-control"
+                                            id="variant"
+                                            type="text"
+                                            disabled
+                                        />
                                     </div>
                                 </div>
 
@@ -59,14 +68,43 @@
                                 <div class="form-group">
                                     <label for="reviewer_name" class="col-md-3 control-label text-left">
                                         Reviewer Name
-                                        <span class="m-l-5 text-red">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input 
-                                            v-model="form.reviewer_name" 
-                                            name="reviewer_name" 
-                                            class="form-control" 
-                                            id="reviewer_name" 
+                                        <input
+                                            v-model="form.reviewer_name"
+                                            class="form-control"
+                                            id="reviewer_name"
+                                            type="text"
+                                            disabled
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Rating Field -->
+                                <div class="form-group">
+                                    <label for="rating" class="col-md-3 control-label text-left">
+                                        Rating
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="rating-stars">
+                                            <span v-for="i in 5" :key="i" :class="i <= form.rating ? 'star-filled' : 'star-empty'">
+                                                ★
+                                            </span>
+                                            <span class="rating-number">({{ form.rating }})</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Title Field -->
+                                <div class="form-group">
+                                    <label for="title" class="col-md-3 control-label text-left">
+                                        Title
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            v-model="form.title"
+                                            class="form-control"
+                                            id="title"
                                             type="text"
                                             disabled
                                         />
@@ -77,15 +115,13 @@
                                 <div class="form-group">
                                     <label for="comment" class="col-md-3 control-label text-left">
                                         Comment
-                                        <span class="m-l-5 text-red">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <textarea 
-                                            v-model="form.comment" 
-                                            name="comment" 
-                                            class="form-control" 
-                                            id="comment" 
-                                            rows="4" 
+                                        <textarea
+                                            v-model="form.comment"
+                                            class="form-control"
+                                            id="comment"
+                                            rows="4"
                                             cols="10"
                                             disabled
                                         ></textarea>
@@ -96,17 +132,36 @@
                                 <div class="form-group">
                                     <label for="is_hidden" class="col-md-3 control-label text-left">
                                         Status
+                                        <span class="m-l-5 text-red">*</span>
                                     </label>
                                     <div class="col-md-9">
                                         <div class="checkbox">
-                                            <input 
-                                                type="checkbox" 
-                                                v-model="form.is_hidden" 
-                                                name="is_hidden" 
+                                            <input
+                                                type="checkbox"
+                                                v-model="form.is_hidden"
+                                                name="is_hidden"
                                                 id="is_hidden"
                                             />
                                             <label for="is_hidden">Hide this review</label>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden Reason Field -->
+                                <div class="form-group" v-if="form.is_hidden">
+                                    <label for="hidden_reason" class="col-md-3 control-label text-left">
+                                        Hidden Reason
+                                        <span class="m-l-5 text-red">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <textarea
+                                            v-model="form.hidden_reason"
+                                            class="form-control"
+                                            id="hidden_reason"
+                                            rows="3"
+                                            cols="10"
+                                            placeholder="Enter reason for hiding this review..."
+                                        ></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -116,9 +171,9 @@
                     <!-- Save Button -->
                     <div class="form-group">
                         <div class="col-md-10 col-md-offset-2">
-                            <button 
-                                type="submit" 
-                                class="btn btn-primary" 
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
                                 @click="handleSubmit"
                                 :disabled="loading"
                             >
@@ -136,7 +191,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getReview, updateReview } from '../api/reviewApi';
+import { getReview, updateReviewStatus } from '../api/reviewApi';
 
 export default {
     name: 'ReviewEdit',
@@ -145,16 +200,16 @@ export default {
         const router = useRouter();
         const loading = ref(false);
         const reviewId = ref(null);
-        
+
         const form = ref({
-            rating: 5,
+            product: '',
+            variant: '',
             reviewer_name: '',
+            rating: 5,
+            title: '',
             comment: '',
             is_hidden: false,
-            productId: null,
-            userId: null,
-            orderId: null,
-            title: ''
+            hidden_reason: ''
         });
 
         // Load review data from API
@@ -166,22 +221,22 @@ export default {
                     console.log('Loading review with ID:', id);
                     const response = await getReview(id);
                     console.log('Review API response:', response);
-                    
+
                     if (response && response.code === 200 && response.result) {
                         const data = response.result;
-                        
-                        // Map API data to form - keep all fields for update
+
+                        // Map API data to form
                         form.value = {
-                            rating: parseInt(data.rating) || 5,
+                            product: data.productName || '',
+                            variant: data.variantName || '',
                             reviewer_name: data.userFullName || '',
+                            rating: parseInt(data.rating) || 5,
+                            title: data.title || '',
                             comment: data.comment || '',
                             is_hidden: data.isHidden || false,
-                            productId: data.productId,
-                            userId: data.userId,
-                            orderId: data.orderId,
-                            title: data.title || ''
+                            hidden_reason: data.hiddenReason || ''
                         };
-                        
+
                         console.log('Loaded review data:', form.value);
                     }
                 } catch (error) {
@@ -192,30 +247,26 @@ export default {
         });
 
         const handleSubmit = async () => {
+            // Validate: if hiding, reason is required
+            if (form.value.is_hidden && !form.value.hidden_reason.trim()) {
+                alert('Please provide a reason for hiding this review.');
+                return;
+            }
+
             loading.value = true;
 
             try {
-                // Ensure rating has a valid value
-                const ratingValue = form.value.rating ? Number(form.value.rating) : 5;
-                
-                // Only update isHidden status, keep other fields unchanged
+                // Only send isHidden and hiddenReason
                 const updateData = {
-                    productId: Number(form.value.productId),
-                    userId: Number(form.value.userId),
-                    orderId: Number(form.value.orderId),
-                    title: form.value.title || '',
-                    comment: form.value.comment || '',
-                    rating: ratingValue,
-                    isHidden: Boolean(form.value.is_hidden)
+                    isHidden: Boolean(form.value.is_hidden),
+                    hiddenReason: form.value.is_hidden ? form.value.hidden_reason.trim() : null
                 };
 
-                console.log('Form value rating:', form.value.rating);
-                console.log('Rating value to send:', ratingValue);
-                console.log('Full update data:', updateData);
-                
-                const response = await updateReview(reviewId.value, updateData);
+                console.log('Update data:', updateData);
+
+                const response = await updateReviewStatus(reviewId.value, updateData);
                 console.log('Update response:', response);
-                
+
                 alert('Review status updated successfully!');
                 router.push({ name: 'admin.reviews.index' });
             } catch (error) {
@@ -490,5 +541,28 @@ export default {
     content: "";
     display: table;
     clear: both;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-top: 7px;
+}
+
+.star-filled {
+    color: #fbbf24;
+    font-size: 18px;
+}
+
+.star-empty {
+    color: #d1d5db;
+    font-size: 18px;
+}
+
+.rating-number {
+    margin-left: 8px;
+    color: #6b7280;
+    font-size: 14px;
 }
 </style>

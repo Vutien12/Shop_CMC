@@ -5,16 +5,13 @@
         :columns="columns"
         :create-route="{ name: 'admin.options.create' }"
         create-button-text="Create Option"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
-        <!-- Custom cell for Name column with link -->
-        <template #cell-name="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.options.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Name column -->
+        <template #cell-name="{ value }">
+            <span class="name-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Created column with formatted date -->
@@ -26,6 +23,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
 
@@ -35,6 +33,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const options = ref([]);
 
         const columns = [
@@ -60,6 +59,10 @@ export default {
             } catch (error) {
                 console.error('Error loading options:', error);
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.options.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -108,6 +111,7 @@ export default {
         return {
             options,
             columns,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -116,14 +120,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.name-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 </style>
 

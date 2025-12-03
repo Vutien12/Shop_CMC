@@ -3,16 +3,13 @@
         title="Users"
         :data="users"
         :columns="columns"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
-        <!-- Custom cell for Name column with link -->
-        <template #cell-name="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.users.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Name column -->
+        <template #cell-name="{ value }">
+            <span class="name-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Role column with badge -->
@@ -31,6 +28,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getUsers, deleteUser, deleteManyUsers } from '@/api/userApi';
 
@@ -40,6 +38,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const users = ref([]);
         const loading = ref(false);
 
@@ -54,11 +53,11 @@ export default {
         const loadUsers = async () => {
             try {
                 loading.value = true;
-                console.log('🔑 Token:', localStorage.getItem('accessToken'));
-                console.log('📡 Loading users...');
-                
+                console.log('Token:', localStorage.getItem('accessToken'));
+                console.log('Loading users...');
+
                 const response = await getUsers();
-                console.log('✅ Users response:', response);
+                console.log('Users response:', response);
 
                 if (response.code === 200) {
                     // Map API response to component format
@@ -69,15 +68,19 @@ export default {
                         role: user.role || 'USER',
                         updated_at: user.defaultAddress?.updatedAt || user.createdAt || null
                     }));
-                    console.log('✅ Mapped users:', users.value);
+                    console.log('Mapped users:', users.value);
                 }
             } catch (error) {
-                console.error('❌ Failed to load users:', error);
-                console.error('❌ Error response:', error.response);
+                console.error('Failed to load users:', error);
+                console.error('Error response:', error.response);
                 alert('Failed to load users. Please try again.');
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.users.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -131,6 +134,7 @@ export default {
             users,
             columns,
             loading,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -139,14 +143,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.name-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 
 .role-badge {

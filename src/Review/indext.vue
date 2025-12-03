@@ -3,16 +3,13 @@
         title="Reviews"
         :data="reviews"
         :columns="columns"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
-        <!-- Custom cell for ID column with link -->
-        <template #cell-id="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.reviews.edit', params: { id: row.id } }"
-                class="id-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for ID column -->
+        <template #cell-id="{ value }">
+            <span class="id-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Product column -->
@@ -51,6 +48,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchReviews } from '@/api/reviewApi';
 
@@ -60,21 +58,24 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const reviews = ref([]);
         const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'product', label: 'Product', sortable: true },
-            { key: 'reviewer_name', label: 'Reviewer Name', sortable: true },
+            { key: 'variant', label: 'Variant', sortable: true },
+            { key: 'reviewer_name', label: 'Reviewer', sortable: true },
             { key: 'rating', label: 'Rating', sortable: true, width: '150px' },
+            { key: 'title', label: 'Title', sortable: true },
             { key: 'status', label: 'Status', sortable: true, width: '120px' },
             { key: 'date', label: 'Date', sortable: true, width: '150px' }
         ];
 
         const loadReviews = async () => {
             loading.value = true;
-            
+
             try {
                 const response = await searchReviews({
                     page: 0,
@@ -85,13 +86,15 @@ export default {
 
                 if (response && response.code === 200 && response.result) {
                     const reviewList = response.result.content || [];
-                    
+
                     reviews.value = reviewList.map(review => ({
                         id: review.id,
                         product: review.productName || 'N/A',
+                        variant: review.variantName || 'N/A',
                         reviewer_name: review.userFullName || 'Anonymous',
                         rating: review.rating || 0,
-                        status: !review.isHidden, // isHidden = false means Approved
+                        title: review.title || '',
+                        status: !review.isHidden, // isHidden = false means Visible
                         date: review.createdAt || review.updatedAt
                     }));
 
@@ -99,28 +102,14 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to load reviews:', error);
-                // Fallback to mock data
-                reviews.value = [
-                    {
-                        id: 1,
-                        product: 'QR thanh toán',
-                        reviewer_name: 'Phung Van Vu',
-                        rating: 5,
-                        status: true,
-                        date: '2025-12-03T23:05:26.268388'
-                    },
-                    {
-                        id: 2,
-                        product: 'Sample Product',
-                        reviewer_name: 'Nguyen Van A',
-                        rating: 4,
-                        status: false,
-                        date: '2025-12-02T14:20:00'
-                    }
-                ];
+                reviews.value = [];
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.reviews.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -173,6 +162,7 @@ export default {
             reviews,
             columns,
             loading,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -181,14 +171,9 @@ export default {
 </script>
 
 <style scoped>
-.id-link {
-    color: #2563eb;
-    text-decoration: none;
+.id-text {
     font-weight: 500;
-}
-
-.id-link:hover {
-    text-decoration: underline;
+    color: #374151;
 }
 
 .product-name {
@@ -230,12 +215,12 @@ export default {
     font-weight: 500;
 }
 
-.status-approved {
+.status-badge.status-approved {
     background-color: #d1fae5;
     color: #065f46;
 }
 
-.status-pending {
+.status-badge.status-pending {
     background-color: #fef3c7;
     color: #92400e;
 }

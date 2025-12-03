@@ -5,7 +5,9 @@
         :columns="columns"
         :create-route="{ name: 'admin.blogs.create' }"
         create-button-text="Create Blog"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
         <!-- Custom cell for Featured Image column -->
         <template #cell-thumbnail="{ value }">
@@ -20,14 +22,9 @@
             </div>
         </template>
 
-        <!-- Custom cell for Title column with link -->
-        <template #cell-title="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.blogs.edit', params: { id: row.id } }"
-                class="title-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Title column -->
+        <template #cell-title="{ value }">
+            <span class="title-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Publish Status column with badge -->
@@ -46,6 +43,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchBlogs, deleteManyBlogs } from '@/api/blogApi.js';
 
@@ -55,6 +53,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const blogs = ref([]);
         const loading = ref(false);
 
@@ -93,6 +92,10 @@ export default {
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.blogs.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -141,6 +144,7 @@ export default {
             blogs,
             columns,
             loading,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -173,15 +177,9 @@ export default {
     font-size: 12px;
 }
 
-.title-link {
-    color: #2563eb;
-    text-decoration: none;
+.title-text {
     font-weight: 500;
-}
-
-.title-link:hover {
-    text-decoration: underline;
-    color: #1e40af;
+    color: #111827;
 }
 
 .status-badge {

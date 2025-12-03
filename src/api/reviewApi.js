@@ -106,3 +106,22 @@ export const getReview = async (reviewId) => {
     throw error;
   }
 };
+
+// Update review status (hide/show)
+export const updateReviewStatus = async (reviewId, statusData) => {
+  try {
+    const payload = {
+      isHidden: statusData.isHidden,
+      hiddenReason: statusData.hiddenReason
+    };
+
+    console.log('Updating review status with payload:', payload);
+    const response = await api.put(`/reviews/${reviewId}/status`, payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating review status:', error);
+    console.error('Error details:', error.response?.data);
+    throw error;
+  }
+};
+

@@ -5,16 +5,13 @@
         :columns="columns"
         :create-route="{ name: 'admin.variations.create' }"
         create-button-text="Create Variation"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
-        <!-- Custom cell for Name column with link -->
-        <template #cell-name="{ row, value }">
-            <router-link 
-                :to="{ name: 'admin.variations.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Name column -->
+        <template #cell-name="{ value }">
+            <span class="name-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Updated column with formatted date -->
@@ -26,6 +23,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
 
@@ -35,9 +33,10 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const variations = ref([]);
         const loading = ref(false);
-        
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
@@ -68,6 +67,10 @@ export default {
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.variations.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -104,10 +107,10 @@ export default {
             if (diffYears >= 1) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
             if (diffMonths >= 1) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
             if (diffDays >= 1) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            
+
             const diffHours = Math.floor(diffMs / 3600000);
             if (diffHours >= 1) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            
+
             const diffMins = Math.floor(diffMs / 60000);
             return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
         };
@@ -120,6 +123,7 @@ export default {
             variations,
             columns,
             loading,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -128,14 +132,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.name-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 </style>
 

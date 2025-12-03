@@ -319,6 +319,7 @@ const route = useRoute();
 const isLoading = ref(true);
 const isSaving = ref(false);
 const statusError = ref(''); // Error message for status
+const originalStatus = ref(''); // Track original status from server
 
 // Define valid status transitions (matching backend validation)
 const validStatusTransitions = {
@@ -344,9 +345,9 @@ const allStatuses = [
   { value: 'REFUNDED', label: 'Refunded' }
 ];
 
-// Computed property for allowed statuses
+// Computed property for allowed statuses - always based on ORIGINAL status from server
 const allowedStatuses = computed(() => {
-  const currentStatus = order.status;
+  const currentStatus = originalStatus.value; // Use original status, not UI status
   const allowedTransitions = validStatusTransitions[currentStatus] || [];
 
   // Always include current status + allowed transitions
@@ -409,6 +410,7 @@ const loadOrderData = async () => {
     order.id = data.id;
     order.date = formatDate(data.createdAt);
     order.status = data.status || 'PENDING';
+    originalStatus.value = data.status || 'PENDING'; // Save original status from server
     order.shippingMethod = data.shippingMethod || 'N/A';
     order.paymentMethod = formatPaymentMethod(data.paymentMethod);
     order.currency = data.currency || 'VND';

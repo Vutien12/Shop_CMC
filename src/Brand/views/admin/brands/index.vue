@@ -5,7 +5,9 @@
         :columns="columns"
         :create-route="{ name: 'admin.brands.create' }"
         create-button-text="Create Brand"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
         <!-- Custom cell for Logo column with image -->
         <template #cell-logo="{ value }">
@@ -19,14 +21,9 @@
             <span v-else class="no-image">No image</span>
         </template>
 
-        <!-- Custom cell for Name column with link -->
-        <template #cell-name="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.brands.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Name column -->
+        <template #cell-name="{ value }">
+            <span class="name-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Updated column with formatted date -->
@@ -38,6 +35,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getBrands, deleteBrand, deleteManyBrands } from '@/api/brandApi';
 
@@ -47,6 +45,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const brands = ref([]);
         const loading = ref(false);
 
@@ -78,6 +77,10 @@ export default {
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.brands.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -130,6 +133,7 @@ export default {
             brands,
             columns,
             loading,
+            handleRowClick,
             handleDelete,
             formatDate
         };
@@ -138,14 +142,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.name-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 
 .logo-container {

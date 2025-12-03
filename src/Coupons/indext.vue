@@ -5,16 +5,13 @@
         :columns="columns"
         :create-route="{ name: 'admin.coupons.create' }"
         create-button-text="Create Coupon"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
-        <!-- Custom cell for Name column with link to edit (route optional) -->
-        <template #cell-description="{ row, value }">
-            <router-link 
-                :to="{ name: 'admin.coupons.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Description column -->
+        <template #cell-description="{ value }">
+            <span class="description-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Created column with formatted date -->
@@ -36,7 +33,7 @@
 
 <script>
 import { ref, onMounted, watch, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getCoupons, deleteCoupon, deleteCoupons } from '@/api/couponsApi';
 
@@ -46,8 +43,9 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const coupons = ref([]);
-        
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'description', label: 'Description', sortable: true },
@@ -61,10 +59,10 @@ export default {
             try {
                 const response = await getCoupons();
                 console.log('API Response:', response);
-                
+
                 // Handle different response structures
                 const data = Array.isArray(response) ? response : (response.data || response.result || []);
-                
+
                 coupons.value = data.map(coupon => ({
                     id: coupon.id,
                     description: coupon.description,
@@ -82,6 +80,10 @@ export default {
         };
 
         const route = useRoute()
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.coupons.edit', params: { id: row.id } });
+        };
 
         const handleDelete = async (selectedIds) => {
             if (confirm(`Are you sure you want to delete ${selectedIds.length} coupon(s)?`)) {
@@ -152,7 +154,7 @@ export default {
                     coupons.value = [newCoupon, ...coupons.value]
                     return
                 }
-            } catch (e) {
+            } catch {
                 // fall back to reload
             }
             loadCoupons()
@@ -165,6 +167,7 @@ export default {
         return {
             coupons,
             columns,
+            handleRowClick,
             handleDelete,
             formatDate,
             formatDiscount
@@ -174,14 +177,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.description-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 
 .text-success { color: #16a34a }

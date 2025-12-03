@@ -5,7 +5,9 @@
         :columns="columns"
         :create-route="{ name: 'admin.products.create' }"
         create-button-text="Create Product"
+        :row-clickable="true"
         @delete="handleDelete"
+        @row-click="handleRowClick"
     >
         <!-- Custom cell for Thumbnail column -->
         <template #cell-thumbnail="{ value }">
@@ -19,14 +21,9 @@
             <span v-else class="no-image">No image</span>
         </template>
 
-        <!-- Custom cell for Name column with link -->
-        <template #cell-name="{ row, value }">
-            <router-link
-                :to="{ name: 'admin.products.edit', params: { id: row.id } }"
-                class="name-link"
-            >
-                {{ value }}
-            </router-link>
+        <!-- Custom cell for Name column -->
+        <template #cell-name="{ value }">
+            <span class="name-text">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Price column - hiển thị khoảng giá nếu có nhiều variants -->
@@ -64,6 +61,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchProducts, deleteProduct } from '@/api';
 
@@ -73,6 +71,7 @@ export default {
         DataTable
     },
     setup() {
+        const router = useRouter();
         const products = ref([]);
 
         const columns = [
@@ -118,40 +117,12 @@ export default {
                 console.log('Products loaded:', products.value.length, products.value);
             } catch (error) {
                 console.error('Error loading products:', error);
-                // Fallback to mock data nếu API fail
-                products.value = [
-                    {
-                        id: 44,
-                        name: 'LG gram Laptop - 13.3" Full HD Display, Intel 8th Gen Core i5, 8GB RAM, 256GB SSD',
-                        thumbnail: 'https://m.media-amazon.com/images/I/71VvXGBHEeL._AC_SX466_.jpg',
-                        price: 2135.54,
-                        old_price: 2426.75,
-                        stock: true,
-                        status: true,
-                        updated_at: '2025-10-26T10:00:00'
-                    },
-                    {
-                        id: 100,
-                        name: 'Europe size Summer Short Sleeve Solid Polo Shirt',
-                        thumbnail: 'https://ae01.alicdn.com/kf/H0e3bb15e91f140f7b31dea975bd11444z.jpg',
-                        price: 8.35,
-                        old_price: null,
-                        stock: true,
-                        status: true,
-                        updated_at: '2025-10-25T15:30:00'
-                    },
-                    {
-                        id: 105,
-                        name: 'WILLIAMPOLO Fashion Men Leather Belts Solid Buckle',
-                        thumbnail: 'https://ae01.alicdn.com/kf/HTB1qY9QaZfrK1RjSspbq6A4pFXa0.jpg',
-                        price: 19.00,
-                        old_price: 21.35,
-                        stock: true,
-                        status: true,
-                        updated_at: '2025-10-21T08:45:00'
-                    }
-                ];
+                products.value = [];
             }
+        };
+
+        const handleRowClick = (row) => {
+            router.push({ name: 'admin.products.edit', params: { id: row.id } });
         };
 
         const handleDelete = async (selectedIds) => {
@@ -208,6 +179,7 @@ export default {
         return {
             products,
             columns,
+            handleRowClick,
             handleDelete,
             formatPrice,
             formatRelativeTime
@@ -217,14 +189,9 @@ export default {
 </script>
 
 <style scoped>
-.name-link {
-    color: #2563eb;
-    text-decoration: none;
+.name-text {
     font-weight: 500;
-}
-
-.name-link:hover {
-    text-decoration: underline;
+    color: #111827;
 }
 
 .thumbnail-container {

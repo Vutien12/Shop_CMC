@@ -11,7 +11,6 @@ const PUBLIC_ENDPOINT_RULES = [
   { path: '/categories/**', methods: ['GET'] },
   { path: '/options/**', methods: ['GET'] },
   { path: '/variations/**', methods: ['GET'] },
-  { path: '/reviews/**', methods: ['GET'] },
   { path: '/files/**', methods: ['GET'] },
   { path: '/entity-files/**', methods: ['GET'] },
   { path: '/ws/**', methods: ['ALL'] },
@@ -21,6 +20,7 @@ const PUBLIC_ENDPOINT_RULES = [
 
 const OPTIONAL_JWT_ENDPOINTS = [
   { path: '/products/**', methods: ['GET'] },
+  { path: '/reviews/**', methods: ['GET'] },
 ]
 
 const api = axios.create({
