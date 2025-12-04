@@ -76,4 +76,3 @@ export const getCouponByCode = async (code) => {
         throw error;
     }
 };
-

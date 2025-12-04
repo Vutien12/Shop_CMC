@@ -161,8 +161,9 @@ export default {
             defaultVariantUid: '',
             defaultCurrencySymbol: 'VNĐ',
             flatPickrConfig: {
-                enableTime: false,
-                dateFormat: 'Y-m-d',
+                enableTime: true,
+                dateFormat: 'Y-m-d H:i:S',
+                time_24hr: true,
             },
             placeholderImage: '/assets/placeholder_image.png',
             isFileManagerOpen: false,
@@ -216,6 +217,31 @@ export default {
             if (this.form.variations.length === 0 && this.form.variants.length > 0) {
                 this.form.variants.forEach(variant => {
                     variant.special_price = newSpecialPrice ? parseFloat(newSpecialPrice) : '';
+                });
+            }
+        },
+        'form.special_price_type'(newType) {
+            // Auto-update variant special price type (convert 1/2 to fixed/percent)
+            if (this.form.variations.length === 0 && this.form.variants.length > 0) {
+                const typeString = newType === 2 ? 'percent' : 'fixed';
+                this.form.variants.forEach(variant => {
+                    variant.special_price_type = typeString;
+                });
+            }
+        },
+        'form.special_price_start'(newStartDate) {
+            // Auto-update variant special price start
+            if (this.form.variations.length === 0 && this.form.variants.length > 0) {
+                this.form.variants.forEach(variant => {
+                    variant.special_price_start = newStartDate || '';
+                });
+            }
+        },
+        'form.special_price_end'(newEndDate) {
+            // Auto-update variant special price end
+            if (this.form.variations.length === 0 && this.form.variants.length > 0) {
+                this.form.variants.forEach(variant => {
+                    variant.special_price_end = newEndDate || '';
                 });
             }
         }
@@ -374,32 +400,49 @@ export default {
 
                 // Transform variants
                 if (product.variants && product.variants.length > 0) {
-                    this.form.variants = product.variants.map(variant => ({
-                        uid: this.generateUid(),
-                        id: variant.id,
-                        name: variant.name,
-                        price: variant.price || 0,
-                        special_price: variant.specialPrice || '',
-                        special_price_type: variant.specialPriceType?.toLowerCase() || 'fixed',
-                        special_price_start: variant.specialPriceStart || '',
-                        special_price_end: variant.specialPriceEnd || '',
-                        sku: variant.sku || '',
-                        manage_stock: variant.manageStock ? 1 : 0,
-                        qty: variant.qty || 0,
-                        in_stock: variant.inStock ? 1 : 0,
-                        is_active: variant.isActive ? 1 : 0,
-                        is_default: false,
-                        is_selected: true,
-                        is_open: false,
-                        media: [],
-                        position: 0,
-                    }));
+                    this.form.variants = product.variants.map(variant => {
+                        // Map specialPriceType from API format (FIXED/PERCENT) to UI format (fixed/percent)
+                        let specialPriceType = 'fixed';
+                        if (variant.specialPriceType) {
+                            specialPriceType = variant.specialPriceType.toLowerCase();
+                        }
+
+                        return {
+                            uid: this.generateUid(),
+                            id: variant.id,
+                            name: variant.name,
+                            price: variant.price || 0,
+                            special_price: variant.specialPrice || '',
+                            special_price_type: specialPriceType,
+                            special_price_start: variant.specialPriceStart || '',
+                            special_price_end: variant.specialPriceEnd || '',
+                            sku: variant.sku || '',
+                            manage_stock: variant.manageStock ? 1 : 0,
+                            qty: variant.qty || 0,
+                            in_stock: variant.inStock ? 1 : 0,
+                            is_active: variant.isActive ? 1 : 0,
+                            is_default: false,
+                            is_selected: true,
+                            is_open: false,
+                            media: [],
+                            position: 0,
+                        };
+                    });
 
                     // Set price from first variant if exists
                     if (this.form.variants[0]) {
                         this.form.price = this.form.variants[0].price;
                         this.form.special_price = this.form.variants[0].special_price;
-                        this.form.special_price_type = this.form.variants[0].special_price_type;
+
+                        // Convert special_price_type from 'fixed'/'percent' to 1/2 for pricing section
+                        if (this.form.variants[0].special_price_type === 'percent') {
+                            this.form.special_price_type = 2;
+                        } else {
+                            this.form.special_price_type = 1;
+                        }
+
+                        this.form.special_price_start = this.form.variants[0].special_price_start;
+                        this.form.special_price_end = this.form.variants[0].special_price_end;
                     }
                 }
 
@@ -626,6 +669,10 @@ export default {
                 isActive: this.form.is_active === 1,
                 categoryIds: this.form.categories || [],
 
+                // New From/To dates
+                newFrom: this.formatDateTimeForAPI(this.form.new_from),
+                newTo: this.formatDateTimeForAPI(this.form.new_to),
+
                 // Transform variations
                 variations: this.transformVariations(),
 
@@ -708,15 +755,21 @@ export default {
             // Transform variants từ format Vue sang format API
             return this.form.variants.map(variant => {
                 const price = parseFloat(variant.price) || 0;
+                const specialPrice = variant.special_price ? parseFloat(variant.special_price) : null;
+                const specialPriceType = variant.special_price_type || 'fixed';
                 const sellingPrice = calculateSellingPrice(
                     variant.price,
                     variant.special_price,
-                    variant.special_price_type || 'fixed'
+                    specialPriceType
                 );
 
                 const variantData = {
                     sku: variant.sku || '',
                     price: price,
+                    specialPrice: specialPrice,
+                    specialPriceType: specialPriceType.toUpperCase(), // Backend expects: FIXED or PERCENT
+                    specialPriceStart: this.formatDateForAPI(variant.special_price_start),
+                    specialPriceEnd: this.formatDateForAPI(variant.special_price_end),
                     sellingPrice: sellingPrice,
                     manageStock: variant.manage_stock === 1,
                     qty: variant.qty ? parseInt(variant.qty) : 0,
@@ -871,6 +924,42 @@ export default {
         generateUid() {
             // Generate unique ID for form elements
             return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        },
+
+        formatDateTimeForAPI(dateString) {
+            // Format date to LocalDateTime format for backend: yyyy-MM-ddTHH:mm:ss
+            if (!dateString) return null;
+
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return null;
+
+            // Format: 2025-12-31T23:59:59
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        },
+
+        formatDateForAPI(dateString) {
+            // Format date to ISO 8601 format for backend: yyyy-MM-ddTHH:mm:ss
+            if (!dateString) return null;
+
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return null;
+
+            // Format: 2025-12-31T23:59:59 (same as formatDateTimeForAPI)
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
         },
 
         chooseVariationImage(data) {
