@@ -88,8 +88,8 @@
                                                 <th style="width: 120px;">Thumbnail</th>
                                                 <th style="width: 300px; max-width: 300px;" @click="sortBy('filename')">Filename <i class="fa fa-sort"></i></th>
                                                 <th style="width: 120px;" @click="sortBy('extension')">Extension <i class="fa fa-sort"></i></th>
+                                              <th style="width: 140px;" @click="sortBy('disk')">Disk <i class="fa fa-sort"></i></th>
                                                 <th style="width: 120px;" @click="sortBy('size')">Size <i class="fa fa-sort"></i></th>
-                                                <th style="width: 140px;" @click="sortBy('disk')">Disk <i class="fa fa-sort"></i></th>
                                                 <th style="width: 160px;" @click="sortBy('createdAt')">Created <i class="fa fa-sort"></i></th>
                                             </tr>
                                         </thead>

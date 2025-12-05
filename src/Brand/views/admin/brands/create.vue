@@ -206,8 +206,8 @@ const save = async () => {
                 await attachFileToBrand({
                     fileId: selectedLogoFileId.value,
                     entityId: brandId,
-                    entityType: 'brand',
-                    zone: 'logo'
+                    entityType: 'BRAND',
+                    zone: 'LOGO'
                 });
             }
             alert('Brand created successfully!');

@@ -328,8 +328,8 @@ export default {
                         await attachFileToEntity({
                             fileId: selectedThumbnailFileId.value,
                             entityId: blogId,
-                            entityType: 'blog',
-                            zone: 'thumbnail'
+                            entityType: 'BLOG',
+                            zone: 'THUMBNAIL'
                         });
                     }
 
@@ -343,8 +343,8 @@ export default {
                         await attachFileToEntity({
                             fileId: selectedThumbnailFileId.value,
                             entityId: blogId,
-                            entityType: 'blog',
-                            zone: 'thumbnail'
+                            entityType: 'BLOG',
+                            zone: 'THUMBNAIL'
                         });
                     }
 
@@ -402,8 +402,8 @@ export default {
                     await attachFileToEntity({
                         fileId: selectedThumbnailFileId.value,
                         entityId: blogId,
-                        entityType: 'blog',
-                        zone: 'thumbnail'
+                        entityType: 'BLOG',
+                        zone: 'THUMBNAIL'
                     });
                 }
 

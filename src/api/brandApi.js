@@ -68,23 +68,29 @@ export const deleteManyBrands = async (ids) => {
  * @returns {Promise}
  */
 export const attachFileToBrand = async (entityFileData) => {
-  const response = await api.post('/entity-files', entityFileData)
+  // Convert entityType and zone to uppercase (API requires uppercase values)
+  const normalizedData = {
+    ...entityFileData,
+    entityType: entityFileData.entityType.toUpperCase(),
+    zone: entityFileData.zone.toUpperCase()
+  }
+  const response = await api.post('/entity-files', normalizedData)
   return response.data
 }
 
 /**
  * Get entity files for a brand
  * @param {number} entityId - Brand ID
- * @param {string} entityType - Entity type (default: "brand")
- * @param {string} zone - Zone (default: "logo")
+ * @param {string} entityType - Entity type (default: "BRAND")
+ * @param {string} zone - Zone (default: "LOGO")
  * @returns {Promise}
  */
-export const getBrandFiles = async (entityId, entityType = 'brand', zone = 'logo') => {
+export const getBrandFiles = async (entityId, entityType = 'BRAND', zone = 'LOGO') => {
   const response = await api.get('/entity-files', {
     params: {
       entityId,
-      entityType,
-      zone,
+      entityType: entityType.toUpperCase(),
+      zone: zone.toUpperCase(),
     },
   })
   return response.data

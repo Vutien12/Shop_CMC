@@ -544,12 +544,12 @@ export default {
                         if (media.id) {
                             try {
                                 // First image is thumbnail, rest are gallery
-                                const zone = i === 0 ? 'thumbnail' : 'gallery';
+                                const zone = i === 0 ? 'THUMBNAIL' : 'GALLERY';
 
                                 await attachFileToEntity({
                                     fileId: media.id,
                                     entityId: productId,
-                                    entityType: 'product',
+                                    entityType: 'PRODUCT',
                                     zone: zone
                                 });
                                 console.log(`${zone === 'thumbnail' ? 'Thumbnail' : 'Gallery'} image ${media.id} attached successfully`);

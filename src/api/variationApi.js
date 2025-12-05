@@ -86,13 +86,19 @@ export const deleteVariation = async (id) => {
  * @param {Object} entityFileData - Entity file data
  * @param {number} entityFileData.fileId - File ID
  * @param {number} entityFileData.entityId - Variation value ID
- * @param {string} entityFileData.entityType - "variation_value"
- * @param {string} entityFileData.zone - "image"
+ * @param {string} entityFileData.entityType - "VARIATION_VALUE"
+ * @param {string} entityFileData.zone - "VARIATION"
  * @returns {Promise}
  */
 export const attachFileToVariationValue = async (entityFileData) => {
   try {
-    const response = await api.post('/entity-files', entityFileData);
+    // Convert entityType and zone to uppercase (API requires uppercase values)
+    const normalizedData = {
+      ...entityFileData,
+      entityType: entityFileData.entityType.toUpperCase(),
+      zone: entityFileData.zone.toUpperCase()
+    };
+    const response = await api.post('/entity-files', normalizedData);
     return response.data;
   } catch (error) {
     console.error('Error attaching file to variation value:', error);

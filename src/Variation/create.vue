@@ -435,8 +435,8 @@ const saveForm = async () => {
               return attachFileToVariationValue({
                 fileId: v.imageFileId,
                 entityId: matchingValue.id,
-                entityType: 'variation_value',
-                zone: 'variation'
+                entityType: 'VARIATION_VALUE',
+                zone: 'VARIATION'
               });
             }
             return Promise.resolve();

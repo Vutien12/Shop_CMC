@@ -216,7 +216,7 @@ const loadBrand = async () => {
 
             // Load entity files (logo)
             try {
-                const logoFiles = await getBrandFiles(brandId, 'brand', 'logo');
+                const logoFiles = await getBrandFiles(brandId, 'BRAND', 'LOGO');
                 if (logoFiles.code === 200 && logoFiles.result?.length > 0) {
                     const logoFile = logoFiles.result[0];
                     existingLogoEntityFileId.value = logoFile.id;
@@ -295,8 +295,8 @@ const update = async () => {
             const logoData = {
                 fileId: selectedLogoFileId.value,
                 entityId: brandId,
-                entityType: 'brand',
-                zone: 'logo'
+                entityType: 'BRAND',
+                zone: 'LOGO'
             };
             console.log('BrandEdit: Attaching logo with data:', logoData);
             await attachFileToBrand(logoData);
