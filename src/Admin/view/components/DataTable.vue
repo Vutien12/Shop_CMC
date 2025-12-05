@@ -26,6 +26,11 @@
 
         <!-- Content Box -->
         <div class="content-box">
+            <!-- Header Actions Slot (for filters, etc.) -->
+            <div v-if="$slots['header-actions']" class="header-actions-container">
+                <slot name="header-actions"></slot>
+            </div>
+
             <!-- Table Controls -->
             <div class="table-controls">
                 <div class="controls-left">
@@ -49,6 +54,11 @@
                 </div>
                 
                 <div class="controls-right">
+                    <!-- Custom filters slot -->
+                    <div v-if="$slots['filters']" class="filters-slot">
+                        <slot name="filters"></slot>
+                    </div>
+
                     <div class="search-box">
                         <i class="fa fa-search search-icon"></i>
                         <input 
@@ -532,6 +542,12 @@ export default {
     overflow: hidden;
 }
 
+/* Header Actions Container */
+.header-actions-container {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
 /* Table Controls */
 .table-controls {
     display: flex;
@@ -589,6 +605,13 @@ export default {
 .controls-right {
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.filters-slot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .search-box {
