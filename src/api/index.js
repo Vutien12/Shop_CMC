@@ -74,3 +74,7 @@ export * from './contactApi.js';
 
 // User APIs
 export * from './userApi.js';
+
+// Flash Sale APIs
+export * from './flashsaleApi.js';
+

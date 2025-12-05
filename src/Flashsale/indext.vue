@@ -25,6 +25,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import { getAllFlashSales, deleteFlashSale } from '@/api/flashsaleApi.js';
 
 export default {
     name: 'FlashSalePage',
@@ -38,21 +39,21 @@ export default {
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
-            { key: 'created', label: 'Created', sortable: true, width: '200px' }
+            { key: 'status', label: 'Status', sortable: true, width: '150px' },
+            { key: 'startTime', label: 'Start Time', sortable: true, width: '200px' },
+            { key: 'endTime', label: 'End Time', sortable: true, width: '200px' },
+            { key: 'totalItems', label: 'Total Items', sortable: true, width: '120px' }
         ];
 
         const loadFlashSales = async () => {
             try {
-                // TODO: Replace with actual API call
-                // const response = await getFlashSales();
-                // Mock data for now
-                flashSales.value = [
-                    { id: 1, name: 'Summer Sale 2024', created: new Date('2024-06-01') },
-                    { id: 2, name: 'Black Friday Sale', created: new Date('2024-11-15') },
-                    { id: 3, name: 'Christmas Sale', created: new Date('2024-12-01') }
-                ];
+                const response = await getAllFlashSales();
+                if (response && response.code === 200) {
+                    flashSales.value = response.result || [];
+                }
             } catch (error) {
                 console.error('Error loading flash sales:', error);
+                alert('Error loading flash sales. Please try again.');
             }
         };
 
@@ -66,12 +67,10 @@ export default {
             }
 
             try {
-                // TODO: Replace with actual API call
-                // if (selectedIds.length === 1) {
-                //     await deleteFlashSale(selectedIds[0]);
-                // } else {
-                //     await deleteManyFlashSales(selectedIds);
-                // }
+                // Delete each flash sale
+                for (const id of selectedIds) {
+                    await deleteFlashSale(id);
+                }
 
                 await loadFlashSales();
                 alert('Flash sale(s) deleted successfully!');
@@ -82,6 +81,7 @@ export default {
         };
 
         const formatDate = (date) => {
+            if (!date) return 'N/A';
             const d = new Date(date);
             const now = new Date();
             const diffMs = now - d;
