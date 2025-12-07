@@ -25,7 +25,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { getVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
+import { searchVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
 
 export default {
     name: 'VariationPage',
@@ -48,11 +48,15 @@ export default {
         const loadVariations = async () => {
             try {
                 loading.value = true;
-                const response = await getVariations({ page: 1, size: 100 });
+                // Use searchVariations so the backend's /search mapping receives ModelAttribute fields like isGlobal
+                // Spring pageable is 0-based — request page 0 for the first page
+                const response = await searchVariations({ page: 0, size: 100, isGlobal: true });
 
                 if (response.code === 200) {
+                    // Backend may return a Page object: result.content contains items
+                    const items = response.result?.content ?? response.result ?? [];
                     // Map API response to component format
-                    variations.value = response.result.map(variation => ({
+                    variations.value = items.map(variation => ({
                         id: variation.id,
                         name: variation.name,
                         type: variation.type,
@@ -137,4 +141,3 @@ export default {
     color: #111827;
 }
 </style>
-

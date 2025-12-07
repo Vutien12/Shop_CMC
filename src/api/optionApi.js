@@ -1,9 +1,9 @@
 import api from './axiosInstance';
 
-// Get all options
-export const getOptions = async () => {
+// Get all options (supports optional params)
+export const getOptions = async (params) => {
   try {
-    const response = await api.get('/options');
+    const response = await api.get('/options', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching options:', error);
@@ -69,10 +69,10 @@ export const deleteManyOptions = async (ids) => {
 };
 
 // Search options
-export const searchOptions = async (query) => {
+export const searchOptions = async (params = {}) => {
   try {
     const response = await api.get('/options/search', {
-      params: { q: query }
+      params
     });
     return response.data;
   } catch (error) {
@@ -91,4 +91,3 @@ export const getGlobalOptions = async () => {
     throw error;
   }
 };
-
