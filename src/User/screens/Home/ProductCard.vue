@@ -12,28 +12,15 @@
     </div>
     <div class="product-info">
       <h3 class="product-name">{{ product.name }}</h3>
-      <div class="product-rating">
-        <div class="stars">
-          <span
-            v-for="star in getStarArray()"
-            :key="star"
-            class="star material-icons"
-            :class="{ filled: star <= product.rating }"
-          >
-            {{ star <= product.rating ? 'star' : 'star_border' }}
-          </span>
-        </div>
-        <span class="review-count">{{ product.reviewCount }} Review</span>
-      </div>
       <div class="product-footer">
         <div class="price-section">
           <span
             class="original-price"
             :style="{ visibility: Number(product.originalPrice) > 0 ? 'visible' : 'hidden' }"
           >
-            ${{ formatCurrency(product.originalPrice) }}
+            {{ formatPrice(product.originalPrice) }}
           </span>
-          <span class="current-price" :class="{ 'sale-price': product.discount }">${{ formatCurrency(product.price) }}</span>
+          <span class="current-price" :class="{ 'sale-price': product.discount }">{{ formatPrice(product.price) }}</span>
         </div>
 
         <!-- Action button: View/Add to cart/Out of stock -->
@@ -78,13 +65,14 @@ export default {
     },
   },
   methods: {
-    getStarArray() {
-      return Array.from({ length: 5 }, (_, i) => i + 1)
-    },
-    formatCurrency(value) {
-      if (value === null || value === undefined || value === '') return '0.00'
+    formatPrice(value) {
+      if (value === null || value === undefined || value === '') return '0đ'
       const num = Number(value)
-      return Number.isFinite(num) ? num.toFixed(2) : '0.00'
+      if (!Number.isFinite(num)) return '0đ'
+      return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+      }).format(num)
     },
   },
 }

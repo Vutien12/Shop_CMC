@@ -5,6 +5,9 @@ import router from '@/Router/routes.js'
 import ToastContainer from '@/User/components/Toast/ToastContainer.vue';
 import autoAnimate from '@formkit/auto-animate';
 
+// Line Awesome Icons
+import 'line-awesome/dist/line-awesome/css/line-awesome.min.css'
+
 // Font Awesome
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
