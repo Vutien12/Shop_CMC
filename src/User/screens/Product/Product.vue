@@ -300,7 +300,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
@@ -309,6 +309,7 @@ import { useProductStore } from '@/User/stores/productStore.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 
 const router = useRouter();
+const route = useRoute();
 const store = useProductStore();
 const {
   products,
@@ -363,9 +364,42 @@ watch(viewMode, (newMode) => {
   document.body.classList.toggle('grid-view', newMode === 'grid');
 }, { immediate: true });
 
+// Watch for category query parameter changes
+watch(() => route.query.category, async (categoryId) => {
+  if (categoryId) {
+    // Select the category if it's not already selected
+    const categoryIdNum = parseInt(categoryId);
+    if (!selectedCategories.value.includes(categoryIdNum)) {
+      // Clear existing selections and select the new category
+      selectedCategories.value = [categoryIdNum];
+      // Find and open parent category if this is a subcategory
+      const category = categories.value.find(cat => cat.id === categoryIdNum);
+      if (category && category.parentId) {
+        toggleCategoryOpen(category.parentId);
+      }
+      await fetchProducts();
+    }
+  }
+}, { immediate: false });
+
 onMounted(async () => {
   console.log('Store instance:', store);
   await fetchCategories();
+
+  // Check if there's a category query parameter
+  const categoryId = route.query.category;
+  if (categoryId) {
+    const categoryIdNum = parseInt(categoryId);
+    selectedCategories.value = [categoryIdNum];
+
+    // Wait for categories to be loaded before opening parent
+    await nextTick();
+    const category = categories.value.find(cat => cat.id === categoryIdNum);
+    if (category && category.parentId) {
+      toggleCategoryOpen(category.parentId);
+    }
+  }
+
   await fetchProducts();
   await nextTick();
   console.log('After render - Products:', products.value.length);

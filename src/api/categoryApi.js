@@ -50,3 +50,12 @@ export const deleteCategory = async (id) => {
   return response.data
 }
 
+/**
+ * Get trending categories
+ * @returns {Promise}
+ */
+export const getTrendingCategories = async () => {
+  const response = await api.get('categories/trending')
+  return response.data
+}
+
