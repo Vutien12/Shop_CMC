@@ -8,6 +8,7 @@
 </template>
 
 <script setup>
+import "./Home.css"
 import { onMounted, onBeforeUnmount } from 'vue'
 import Footer from '../../components/Footer/Footer.vue'
 import Header from '../../components/Header1/Header.vue'

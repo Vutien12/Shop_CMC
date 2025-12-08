@@ -50,7 +50,7 @@ import ReviewIndex from "../Review/indext.vue";
 import ReviewEdit from "../Review/edit.vue";
 import FlashSaleIndex from "../Flashsale/indext.vue";
 import FlashSaleCreate from "../Flashsale/create.vue";
-import CancellationsReturnsIndex from "../Cancellations & Returns/indext.vue";
+import RefundIndex from "@/Refund/indext.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -248,7 +248,7 @@ const routes = [
             },
             {
                 name: 'admin.cancellations.index',
-                component: CancellationsReturnsIndex,
+                component: RefundIndex,
                 path: 'cancellations-returns',
             },
         ]
@@ -262,7 +262,7 @@ const router = createRouter ({
 // Navigation Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('accessToken');
-  
+
   // Check if route requires authentication
   if (to.meta.requiresAuth && !token) {
     return next({
@@ -270,7 +270,7 @@ router.beforeEach((to, from, next) => {
       query: { redirect: to.fullPath }
     });
   }
-  
+
   // Check if route requires admin access
   if (to.meta.requiresAdmin && !token) {
     return next({
@@ -278,12 +278,12 @@ router.beforeEach((to, from, next) => {
       query: { redirect: to.fullPath }
     });
   }
-  
+
   // If already logged in and trying to access login page, redirect to home
   if (to.name === 'Login' && token) {
     return next({ path: '/' });
   }
-  
+
   next();
 });
 

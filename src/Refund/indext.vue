@@ -1,6 +1,6 @@
 <template>
     <DataTable
-        title="Cancellations & Returns"
+        title="Refund"
         :data="cancellations"
         :columns="columns"
         :row-clickable="true"
@@ -172,13 +172,13 @@ export default {
             { key: 'user_name', label: 'User', sortable: true,width: '150px' },
             { key: 'type', label: 'Type', sortable: true, width: '150px' },
             { key: 'status', label: 'Status', sortable: true, width: '140px' },
-            
+
             { key: 'created_at', label: 'Created', sortable: true, width: '150px' }
         ];
 
         const loadCancellations = async () => {
             try {
-                
+
                 cancellations.value = [
                     {
                         id: 1,
@@ -276,7 +276,7 @@ export default {
             try {
                 // Add delete API call here
                 console.log('Delete items:', selectedIds);
-                
+
                 await loadCancellations();
                 alert('Item(s) deleted successfully!');
             } catch (error) {
