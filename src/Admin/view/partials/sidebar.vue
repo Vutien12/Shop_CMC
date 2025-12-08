@@ -104,7 +104,7 @@
             <li :class="activeMenu('cancellations')">
               <router-link :to="{ name: 'admin.cancellations.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>
-                <span>Cancellations & Returns</span>
+                <span>Refund</span>
               </router-link>
             </li>
           </ul>

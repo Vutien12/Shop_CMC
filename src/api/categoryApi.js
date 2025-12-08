@@ -1,4 +1,4 @@
-import api from './axiosInstance'
+import api from '@/api/axiosInstance.js'
 
 /**
  * Get all categories
@@ -47,6 +47,15 @@ export const updateCategory = async (id, categoryData) => {
  */
 export const deleteCategory = async (id) => {
   const response = await api.delete(`/categories/${id}`)
+  return response.data
+}
+
+/**
+ * Get trending categories
+ * @returns {Promise}
+ */
+export const getTrendingCategories = async () => {
+  const response = await api.get('categories/trending')
   return response.data
 }
 

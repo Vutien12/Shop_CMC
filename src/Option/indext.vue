@@ -25,7 +25,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { getOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
+import { searchOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
 
 export default {
     name: 'OptionPage',
@@ -46,9 +46,11 @@ export default {
 
         const loadOptions = async () => {
             try {
-                const response = await getOptions();
-                if (response.code === 200 && response.result) {
-                    options.value = response.result.map(opt => ({
+                // Use search endpoint so backend's ModelAttribute binding receives isGlobal
+                const response = await searchOptions({ page: 0, size: 100, isGlobal: true });
+                if (response.code === 200) {
+                    const items = response.result?.content ?? response.result ?? [];
+                    options.value = items.map(opt => ({
                         id: opt.id,
                         name: opt.name,
                         type: opt.type,
@@ -125,4 +127,3 @@ export default {
     color: #111827;
 }
 </style>
-

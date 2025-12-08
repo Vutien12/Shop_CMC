@@ -1,4 +1,4 @@
-import api from './axiosInstance'
+import api from '@/api/axiosInstance.js'
 
 function unwrapResponse(res) {
   // Support multiple backend shapes seen in the project:

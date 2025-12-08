@@ -1,4 +1,4 @@
-import api from './axiosInstance';
+import api from '@/api/axiosInstance.js';
 
 /**
  * Get all variations with pagination
@@ -135,10 +135,10 @@ export const getVariationValues = async (variationId) => {
 /**
  * Search variations
  */
-export const searchVariations = async (query) => {
+export const searchVariations = async (params = {}) => {
   try {
     const response = await api.get('/variations/search', {
-      params: { q: query },
+      params
     });
     return response.data;
   } catch (error) {

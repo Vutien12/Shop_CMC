@@ -1,5 +1,4 @@
-// src/api/cartApi.js
-import api from './axiosInstance.js';
+import api from '@/api/axiosInstance.js';
 
 // POST: Thêm vào giỏ hàng
 export const addToCart = async (payload) => {

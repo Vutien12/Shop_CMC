@@ -191,7 +191,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getReview, updateReviewStatus } from '../api/reviewApi';
+import { getReview, updateReviewStatus } from '@/api/reviewApi.js';
 
 export default {
     name: 'ReviewEdit',

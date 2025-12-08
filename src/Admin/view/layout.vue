@@ -59,6 +59,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Footer from './partials/footer.vue';
 import Sidebar from './partials/sidebar.vue';
 import Topnav from './partials/top_nav.vue';
+import adminCssUrl from '@/Admin/assets/css/main.css?url'
 
 export default {
   name: 'AppLayout',
@@ -126,7 +127,7 @@ export default {
       const link = document.createElement('link');
       link.id = 'admin-css';
       link.rel = 'stylesheet';
-      link.href = new URL('../assets/sass/main.css', import.meta.url).href;
+      link.href = adminCssUrl;
       document.head.appendChild(link);
     }
 
@@ -141,6 +142,8 @@ export default {
       app.style.width = '100%';
     }
   },
+
+
   beforeUnmount() {
     // Remove CSS khi rời khỏi admin
     const adminCss = document.getElementById('admin-css');

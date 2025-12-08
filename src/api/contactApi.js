@@ -1,4 +1,4 @@
-import api from './axiosInstance.js'
+import api from '@/api/axiosInstance.js'
 
 /**
  * Get contact information (phone, email, address, social links)
