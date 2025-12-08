@@ -1,3 +1,4 @@
+// Router/router.js
 import { createWebHistory, createRouter } from "vue-router";
 import Home from "../User/screens/Home/Home.vue";
 import Header1 from "../User/components/Header/Header1.vue";
