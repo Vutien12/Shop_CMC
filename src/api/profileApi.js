@@ -1,4 +1,4 @@
-import axiosInstance from './axiosInstance';
+import axiosInstance from '@/api/axiosInstance.js';
 
 // Get current user profile from /users endpoint
 export const getCurrentUser = async () => {

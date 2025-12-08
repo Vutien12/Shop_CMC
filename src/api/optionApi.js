@@ -1,4 +1,4 @@
-import api from './axiosInstance';
+import api from '@/api/axiosInstance.js';
 
 // Get all options (supports optional params)
 export const getOptions = async (params) => {

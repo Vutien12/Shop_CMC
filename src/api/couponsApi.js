@@ -1,4 +1,4 @@
-import axiosInstance from './axiosInstance';
+import axiosInstance from '@/api/axiosInstance.js';
 
 // Get all coupons
 export const getCoupons = async () => {

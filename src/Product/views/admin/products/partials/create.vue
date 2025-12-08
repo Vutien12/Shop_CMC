@@ -79,11 +79,12 @@
 </template>
 
 <script>
-import LeftColumn from '../layout/left_column.vue';
-import RightColumn from '../layout/right_column.vue';
+import LeftColumn from '@/Product/views/admin/products/layout/left_column.vue';
+import RightColumn from '@/Product/views/admin/products/layout/right_column.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import products from '@/Product/lang/en/products.json';
 import admin from '@/Admin/lang/en/admin.json';
+
 import {
     createProduct,
     updateProduct,

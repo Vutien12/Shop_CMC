@@ -1,4 +1,4 @@
-import api from './axiosInstance.js';
+import api from '@/api/axiosInstance.js';
 
 // Search products
 export const searchProducts = async (params = {}) => {

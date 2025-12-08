@@ -39,7 +39,7 @@
 
 <script>
 import { ref } from 'vue';
-import SelectImage from '../../Media/SelectImage.vue';
+import SelectImage from '@/Media/SelectImage.vue';
 
 export default {
     name: 'ImageUploader',

@@ -1,5 +1,13 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/oauth2/callback/(.*)",
+      "destination": "/"
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "header", "key": "accept", "value": "text/html" }],
+      "destination": "/"
+    }
   ]
 }

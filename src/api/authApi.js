@@ -1,4 +1,4 @@
-import api from './axiosInstance.js';
+import api from '@/api/axiosInstance.js';
 import router from '@/Router/routes.js';
 
 // Login thường
@@ -21,7 +21,7 @@ export const logout = async () => {
     // XÓA TOÀN BỘ dữ liệu người dùng và session
     localStorage.clear(); // Xóa tất cả localStorage
     sessionStorage.clear(); // Xóa tất cả sessionStorage
-    
+
     // Chuyển hướng về login và reload để reset state
     await router.push('/login');
     window.location.reload(); // Force reload để clear tất cả state

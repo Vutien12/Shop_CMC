@@ -84,11 +84,11 @@
 <script setup>
 defineOptions({ name: 'DashboardPage' })
 import { ref, onMounted } from 'vue';
-import StatCard from './components/StatCard.vue';
-import SalesChart from './components/SalesChart.vue';
-import LatestOrders from './components/LatestOrders.vue';
-import LatestReviews from './components/LatestReviews.vue';
-import TopProducts from './components/TopProducts.vue';
+import StatCard from '@/Dashboar/components/StatCard.vue';
+import SalesChart from '@/Dashboar/components/SalesChart.vue';
+import LatestOrders from '@/Dashboar/components/LatestOrders.vue';
+import LatestReviews from '@/Dashboar/components/LatestReviews.vue';
+import TopProducts from '@/Dashboar/components/TopProducts.vue';
 import dashboardApi from '@/api/dashboardApi.js';
 
 // Loading / Error state

@@ -129,7 +129,7 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import SelectImage from '../../../../Media/SelectImage.vue';
+import SelectImage from '@/Media/SelectImage.vue';
 import { createBrand, attachFileToBrand } from '@/api/brandApi';
 
 const router = useRouter();

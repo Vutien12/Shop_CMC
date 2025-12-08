@@ -1,4 +1,4 @@
-import api from './axiosInstance';
+import api from '@/api/axiosInstance.js';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT } from '@/Config/search.js';
 
 // Create order
