@@ -8,12 +8,11 @@
 </template>
 
 <script setup>
-import "./Home.css"
-
-import Footer from '../../components/Footer/Footer.vue'
-import Header from '../../components/Header1/Header.vue'
+import "@/User/screens/Home/Home.css"
+import Footer from '@/User/components/Footer/Footer.vue'
+import Header from '@/User/components/Header1/Header.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
-import Main from './Main.vue'
+import Main from '@/User/screens/Home/Main.vue'
 </script>
 
 
