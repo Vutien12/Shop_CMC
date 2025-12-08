@@ -511,6 +511,13 @@ export default {
 
         async handleSubmit() {
             try {
+                // Debug: Check description content before submit
+                console.log('Form description before submit:', {
+                    length: this.form.description?.length || 0,
+                    hasImages: this.form.description?.includes('<img') || false,
+                    content: this.form.description
+                });
+                
                 // Ensure variants are generated (especially for simple products without variations)
                 if (this.form.variants.length === 0) {
                     this.generateVariants();

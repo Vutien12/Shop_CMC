@@ -260,6 +260,16 @@ export default {
             return typeof result === 'string' ? result : key;
         },
         handleDescriptionChange(value) {
+            // Update form description
+            this.form.description = value;
+            
+            // Debug log
+            console.log('Description changed in general.vue:', {
+                length: value?.length || 0,
+                hasImages: value?.includes('<img') || false,
+                value: value
+            });
+            
             // Clear description error when user types
             if (this.errors.has('description')) {
                 this.errors.clear('description');
