@@ -8,11 +8,27 @@
 </template>
 
 <script setup>
-import "@/User/screens/Home/Home.css"
+import { onMounted, onBeforeUnmount } from "vue"
 import Footer from '@/User/components/Footer/Footer.vue'
 import Header from '@/User/components/Header1/Header.vue'
+import homeCss from "@/User/screens/Home/Home.css?url"
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
-import Main from '@/User/screens/Home/Main.vue'
+import Main from './Main.vue'
+
+let styleElement = null
+
+onMounted(() => {
+  styleElement = document.createElement("link")
+  styleElement.rel = "stylesheet"
+  styleElement.href = homeCss
+  document.head.appendChild(styleElement)
+})
+
+onBeforeUnmount(() => {
+  if (styleElement?.parentNode) {
+    styleElement.parentNode.removeChild(styleElement)
+  }
+})
 </script>
 
 
