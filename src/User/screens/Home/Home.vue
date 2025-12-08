@@ -19,10 +19,9 @@ import Main from './Main.vue'
 let styleElement = null
 
 onMounted(() => {
-  // Tạo style element và load CSS
   styleElement = document.createElement('link')
   styleElement.rel = 'stylesheet'
-  styleElement.href = '/src/User/screens/Home/Home.css'
+  styleElement.href = new URL('./Home.css', import.meta.url).href;
   styleElement.setAttribute('data-home-css', 'true')
   document.head.appendChild(styleElement)
 })
