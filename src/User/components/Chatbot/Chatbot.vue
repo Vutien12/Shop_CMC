@@ -64,7 +64,7 @@ const messages = ref([])
 
 // WebSocket state
 const models = ['gemini-2.5-flash', 'command-a-03-2025', 'open-router']
-const selectedModel = ref(models[0])
+const selectedModel = ref(models[2])
 const wsRef = ref(null)
 const connectionStatus = ref('offline')
 const reconnectTimer = ref(null)
@@ -88,7 +88,7 @@ const formatMessage = (text) => {
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 
   // Tự động chuyển URL thành thẻ <a>
-  html = html.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" class="chatbot-link">$1</a>')
+  html = html.replace(/(https?:\/\/(?:[\w-]+\.)+[\w-]+(?:[\w\-\._~:/?#[\]@!$&'()*+,;=]+)?)/gi, '<a href="$1" target="_blank" rel="noopener" class="chatbot-link">$1</a>')
 
   // Xóa dấu * ở đầu dòng (không tạo <li>)
   html = html.replace(/^\* /gm, '')
@@ -287,17 +287,50 @@ onBeforeUnmount(() => {
 
 <style scoped src="./Chatbot.css"></style>
 <style scoped>
+.product-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5faff;
+  border-radius: 6px;
+  padding: 2px 8px 2px 4px;
+  margin: 2px 0;
+  box-shadow: 0 1px 4px rgba(33,150,243,0.07);
+  max-width: 100%;
+  word-break: break-word;
+}
+.product-link-icon {
+  flex-shrink: 0;
+  margin-right: 2px;
+  vertical-align: middle;
+}
 .chatbot-link {
-  color: #1976d2;
-  word-break: break-all;
+  color: #8e24aa;
   text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
   cursor: pointer;
-  display: inline;
+  display: inline-block;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  transition: color 0.2s;
+}
+.chatbot-link:hover {
+  color: #6d1b7b;
+  text-decoration: underline;
+}
+.message-content {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 .message-content a {
-  word-break: break-all;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
   max-width: 100%;
+  display: inline-block;
 }
 </style>
