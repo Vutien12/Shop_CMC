@@ -87,6 +87,9 @@ const formatMessage = (text) => {
   // Chuyển **text** thành <strong>
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 
+  // Tự động chuyển URL thành thẻ <a>
+  html = html.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" class="chatbot-link">$1</a>')
+
   // Xóa dấu * ở đầu dòng (không tạo <li>)
   html = html.replace(/^\* /gm, '')
 
@@ -283,3 +286,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped src="./Chatbot.css"></style>
+<style scoped>
+.chatbot-link {
+  color: #1976d2;
+  word-break: break-all;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+}
+.message-content a {
+  word-break: break-all;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+</style>
