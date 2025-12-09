@@ -340,95 +340,65 @@
                                                 </div>
 
                                                 <div class="row">
-                                                    <div class="col-sm-6">
-                                                        <div class="form-group">
-                                                            <label :for="`variants-${variant.uid}-manage-stock`">
-                                                                {{ trans('product::products.form.variants.manage_stock') }}
-                                                            </label>
+                                                    <!-- Show Manage Stock select for each variant when there are multiple variants -->
+                                                    <div v-if="hasAnyVariant && form.variants.length > 1" class="col-sm-6">
+                                                         <div class="form-group">
+                                                             <label :for="`variants-${variant.uid}-manage-stock`">
+                                                                 {{ trans('product::products.form.variants.manage_stock') }}
+                                                             </label>
 
-                                                            <select
-                                                                :name="`variants.${variant.uid}.manage_stock`"
-                                                                :id="`variants-${variant.uid}-manage-stock`"
-                                                                class="form-control custom-select-black"
-                                                                @change="focusField({
-                                                                    selector: `#variants-${variant.uid}-qty`,
-                                                                    key: `variants.${variant.uid}.qty`
-                                                                })"
-                                                                v-model.number="variant.manage_stock"
-                                                            >
-                                                                <option :value="0">
-                                                                    {{ trans('product::products.form.variants.manage_stock_states.0') }}
-                                                                </option>
+                                                             <select
+                                                                 :name="`variants.${variant.uid}.manage_stock`"
+                                                                 :id="`variants-${variant.uid}-manage-stock`"
+                                                                 class="form-control custom-select-black"
+                                                                 @change="focusField({
+                                                                     selector: `#variants-${variant.uid}-qty`,
+                                                                     key: `variants.${variant.uid}.qty`
+                                                                 })"
+                                                                 v-model.number="variant.manage_stock"
+                                                             >
+                                                                 <option :value="0">
+                                                                     {{ trans('product::products.form.variants.manage_stock_states.0') }}
+                                                                 </option>
 
-                                                                <option :value="1">
-                                                                    {{ trans('product::products.form.variants.manage_stock_states.1') }}
-                                                                </option>
-                                                            </select>
+                                                                 <option :value="1">
+                                                                     {{ trans('product::products.form.variants.manage_stock_states.1') }}
+                                                                 </option>
+                                                             </select>
 
-                                                            <span
-                                                                class="help-block text-red"
-                                                                v-if="errors.has(`variants.${variant.uid}.manage_stock`)"
-                                                                v-text="errors.get(`variants.${variant.uid}.manage_stock`)"
-                                                            >
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                             <span
+                                                                 class="help-block text-red"
+                                                                 v-if="errors.has(`variants.${variant.uid}.manage_stock`)"
+                                                                 v-text="errors.get(`variants.${variant.uid}.manage_stock`)"
+                                                             >
+                                                             </span>
+                                                         </div>
+                                                     </div>
 
-                                                    <div v-if="variant.manage_stock == 1" class="col-sm-6">
-                                                        <div class="form-group">
-                                                            <label :for="`variants-${variant.uid}-qty`">
-                                                                {{ trans('product::products.form.variants.qty') }}<span class="text-red">*</span>
-                                                            </label>
-
-                                                            <input
-                                                                type="number"
-                                                                :name="`variants.${variant.uid}.qty`"
-                                                                min="0"
-                                                                step="1"
-                                                                :id="`variants-${variant.uid}-qty`"
-                                                                class="form-control"
-                                                                @wheel="$event.target.blur()"
-                                                                v-model.number="variant.qty"
-                                                            >
-                                                            <span class="help-block text-red" v-if="variant.qty <= 0">
-                                                                {{ trans('product::products.form.variants.qty_error') }}
-                                                            </span>
-                                                            <span class="help-block text-red" v-else-if="!variant.qty && variant.manage_stock == 1">
-                                                                {{ trans('product::products.form.variants.qty_required') }}
-                                                            </span>
-
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-sm-6">
-                                                        <div class="form-group">
-                                                            <label :for="`variants-${variant.uid}-in-stock`">
-                                                                {{ trans('product::products.form.variants.in_stock') }}
-                                                            </label>
-
-                                                            <select
-                                                                :name="`variants.${variant.uid}.in_stock`"
-                                                                :id="`variants-${variant.uid}-in-stock`"
-                                                                class="form-control custom-select-black"
-                                                                v-model="variant.in_stock"
-                                                            >
-                                                                <option :value="0">
-                                                                    {{ trans('product::products.form.variants.stock_availability_states.0') }}
-                                                                </option>
-
-                                                                <option :value="1">
-                                                                    {{ trans('product::products.form.variants.stock_availability_states.1') }}
-                                                                </option>
-                                                            </select>
-
-                                                            <span
-                                                                class="help-block text-red"
-                                                                v-if="errors.has(`variants.${variant.uid}.in_stock`)"
-                                                                v-text="errors.get(`variants.${variant.uid}.in_stock`)"
-                                                            >
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                    <!-- Show Qty only when Manage Stock is enabled for that variant -->
+                                                    <div v-if="hasAnyVariant && form.variants.length > 1 && variant.manage_stock == 1" class="col-sm-6">
+                                                         <div class="form-group">
+                                                             <label :for="`variants-${variant.uid}-qty`">
+                                                                 {{ trans('product::products.form.variants.qty') }}<span class="text-red">*</span>
+                                                             </label>
+                                                             <input
+                                                                 type="number"
+                                                                 :name="`variants.${variant.uid}.qty`"
+                                                                 min="0"
+                                                                 step="1"
+                                                                 :id="`variants-${variant.uid}-qty`"
+                                                                 class="form-control"
+                                                                 @wheel="$event.target.blur()"
+                                                                 v-model.number="variant.qty"
+                                                             >
+                                                             <span class="help-block text-red" v-if="variant.qty <= 0">
+                                                                 {{ trans('product::products.form.variants.qty_error') }}
+                                                             </span>
+                                                             <span class="help-block text-red" v-else-if="!variant.qty && variant.manage_stock == 1">
+                                                                 {{ trans('product::products.form.variants.qty_required') }}
+                                                             </span>
+                                                         </div>
+                                                     </div>
                                                 </div>
                                             </div>
                                         </div>

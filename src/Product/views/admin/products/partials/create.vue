@@ -126,7 +126,6 @@ export default {
                 sku: '',
                 manage_stock: 0,
                 qty: '',
-                in_stock: 1,
                 variations: [],
                 variants: [],
                 attributes: [],
@@ -245,7 +244,17 @@ export default {
                     variant.special_price_end = newEndDate || '';
                 });
             }
-        }
+        },
+        // Tự động sinh variants khi variation values thay đổi thủ công
+        'form.variations': {
+            handler() {
+                this.$nextTick(() => {
+                    this.generateVariants();
+                });
+            },
+            deep: true,
+            immediate: true
+        },
     },
     methods: {
         trans(key, params = {}) {
@@ -518,7 +527,7 @@ export default {
                     hasImages: this.form.description?.includes('<img') || false,
                     content: this.form.description
                 });
-                
+
                 // Ensure variants are generated (especially for simple products without variations)
                 if (this.form.variants.length === 0) {
                     this.generateVariants();
@@ -673,7 +682,6 @@ export default {
                 sku: this.form.sku || '',
                 manageStock: this.form.manage_stock === 1,
                 qty: this.form.qty ? parseInt(this.form.qty) : 0,
-                inStock: this.form.in_stock === 1,
                 isActive: this.form.is_active === 1,
                 categoryIds: this.form.categories || [],
 
@@ -741,59 +749,32 @@ export default {
         },
 
         transformVariants() {
-            // Calculate selling price for variant
-            const calculateSellingPrice = (price, specialPrice, specialPriceType) => {
-                const basePrice = parseFloat(price) || 0;
-                const discount = parseFloat(specialPrice) || 0;
+          return this.form.variants.map(variant => {
+            const isSingleVariant = this.form.variants.length === 1;
 
-                if (!discount || discount === 0) {
-                    // Không có giảm giá → sellingPrice = price
-                    return basePrice;
-                }
-
-                if (specialPriceType === 'percent') {
-                    // Giảm theo phần trăm
-                    return basePrice - (basePrice * discount / 100);
-                } else {
-                    // Giảm cố định (fixed)
-                    return basePrice - discount;
-                }
+            const variantData = {
+              sku: variant.sku || '',
+              price: parseFloat(variant.price) || 0,
+              specialPrice: variant.special_price ? parseFloat(variant.special_price) : null,
+              specialPriceType: (variant.special_price_type || 'fixed').toUpperCase(),
+              specialPriceStart: this.formatDateForAPI(variant.special_price_start),
+              specialPriceEnd: this.formatDateForAPI(variant.special_price_end),
+              isActive: variant.is_active === 1,
             };
 
-            // Transform variants từ format Vue sang format API
-            return this.form.variants.map(variant => {
-                const price = parseFloat(variant.price) || 0;
-                const specialPrice = variant.special_price ? parseFloat(variant.special_price) : null;
-                const specialPriceType = variant.special_price_type || 'fixed';
-                const sellingPrice = calculateSellingPrice(
-                    variant.price,
-                    variant.special_price,
-                    specialPriceType
-                );
+            // Chỉ gửi inventory fields khi có nhiều hơn 1 variant
+            if (!isSingleVariant) {
+              variantData.manageStock = variant.manage_stock === 1;
+              variantData.qty = variant.qty ? parseInt(variant.qty) : 0;
+            }
+            // Nếu là single variant → backend sẽ dùng giá trị từ product chính
 
-                const variantData = {
-                    sku: variant.sku || '',
-                    price: price,
-                    specialPrice: specialPrice,
-                    specialPriceType: specialPriceType.toUpperCase(), // Backend expects: FIXED or PERCENT
-                    specialPriceStart: this.formatDateForAPI(variant.special_price_start),
-                    specialPriceEnd: this.formatDateForAPI(variant.special_price_end),
-                    sellingPrice: sellingPrice,
-                    manageStock: variant.manage_stock === 1,
-                    qty: variant.qty ? parseInt(variant.qty) : 0,
-                    inStock: variant.in_stock === 1,
-                    isActive: variant.is_active === 1,
-                    isDefault: false, // No longer using default variant concept
-                    media: variant.media || []
-                };
+            if (variant.id) {
+              variantData.id = variant.id;
+            }
 
-                // Nếu có id (variant đã tồn tại), thêm vào để backend biết là update
-                if (variant.id) {
-                    variantData.id = variant.id;
-                }
-
-                return variantData;
-            });
+            return variantData;
+          });
         },
 
         transformOptions() {
@@ -884,16 +865,28 @@ export default {
             this.form.variants = combinations.map(combo => {
                 const uid = this.generateVariantUid(combo);
                 const existing = existingVariants.find(v => v.uid === uid);
-
+                // Đặt tên variant đúng thứ tự, không có dấu '/' thừa, luôn có label rõ ràng
+                const nameParts = combo.map(c => {
+                    const label = (c.label || '').trim();
+                    const value = (c.value || '').trim();
+                    if (label) return label;
+                    if (value) return value;
+                    return 'Không xác định';
+                });
+                const name = nameParts.join(' / ');
+                // Tự động sinh SKU nếu chưa có
+                const skuBase = (this.form.name || 'SKU').replace(/\s+/g, '-');
+                const skuParts = nameParts.map(p => p.replace(/\s+/g, '-'));
+                const autoSku = skuBase + '-' + skuParts.join('-');
                 return existing || {
                     uid: uid,
-                    name: combo.map(c => c.label).join(' / '),
+                    name: name,
                     price: parseFloat(this.form.price) || 0,
                     special_price: '',
                     special_price_type: 'fixed',
                     special_price_start: '',
                     special_price_end: '',
-                    sku: '',
+                    sku: autoSku,
                     manage_stock: 0,
                     qty: '',
                     in_stock: 1,
@@ -911,12 +904,22 @@ export default {
 
         generateCombinations(variations) {
             if (variations.length === 0) return [];
-            if (variations.length === 1) return variations[0].values.map(v => [v]);
+            // Lọc chỉ lấy value có label hoặc value thực sự
+            const filteredVariations = variations.map(variation => ({
+                ...variation,
+                values: (variation.values || []).filter(v => {
+                    const label = (v.label || '').trim();
+                    const value = (v.value || '').trim();
+                    return label || value;
+                })
+            }));
+            if (filteredVariations.some(v => v.values.length === 0)) return [];
+            if (filteredVariations.length === 1) return filteredVariations[0].values.map(v => [v]);
 
             const result = [];
-            const restCombinations = this.generateCombinations(variations.slice(1));
+            const restCombinations = this.generateCombinations(filteredVariations.slice(1));
 
-            variations[0].values.forEach(value => {
+            filteredVariations[0].values.forEach(value => {
                 restCombinations.forEach(combo => {
                     result.push([value, ...combo]);
                 });

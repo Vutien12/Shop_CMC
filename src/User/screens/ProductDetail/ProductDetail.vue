@@ -1,7 +1,6 @@
 <template>
   <div class="product-detail-container">
-    <Header/>
-
+    <UserHeader/>
     <Loading v-if="isLoading" text="Loading product..." />
 
     <div v-else-if="product" class="product-container">
@@ -94,7 +93,7 @@
                 @click="handleColorSelect(value.label)"
                 :title="value.label"
               >
-                <div class="color-swatch" :style="{ backgroundColor: value.value }"></div>
+                <span class="color-swatch" :style="{ backgroundColor: value.value }"></span>
               </button>
             </div>
           </div>
@@ -143,7 +142,7 @@
                   @click="selectVariation(variation.id, valueItem)"
                   :title="valueItem.label"
                 >
-                  <div class="color-swatch" :style="{ backgroundColor: valueItem.value }"></div>
+                  <span class="color-swatch" :style="{ backgroundColor: valueItem.value }"></span>
                   <span class="color-name">{{ valueItem.label }}</span>
                 </button>
               </template>
@@ -221,10 +220,10 @@
           <div class="purchase-section">
             <div class="quantity-and-cart">
               <div class="quantity-selector">
-                <label>Quantity</label>
+                <label for="qty-input">Quantity</label>
                 <div class="quantity-controls">
                   <button @click="changeQuantity(-1)" class="qty-btn" type="button">-</button>
-                  <input v-model.number="quantity" type="number" min="1" class="qty-input" />
+                  <input id="qty-input" v-model.number="quantity" type="number" min="1" class="qty-input" />
                   <button @click="changeQuantity(1)" class="qty-btn" type="button">+</button>
                 </div>
               </div>
@@ -394,14 +393,14 @@
         </div>
       </div>
     </div>
-    <Footer v-if="product" />
+    <UserFooter v-if="product" />
     <Chatbot />
   </div>
 </template>
 
 <script>
-import Header from '@/User/components/Header1/Header.vue'
-import Footer from '@/User/components/Footer/Footer.vue'
+import UserHeader from '@/User/components/Header1/Header.vue'
+import UserFooter from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import { getProductById } from '@/api/productApi.js'
@@ -413,8 +412,8 @@ export default {
   name: 'ProductDetail',
   components: {
     Chatbot,
-    Header,
-    Footer,
+    UserHeader,
+    UserFooter,
     Loading,
     ReviewList,
   },
@@ -627,14 +626,9 @@ export default {
     buildVariantKeyFromAllVariations(variantLabels) {
       const keys = Object.entries(variantLabels)
         .sort(([aId], [bId]) => aId - bId) // Sort by variation ID for consistency
-        .map(([_, label]) => (label || '').toLowerCase())
+        .map((entry) => (entry[1] || '').toLowerCase())
         .filter(k => k)
-
       return keys.length > 0 ? keys.join('::') : null
-    },
-    buildVariantKey(colorLabel, storageLabel) {
-      if (!colorLabel && !storageLabel) return null
-      return `${(colorLabel || '').toLowerCase()}::${(storageLabel || '').toLowerCase()}`
     },
     extractVariationLabel(variation, variantName) {
       if (!variation || !variantName) return null
@@ -706,103 +700,76 @@ export default {
       const storagesSet = this.availableStoragesByColor[colorLabel] || new Set()
       return Array.from(storagesSet)
     },
+    isVariantActive(variationLabels) {
+      // Trả về true nếu tồn tại variant với các label này và isActive: true
+      const key = this.buildVariantKeyFromAllVariations(variationLabels)
+      const variant = key ? this.variantLookup[key] : null
+      return variant && variant.isActive === true
+    },
     isColorAvailable(colorLabel) {
-      if (!this.storageVariation) return true
-      const storages = this.availableStoragesByColor[colorLabel]
-      return storages ? storages.size > 0 : false
+      // Chỉ cho phép chọn màu nếu tồn tại ít nhất 1 variant với màu này và isActive: true
+      if (!this.colorVariation) return false
+      const labels = { ...this.selectedVariations, [this.colorVariation.id]: colorLabel }
+      // Nếu có storage, kiểm tra từng storage
+      if (this.storageVariation) {
+        return this.storageVariation.variationValues.some(storage => {
+          const testLabels = { ...labels, [this.storageVariation.id]: storage.label }
+          return this.isVariantActive(testLabels)
+        })
+      } else {
+        return this.isVariantActive(labels)
+      }
     },
     isStorageAvailable(storageLabel) {
-      if (!this.storageVariation || !this.selectedColor) return true
-      return this.getAvailableStoragesForColor(this.selectedColor).includes(storageLabel)
+      // Chỉ cho phép chọn storage nếu tồn tại variant với color+storage và isActive: true
+      if (!this.storageVariation || !this.selectedColor) return false
+      const labels = { ...this.selectedVariations, [this.storageVariation.id]: storageLabel, [this.colorVariation?.id]: this.selectedColor }
+      return this.isVariantActive(labels)
+    },
+    isOtherVariationAvailable(variation, valueLabel) {
+      // Chỉ cho phép chọn value nếu tồn tại variant với các lựa chọn hiện tại và value này, isActive: true
+      const labels = { ...this.selectedVariations, [variation.id]: valueLabel }
+      return this.isVariantActive(labels)
     },
     updateVariantFromSelection() {
       if (!this.product || !this.product.variants.length) return
-
-      // Build key from all selected variations
       const variantLabels = {}
       this.variations.forEach((variation) => {
-        // Check both selectedVariations and specific color/storage selections
-        const label = this.selectedVariations[variation.id] ||
-                      (variation === this.colorVariation ? this.selectedColor : null) ||
-                      (variation === this.storageVariation ? this.selectedStorage : null)
-        if (label) {
-          variantLabels[variation.id] = label
-        }
+        const label = this.selectedVariations[variation.id] || (variation === this.colorVariation ? this.selectedColor : null) || (variation === this.storageVariation ? this.selectedStorage : null)
+        if (label) variantLabels[variation.id] = label
       })
-
       const key = this.buildVariantKeyFromAllVariations(variantLabels)
       let variant = key ? this.variantLookup[key] : null
-
-      if (!variant) {
-        // Fallback: use first available variant or first variant
-        variant = this.product.variants.find((v) => v.inStock) || this.product.variants[0]
+      // Ưu tiên variant isActive: true && inStock, sau đó isActive: true
+      if (!variant || !variant.isActive) {
+        variant = this.product.variants.find(v => v.isActive && v.inStock) || this.product.variants.find(v => v.isActive) || null
       }
-
       this.selectedVariant = variant || null
       if (variant) {
         this.product.inStock = variant.inStock
         this.product.qty = variant.qty
       }
     },
-    selectVariation(variationId, valueItem) {
-      this.selectedVariations[variationId] = valueItem.label
-      this.updateVariantFromSelection()
-    },
-    selectImage(index) {
-      this.selectedImage = index
-    },
-    changeQuantity(change) {
-      this.quantity = Math.max(1, this.quantity + change)
-    },
-    formatPrice(price) {
-      if (!price && price !== 0) return '—'
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(price)
-    },
-    optionLabelWithPrice(optionValue) {
-      if (!optionValue || !optionValue.price) return optionValue.label
-      if (Number(optionValue.price) === 0) return optionValue.label
-      return `${optionValue.label} (+${this.formatPrice(optionValue.price)})`
-    },
-    selectedOptionsTotal() {
-      return this.options.reduce((sum, option) => {
-        const selectedId = this.selectedOptions[option.id]
-        if (selectedId === undefined || selectedId === null || selectedId === '') return sum
-        if (option.type === 'TEXT') {
-          const value = this.selectedOptions[option.id]
-          if (!value) return sum
-          const valueDef = option.optionValues?.[0]
-          return sum + (valueDef?.price || 0)
-        }
-        const selectedOptionValue = option.optionValues?.find(
-          (ov) => `${ov.id}` === `${selectedId}`,
-        )
-        return sum + (selectedOptionValue?.price || 0)
-      }, 0)
-    },
     async addToCart() {
       if (!this.selectedVariant) return
+      if (!this.selectedVariant.isActive) {
+        alert('Biến thể này hiện không khả dụng!')
+        return
+      }
       if (this.isSubmitting) return
-
       const requiredOptions = this.options.filter((o) => o.isRequired)
       const missingRequired = requiredOptions.find((o) => {
         const value = this.selectedOptions[o.id]
         return value === null || value === undefined || value === ''
       })
-
       if (missingRequired) {
         alert(`Please select: ${missingRequired.name}`)
         return
       }
-
       const cartPayload = this.buildCartPayload()
       this.isSubmitting = true
       this.submitError = ''
-
       try {
-        // Use cartStore instead of calling API directly
         await this.cartStore.addItem(cartPayload)
         console.log('Added to cart successfully')
         alert('Đã thêm vào giỏ hàng!')
@@ -816,11 +783,10 @@ export default {
     },
     async toggleWishlist() {
       if (!this.product) return;
-
       const currentlyWishlisted = !!this.product.isWishlisted;
       try {
         const api = await import('@/api/accountApi.js');
-        const { getProductById } = await import('@/api/productApi.js');
+        // const { getProductById } = await import('@/api/productApi.js'); // Xóa biến không dùng
 
         // Determine variant id to operate on
         const variantId = this.selectedVariant?.id || this.product.variants?.[0]?.id;
