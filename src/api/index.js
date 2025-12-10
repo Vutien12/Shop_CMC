@@ -78,3 +78,6 @@ export * from './userApi.js';
 // Flash Sale APIs
 export * from './flashsaleApi.js';
 
+// Shipping APIs
+export * from './shippingApi.js';
+

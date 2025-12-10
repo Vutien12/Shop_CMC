@@ -156,6 +156,12 @@
 
             <h2>Shipping Details</h2>
 
+            <!-- Shipping Note -->
+            <div class="shipping-info-alert">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>Please select your delivery address to calculate the exact shipping cost.</span>
+            </div>
+
             <!-- Shipping Address Section -->
             <div class="info-section">
               <!-- Checkbox: Use Same Billing Details -->
@@ -317,61 +323,12 @@
                   />
                   <span class="payment-info">
                     <strong>💳 CARD</strong>
-                    <span class="payment-desc">Thanh toán qua thẻ.</span>
+                    <span class="payment-desc">Payment via card.</span>
                   </span>
                 </label>
               </div>
             </div>
 
-            <!-- Shipping Method -->
-            <div class="shipping-method">
-              <h3>Shipping Method</h3>
-              <div class="shipping-options">
-                <label class="shipping-option" :class="{ selected: selectedShipping === 'free' }">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    value="free"
-                    v-model="selectedShipping"
-                    @change="updateShippingCost(0)"
-                  />
-                  <span class="shipping-info">
-                    <strong>Free Shipping</strong>
-                  </span>
-                  <span class="shipping-price">{{ formatPrice(0) }}</span>
-                </label>
-
-                <label class="shipping-option" :class="{ selected: selectedShipping === 'express' }">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    value="express"
-                    v-model="selectedShipping"
-                    @change="updateShippingCost(50000)"
-                  />
-                  <span class="shipping-info">
-                    <strong>Express Shipping</strong>
-                    <span class="shipping-desc">Delivery in 1-2 days</span>
-                  </span>
-                  <span class="shipping-price">{{ formatPrice(50000) }}</span>
-                </label>
-
-                <label class="shipping-option" :class="{ selected: selectedShipping === 'standard' }">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    value="standard"
-                    v-model="selectedShipping"
-                    @change="updateShippingCost(30000)"
-                  />
-                  <span class="shipping-info">
-                    <strong>Standard Shipping</strong>
-                    <span class="shipping-desc">Delivery in 3-5 days</span>
-                  </span>
-                  <span class="shipping-price">{{ formatPrice(30000) }}</span>
-                </label>
-              </div>
-            </div>
           </div>
 
           <!-- Right Side - Order Summary -->
@@ -472,9 +429,26 @@
                   <span>Subtotal</span>
                   <span>{{ formatPrice(subtotal) }}</span>
                 </div>
-                <div class="total-row">
-                  <span>Shipping Cost</span>
-                  <span>{{ formatPrice(shippingCost) }}</span>
+                <div class="total-row shipping-row" :class="{ 'has-fee': shippingCost > 0, 'calculating': isCalculatingFee }">
+                  <span class="shipping-label">
+                    <i class="fa-solid fa-truck"></i>
+                    Shipping Cost
+                    <span v-if="!canCalculateShippingFee" class="shipping-note">
+                      <i class="fa-solid fa-info-circle"></i>
+                      Select delivery address
+                    </span>
+                    <span v-else-if="isCalculatingFee" class="shipping-note calculating">
+                      <i class="fa-solid fa-spinner fa-spin"></i>
+                      Charging...
+                    </span>
+                    <span v-else-if="shippingCost > 0" class="shipping-note success">
+                      <i class="fa-solid fa-check-circle"></i>
+                      Fees have been charged
+                    </span>
+                  </span>
+                  <span class="shipping-price">
+                    {{ formatPrice(shippingCost) }}
+                  </span>
                 </div>
                 <div v-if="couponDiscount > 0" class="total-row discount">
                   <span>
@@ -505,7 +479,7 @@
               >
                 <i v-if="!isProcessing" class="fa-solid fa-check-circle"></i>
                 <i v-else class="fa-solid fa-spinner fa-spin"></i>
-                {{ isProcessing ? 'Đang xử lý...' : 'Đặt hàng' }}
+                {{ isProcessing ? 'Processing...' : 'Order' }}
               </button>
             </div>
           </div>
@@ -528,8 +502,8 @@
           </div>
 
           <div class="qr-modal-info">
-            <p><strong>Mã đơn hàng:</strong> #{{ currentOrderId }}</p>
-            <p><strong>Số tiền:</strong> {{ formatPrice(currentOrderTotal) }}</p>
+            <p><strong>Order code:</strong> #{{ currentOrderId }}</p>
+            <p><strong>Amount:</strong> {{ formatPrice(currentOrderTotal) }}</p>
           </div>
 
           <div class="qr-modal-footer">
@@ -555,6 +529,8 @@ import { createOrder } from '@/api/orderApi.js'
 import { getCouponByCode } from '@/api/couponsApi.js'
 import { getCouponDisplayInfo } from '@/Utils/couponUtils.js'
 import { getProvinces, getDistricts, getWards } from '@/api/accountApi.js'
+import { calculateShippingFee as calculateShippingFeeApi } from '@/api/shippingApi.js'
+import { SHIPPING_CONFIG } from '@/Config/shipping.js'
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
@@ -632,6 +608,10 @@ const selectedShipping = ref('free')
 const isProcessing = ref(false)
 const userProfile = ref(null)
 
+// Shipping fee calculation
+const isCalculatingFee = ref(false)
+const fromDistrictId = ref(null)
+
 // Location data
 const provinces = ref([])
 const billingDistricts = ref([])
@@ -684,7 +664,7 @@ const loadBillingDistricts = async (provinceId) => {
     billingDistricts.value = response.data?.result || response.data || []
   } catch (error) {
     console.error('Failed to load districts:', error)
-    toast('Không thể tải danh sách quận/huyện', 'error')
+    toast('Unable to load the list of districts/counties', 'error')
   }
 }
 
@@ -698,7 +678,7 @@ const loadBillingWards = async (districtId) => {
     billingWards.value = response.data?.result || response.data || []
   } catch (error) {
     console.error('Failed to load wards:', error)
-    toast('Không thể tải danh sách phường/xã', 'error')
+    toast('Unable to load the list of wards/communes', 'error')
   }
 }
 
@@ -774,10 +754,94 @@ const selectShippingDistrict = async (district) => {
   await loadShippingWards(district.DistrictID)
 }
 
-const selectShippingWard = (ward) => {
+const selectShippingWard = async (ward) => {
   manualShipping.value.wardCode = ward.WardCode
   manualShipping.value.wardName = ward.WardName
+
+  // Tính phí vận chuyển khi đã có đủ thông tin
+  await calculateShippingFee()
 }
+
+// Shipping Fee Calculation
+const canCalculateShippingFee = computed(() => {
+  return fromDistrictId.value &&
+         manualShipping.value.districtId &&
+         manualShipping.value.wardCode &&
+         cartItems.value.length > 0
+})
+
+const calculateShippingFee = async () => {
+  // Chỉ tính phí khi có đủ thông tin
+  if (!canCalculateShippingFee.value) {
+    shippingCost.value = 0
+    return
+  }
+
+  isCalculatingFee.value = true
+  try {
+    // Prepare items from cart
+    const items = cartItems.value.map(item => ({
+      name: item.productName || 'Product',
+      code: item.productId?.toString() || '',
+      quantity: item.qty || 1,
+      length: item.length || SHIPPING_CONFIG.DEFAULT_LENGTH,
+      width: item.width || SHIPPING_CONFIG.DEFAULT_WIDTH,
+      height: item.height || SHIPPING_CONFIG.DEFAULT_HEIGHT,
+      weight: item.weight || SHIPPING_CONFIG.DEFAULT_WEIGHT
+    }))
+
+    // Calculate total weight
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight * item.quantity), 0)
+
+    // Build fee request - sử dụng service_type_id cố định
+    const feeRequest = {
+      service_type_id: SHIPPING_CONFIG.DEFAULT_SERVICE_TYPE_ID, // Luôn dùng service type 2 (hàng nhẹ)
+      from_district_id: fromDistrictId.value,
+      from_ward_code: SHIPPING_CONFIG.SHOP_WARD_CODE || '',
+      to_district_id: manualShipping.value.districtId,
+      to_ward_code: manualShipping.value.wardCode,
+      insurance_value: Math.round(subtotal.value),
+      cod_value: selectedPayment.value === 'cod' ? Math.round(total.value) : 0,
+      weight: totalWeight,
+      length: items[0]?.length || SHIPPING_CONFIG.DEFAULT_LENGTH,
+      width: items[0]?.width || SHIPPING_CONFIG.DEFAULT_WIDTH,
+      height: items[0]?.height || SHIPPING_CONFIG.DEFAULT_HEIGHT,
+    }
+
+    const response = await calculateShippingFeeApi(feeRequest)
+    const feeData = response.data?.result || response.data
+
+    if (feeData) {
+      // GHN response không có field "total", phải tính tổng
+      const totalFee = (feeData.total || 0) +
+                       (feeData.service_fee || 0) +
+                       (feeData.insurance_fee || 0) +
+                       (feeData.pick_station_fee || 0) +
+                       (feeData.cod_fee || 0) +
+                       (feeData.pick_remote_areas_fee || 0) +
+                       (feeData.deliver_remote_areas_fee || 0) +
+                       (feeData.r2s_fee || 0)
+
+      shippingCost.value = totalFee
+      console.log('[Checkout] Shipping fee calculated:', {
+        service_fee: feeData.service_fee,
+        total: totalFee,
+        breakdown: feeData
+      })
+
+      if (totalFee > 0) {
+        toast(`Phí vận chuyển: ${formatPrice(totalFee)}`, 'success')
+      }
+    }
+  } catch (error) {
+    console.error('[Checkout] Failed to calculate shipping fee:', error)
+    toast('Không thể tính phí vận chuyển', 'error')
+    shippingCost.value = 0
+  } finally {
+    isCalculatingFee.value = false
+  }
+}
+
 
 // Methods
 const useDefaultPhone = () => {
@@ -832,17 +896,19 @@ const useDefaultShippingAddress = () => {
   }
 }
 
-const handleUseSameBilling = () => {
+const handleUseSameBilling = async () => {
   if (useSameBilling.value) {
     // Copy billing address to shipping including new fields
     manualShipping.value = JSON.parse(JSON.stringify(manualBilling.value))
+
+    // If we have complete address info, calculate shipping fee
+    if (manualShipping.value.districtId && manualShipping.value.wardCode) {
+      await loadShippingDistricts(manualShipping.value.provinceId)
+      await loadShippingWards(manualShipping.value.districtId)
+      await calculateShippingFee()
+    }
   }
 }
-
-const updateShippingCost = (cost) => {
-  shippingCost.value = cost
-}
-
 
 const applyCoupon = async () => {
   if (!couponCode.value.trim()) {
@@ -930,14 +996,14 @@ const processPayment = async () => {
         !manualShipping.value.address1 ||
         !manualShipping.value.provinceId || !manualShipping.value.districtId || !manualShipping.value.wardCode ||
         !(manualShipping.value.zip || manualShipping.value.postalCode) || !manualShipping.value.country) {
-      toast('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng (bao gồm tỉnh/thành, quận/huyện, phường/xã)', 'error')
+      toast('Please fill in your complete delivery address information (including province/city, district/county, ward/commune).', 'error')
       return
     }
   }
 
   // Validate phone
   if (!phoneNumber.value) {
-    toast('Vui lòng nhập số điện thoại', 'error')
+    toast('Please enter phone number', 'error')
     return
   }
 
@@ -962,7 +1028,7 @@ const processPayment = async () => {
 
     // Map payment method
     const paymentMethodMap = {
-      'cod': 'COD',  // Changed from 'CASH' to 'COD' - backend expects COD
+      'cod': 'COD',
       'bank_transfer': 'VIETQR',
       'card': 'DEBIT_CARD'
     }
@@ -1027,7 +1093,7 @@ const processPayment = async () => {
     // Clear cart after successful order
     await cartStore.fetchCart(true)
 
-    toast('Đặt hàng thành công!', 'success')
+    toast('Order successful!', 'success')
 
     // Handle payment based on method
     if (paymentMethod === 'VIETQR') {
@@ -1048,7 +1114,7 @@ const processPayment = async () => {
           window.location.href = `https://checkout.stripe.com/pay/${orderData.sessionId}`
         } else {
           console.warn('[Checkout] No checkoutUrl or sessionId in response')
-          toast('Không thể tạo phiên thanh toán. Vui lòng thử lại!', 'error')
+          toast('Unable to create a payment session. Please try again.!', 'error')
           setTimeout(() => {
             router.push(`/order-complete/${orderId}`)
           }, 500)
@@ -1131,10 +1197,13 @@ const loadData = async () => {
 
 // Lifecycle
 onMounted(async () => {
+  // Set shop district ID from config
+  fromDistrictId.value = SHIPPING_CONFIG.SHOP_DISTRICT_ID
+
   await loadProvinces()
   await loadData()
 
-  // If default address has location data, restore it
+  // If default address has location data, restore it FOR BILLING ONLY
   if (userProfile.value?.defaultAddress) {
     const addr = userProfile.value.defaultAddress
     if (addr.provinceId) {
@@ -1143,6 +1212,7 @@ onMounted(async () => {
         await loadBillingWards(addr.districtId)
       }
     }
+    // Note: Shipping address phải để user tự chọn hoặc dùng "Use default address"
   }
 })
 </script>
