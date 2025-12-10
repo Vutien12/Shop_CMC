@@ -93,7 +93,7 @@
                     <p class="address-text">
                       {{ addr.addressLine }}<br />
                       <span v-if="addr.addressLine2">{{ addr.addressLine2 }}<br /></span>
-                      {{ addr.ward }}, {{ addr.district }}, {{ addr.city }} {{ addr.postalCode }}<br />
+                      {{ addr.wardName || addr.ward || addr.wardName }}{{ (addr.wardName || addr.ward) ? ', ' : '' }}{{ addr.districtName || addr.district || addr.districtName }}{{ (addr.districtName || addr.district) ? ', ' : '' }}{{ addr.stateOrProvince || addr.city || addr.provinceName || '' }} {{ addr.postalCode || '' }}<br />
                       {{ addr.country }}
                     </p>
                     <div class="address-actions">

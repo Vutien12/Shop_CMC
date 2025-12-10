@@ -1,3 +1,4 @@
+/* eslint-disable vue/multi-word-component-names */
 <template>
   <div class="checkout-wrapper">
     <Header />
@@ -31,13 +32,14 @@
             <div class="info-section">
               <h3>Phone Number</h3>
               <div class="form-group">
-                <label>Phone Number <span class="required">*</span></label>
+                <label for="phoneNumber">Phone Number <span class="required">*</span></label>
                 <input
                   type="tel"
                   v-model="phoneNumber"
                   placeholder="Enter phone number"
                   required
                   class="form-input"
+                  id="phoneNumber"
                 />
               </div>
               <div v-if="userProfile?.phone" class="use-default-text">
@@ -56,65 +58,91 @@
               <div class="manual-address-form">
                 <div class="form-row">
                   <div class="form-group">
-                    <label>First Name <span class="required">*</span></label>
-                    <input type="text" v-model="manualBilling.firstName" required class="form-input" />
+                    <label for="billingFirstName">First Name <span class="required">*</span></label>
+                    <input type="text" v-model="manualBilling.firstName" required class="form-input" id="billingFirstName" />
                   </div>
                   <div class="form-group">
-                    <label>Last Name <span class="required">*</span></label>
-                    <input type="text" v-model="manualBilling.lastName" required class="form-input" />
+                    <label for="billingLastName">Last Name <span class="required">*</span></label>
+                    <input type="text" v-model="manualBilling.lastName" required class="form-input" id="billingLastName" />
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label>Street Address <span class="required">*</span></label>
+                  <label for="billingAddress1">Street Address <span class="required">*</span></label>
                   <input
                     type="text"
                     v-model="manualBilling.address1"
                     placeholder="Address Line 1"
                     required
                     class="form-input"
+                    id="billingAddress1"
                   />
                   <input
                     type="text"
                     v-model="manualBilling.address2"
                     placeholder="Address Line 2 (optional)"
                     class="form-input mt-2"
+                    id="billingAddress2"
                   />
                 </div>
 
+                <!-- Province / District / Ward for Vietnam -->
                 <div class="form-row">
                   <div class="form-group">
-                    <label>City <span class="required">*</span></label>
-                    <input type="text" v-model="manualBilling.city" required class="form-input" />
+                    <label for="billingProvince">Province / City <span class="required">*</span></label>
+                    <VSelect
+                      :options="provinces"
+                      label="ProvinceName"
+                      :reduce="p => p.ProvinceID"
+                      v-model="manualBilling.provinceId"
+                      placeholder="Select province/city"
+                      @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectBillingProvince(p); }"
+                      class="form-select-vue"
+                      inputId="billingProvince"
+                    />
                   </div>
                   <div class="form-group">
-                    <label>Postcode / ZIP <span class="required">*</span></label>
-                    <input type="text" v-model="manualBilling.zip" required class="form-input" />
+                    <label for="billingDistrict">District <span class="required">*</span></label>
+                    <VSelect
+                      :options="billingDistricts"
+                      label="DistrictName"
+                      :reduce="d => d.DistrictID"
+                      v-model="manualBilling.districtId"
+                      placeholder="Select district"
+                      :disabled="!manualBilling.provinceId"
+                      @input="(val) => { const d = billingDistricts.find(x => x.DistrictID === val); if (d) selectBillingDistrict(d); }"
+                      class="form-select-vue"
+                      inputId="billingDistrict"
+                    />
                   </div>
                 </div>
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Country <span class="required">*</span></label>
-                    <select v-model="manualBilling.country" required class="form-select">
-                      <option value="">Please Select</option>
-                      <option value="Vietnam">Vietnam</option>
-                      <option value="United States">United States</option>
-                      <option value="United Kingdom">United Kingdom</option>
-                      <option value="Canada">Canada</option>
-                      <option value="Australia">Australia</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>State / Province <span class="required">*</span></label>
-                    <input
-                      type="text"
-                      v-model="manualBilling.state"
-                      placeholder="Enter state or province"
-                      required
-                      class="form-input"
+                    <label for="billingWard">Ward / Commune <span class="required">*</span></label>
+                    <VSelect
+                      :options="billingWards"
+                      label="WardName"
+                      :reduce="w => w.WardCode"
+                      v-model="manualBilling.wardCode"
+                      placeholder="Select ward/commune"
+                      :disabled="!manualBilling.districtId"
+                      @input="(val) => { const w = billingWards.find(x => x.WardCode === val); if (w) selectBillingWard(w); }"
+                      class="form-select-vue"
+                      inputId="billingWard"
                     />
                   </div>
+                  <div class="form-group">
+                    <label for="billingZip">Postcode / ZIP <span class="required">*</span></label>
+                    <input type="text" v-model="manualBilling.zip" required class="form-input" placeholder="100000" id="billingZip" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="billingCountry">Country <span class="required">*</span></label>
+                  <select v-model="manualBilling.country" required class="form-select" id="billingCountry">
+                    <option value="Vietnam">Vietnam</option>
+                  </select>
                 </div>
               </div>
 
@@ -143,65 +171,91 @@
                 <div class="manual-address-form">
                   <div class="form-row">
                     <div class="form-group">
-                      <label>First Name <span class="required">*</span></label>
-                      <input type="text" v-model="manualShipping.firstName" required class="form-input" />
+                      <label for="shippingFirstName">First Name <span class="required">*</span></label>
+                      <input type="text" v-model="manualShipping.firstName" required class="form-input" id="shippingFirstName" />
                     </div>
                     <div class="form-group">
-                      <label>Last Name <span class="required">*</span></label>
-                      <input type="text" v-model="manualShipping.lastName" required class="form-input" />
+                      <label for="shippingLastName">Last Name <span class="required">*</span></label>
+                      <input type="text" v-model="manualShipping.lastName" required class="form-input" id="shippingLastName" />
                     </div>
                   </div>
 
                   <div class="form-group">
-                    <label>Street Address <span class="required">*</span></label>
+                    <label for="shippingAddress1">Street Address <span class="required">*</span></label>
                     <input
                       type="text"
                       v-model="manualShipping.address1"
                       placeholder="Address Line 1"
                       required
                       class="form-input"
+                      id="shippingAddress1"
                     />
                     <input
                       type="text"
                       v-model="manualShipping.address2"
                       placeholder="Address Line 2 (optional)"
                       class="form-input mt-2"
+                      id="shippingAddress2"
                     />
                   </div>
 
+                  <!-- Province / District / Ward for Vietnam -->
                   <div class="form-row">
                     <div class="form-group">
-                      <label>City <span class="required">*</span></label>
-                      <input type="text" v-model="manualShipping.city" required class="form-input" />
+                      <label for="shippingProvince">Province / City <span class="required">*</span></label>
+                      <VSelect
+                        :options="provinces"
+                        label="ProvinceName"
+                        :reduce="p => p.ProvinceID"
+                        v-model="manualShipping.provinceId"
+                        placeholder="Select province/city"
+                        @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectShippingProvince(p); }"
+                        class="form-select-vue"
+                        inputId="shippingProvince"
+                      />
                     </div>
                     <div class="form-group">
-                      <label>Postcode / ZIP <span class="required">*</span></label>
-                      <input type="text" v-model="manualShipping.zip" required class="form-input" />
+                      <label for="shippingDistrict">District <span class="required">*</span></label>
+                      <VSelect
+                        :options="shippingDistricts"
+                        label="DistrictName"
+                        :reduce="d => d.DistrictID"
+                        v-model="manualShipping.districtId"
+                        placeholder="Select district"
+                        :disabled="!manualShipping.provinceId"
+                        @input="(val) => { const d = shippingDistricts.find(x => x.DistrictID === val); if (d) selectShippingDistrict(d); }"
+                        class="form-select-vue"
+                        inputId="shippingDistrict"
+                      />
                     </div>
                   </div>
 
                   <div class="form-row">
                     <div class="form-group">
-                      <label>Country <span class="required">*</span></label>
-                      <select v-model="manualShipping.country" required class="form-select">
-                        <option value="">Please Select</option>
-                        <option value="Vietnam">Vietnam</option>
-                        <option value="United States">United States</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="Canada">Canada</option>
-                        <option value="Australia">Australia</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label>State / Province <span class="required">*</span></label>
-                      <input
-                        type="text"
-                        v-model="manualShipping.state"
-                        placeholder="Enter state or province"
-                        required
-                        class="form-input"
+                      <label for="shippingWard">Ward / Commune <span class="required">*</span></label>
+                      <VSelect
+                        :options="shippingWards"
+                        label="WardName"
+                        :reduce="w => w.WardCode"
+                        v-model="manualShipping.wardCode"
+                        placeholder="Select ward/commune"
+                        :disabled="!manualShipping.districtId"
+                        @input="(val) => { const w = shippingWards.find(x => x.WardCode === val); if (w) selectShippingWard(w); }"
+                        class="form-select-vue"
+                        inputId="shippingWard"
                       />
                     </div>
+                    <div class="form-group">
+                      <label for="shippingZip">Postcode / ZIP <span class="required">*</span></label>
+                      <input type="text" v-model="manualShipping.zip" required class="form-input" placeholder="100000" id="shippingZip" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="shippingCountry">Country <span class="required">*</span></label>
+                    <select v-model="manualShipping.country" required class="form-select" id="shippingCountry">
+                      <option value="Vietnam">Vietnam</option>
+                    </select>
                   </div>
                 </div>
 
@@ -235,10 +289,10 @@
                     value="cod"
                     v-model="selectedPayment"
                   />
-                  <div class="payment-info">
-                    <h4>💵 Thanh toán khi nhận hàng (COD)</h4>
-                    <p>Thanh toán bằng tiền mặt khi nhận hàng.</p>
-                  </div>
+                  <span class="payment-info">
+                    <strong>💵 Payment upon delivery (COD)</strong>
+                    <span class="payment-desc">Payment in cash upon delivery.</span>
+                  </span>
                 </label>
 
                 <label class="payment-option" :class="{ selected: selectedPayment === 'bank_transfer' }">
@@ -248,10 +302,10 @@
                     value="bank_transfer"
                     v-model="selectedPayment"
                   />
-                  <div class="payment-info">
-                    <h4>🏦 Chuyển khoản ngân hàng</h4>
-                    <p>Chuyển khoản trực tiếp vào tài khoản ngân hàng.</p>
-                  </div>
+                  <span class="payment-info">
+                    <strong>🏦 Bank transfer</strong>
+                    <span class="payment-desc">Direct transfer to bank account.</span>
+                  </span>
                 </label>
 
                 <label class="payment-option" :class="{ selected: selectedPayment === 'vnpay' }">
@@ -261,10 +315,10 @@
                     value="card"
                     v-model="selectedPayment"
                   />
-                  <div class="payment-info">
-                    <h4>💳 CARD</h4>
-                    <p>Thanh toán qua thẻ.</p>
-                  </div>
+                  <span class="payment-info">
+                    <strong>💳 CARD</strong>
+                    <span class="payment-desc">Thanh toán qua thẻ.</span>
+                  </span>
                 </label>
               </div>
             </div>
@@ -281,10 +335,10 @@
                     v-model="selectedShipping"
                     @change="updateShippingCost(0)"
                   />
-                  <div class="shipping-info">
-                    <h4>Free Shipping</h4>
-                  </div>
-                  <div class="shipping-price">{{ formatPrice(0) }}</div>
+                  <span class="shipping-info">
+                    <strong>Free Shipping</strong>
+                  </span>
+                  <span class="shipping-price">{{ formatPrice(0) }}</span>
                 </label>
 
                 <label class="shipping-option" :class="{ selected: selectedShipping === 'express' }">
@@ -295,11 +349,11 @@
                     v-model="selectedShipping"
                     @change="updateShippingCost(50000)"
                   />
-                  <div class="shipping-info">
-                    <h4>Express Shipping</h4>
-                    <p class="shipping-desc">Delivery in 1-2 days</p>
-                  </div>
-                  <div class="shipping-price">{{ formatPrice(50000) }}</div>
+                  <span class="shipping-info">
+                    <strong>Express Shipping</strong>
+                    <span class="shipping-desc">Delivery in 1-2 days</span>
+                  </span>
+                  <span class="shipping-price">{{ formatPrice(50000) }}</span>
                 </label>
 
                 <label class="shipping-option" :class="{ selected: selectedShipping === 'standard' }">
@@ -310,11 +364,11 @@
                     v-model="selectedShipping"
                     @change="updateShippingCost(30000)"
                   />
-                  <div class="shipping-info">
-                    <h4>Standard Shipping</h4>
-                    <p class="shipping-desc">Delivery in 3-5 days</p>
-                  </div>
-                  <div class="shipping-price">{{ formatPrice(30000) }}</div>
+                  <span class="shipping-info">
+                    <strong>Standard Shipping</strong>
+                    <span class="shipping-desc">Delivery in 3-5 days</span>
+                  </span>
+                  <span class="shipping-price">{{ formatPrice(30000) }}</span>
                 </label>
               </div>
             </div>
@@ -327,55 +381,42 @@
 
               <!-- Cart Items -->
               <div class="cart-items">
-                <div v-for="item in cartItems" :key="item.id" class="cart-item">
-                  <!-- Product Image & Info -->
-                  <div class="item-main">
-                    <div class="item-image">
-                      <img :src="getThumb(item)" :alt="item.productName" />
-                      <span class="item-qty-badge">{{ item.qty }}</span>
+                <div v-for="item in cartItems" :key="item.id" class="summary-item">
+                  <div class="summary-item-left">
+                    <!-- Product Image with Quantity Badge -->
+                    <div class="summary-image-wrapper">
+                      <img :src="getThumb(item)" :alt="item.productName" class="summary-image" />
+                      <span class="qty-badge">{{ item.qty }}×</span>
                     </div>
 
-                    <div class="item-details">
-                      <h4 class="item-name">{{ item.productName }}</h4>
+                    <!-- Product Info -->
+                    <div class="summary-info">
+                      <h4 class="summary-name">{{ item.productName }}</h4>
 
-                      <!-- Variations -->
-                      <div v-if="item.cartItemVariations?.length > 0" class="item-specs">
-                        <div v-for="variation in item.cartItemVariations" :key="variation.id" class="spec-row">
-                          <span class="spec-label">{{ variation.variationName }}:</span>
-                          <span class="spec-value">
-                            <span v-if="variation.type === 'COLOR'"
-                              class="color-swatch"
-                              :style="{ backgroundColor: variation.value }"
-                              :title="variation.cartItemVariationValues[0]?.label">
-                            </span>
-                            <span>{{ variation.cartItemVariationValues[0]?.label }}</span>
+                      <!-- Compact Variations - Single Line -->
+                      <div v-if="item.cartItemVariations?.length > 0" class="summary-meta">
+                        <span v-for="(variation, idx) in item.cartItemVariations" :key="variation.id" class="meta-tag">
+                          <span v-if="variation.type === 'COLOR'"
+                            class="color-dot-tiny"
+                            :style="{ backgroundColor: variation.cartItemVariationValues[0]?.value }">
                           </span>
-                        </div>
+                          {{ variation.cartItemVariationValues[0]?.label }}<span v-if="idx < item.cartItemVariations.length - 1">, </span>
+                        </span>
                       </div>
 
-                      <!-- Options -->
-                      <div v-if="item.cartItemOptions?.length > 0" class="item-options">
-                        <div v-for="option in item.cartItemOptions" :key="option.id" class="option-row">
-                          <span class="option-label">{{ option.optionName }}:</span>
-                          <span class="option-value">
-                            {{ option.valueLabel || option.cartItemOptionValues?.[0]?.optionValue?.label || option.cartItemOptionValues?.[0]?.valueLabel || '-' }}
-                          </span>
-                          <span v-if="option.price > 0" class="option-price">+{{ formatPrice(option.price) }}</span>
-                        </div>
+                      <!-- Compact Options -->
+                      <div v-if="item.cartItemOptions?.length > 0" class="summary-options">
+                        <span v-for="(option, idx) in item.cartItemOptions" :key="option.id" class="option-tag">
+                          {{ option.optionName }}: {{ option.valueLabel }}<span v-if="option.price > 0"> (+{{ formatPrice(option.price) }})</span><span v-if="idx < item.cartItemOptions.length - 1">; </span>
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Price -->
-                  <div class="item-pricing">
-                    <div class="unit-price">
-                      <span class="price-label">Unit:</span>
-                      <span class="price-value">{{ formatPrice(item.unitPrice) }}</span>
-                    </div>
-                    <div class="line-total">
-                      <span class="price-label">Total:</span>
-                      <span class="price-value">{{ formatPrice(item.lineTotal) }}</span>
-                    </div>
+                  <div class="summary-item-right">
+                    <div class="summary-price">{{ formatPrice(item.lineTotal) }}</div>
+                    <div class="summary-unit-price">{{ formatPrice(item.unitPrice) }}/ea</div>
                   </div>
                 </div>
 
@@ -474,16 +515,16 @@
     <div v-if="showQRModal" class="qr-modal-overlay" @click="closeQRModal">
       <div class="qr-modal" @click.stop>
         <div class="qr-modal-header">
-          <h2>Quét mã QR để thanh toán</h2>
+          <h2>Scan the QR code to pay.</h2>
           <button class="btn-close" @click="closeQRModal">&times;</button>
         </div>
 
         <div class="qr-modal-body">
-          <p class="qr-instruction">Vui lòng quét mã QR bên dưới bằng ứng dụng ngân hàng hoặc ví điện tử của bạn</p>
+          <p class="qr-instruction">Please scan the QR code below using your banking app or e-wallet.</p>
 
           <div class="qr-code-container">
             <img v-if="qrCodeUrl" :src="qrCodeUrl" :alt="'QR Code for order ' + currentOrderId" class="qr-code-image" />
-            <p v-else class="loading-text">Đang tải mã QR...</p>
+            <p v-else class="loading-text">Loading QR code...</p>
           </div>
 
           <div class="qr-modal-info">
@@ -492,8 +533,8 @@
           </div>
 
           <div class="qr-modal-footer">
-            <button class="btn-primary" @click="completePayment">Đã thanh toán</button>
-            <button class="btn-secondary" @click="closeQRModal">Hủy</button>
+            <button class="btn-primary" @click="completePayment">Paid</button>
+            <button class="btn-secondary" @click="closeQRModal">Cancel</button>
           </div>
         </div>
       </div>
@@ -513,9 +554,17 @@ import { useToast } from '@/User/components/Toast/useToast.js'
 import { createOrder } from '@/api/orderApi.js'
 import { getCouponByCode } from '@/api/couponsApi.js'
 import { getCouponDisplayInfo } from '@/Utils/couponUtils.js'
+import { getProvinces, getDistricts, getWards } from '@/api/accountApi.js'
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css'
+
+// Provide an explicit multi-word component name to satisfy eslint
+defineOptions({ name: 'CheckoutPage' })
+
+const VSelect = vSelect
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -530,16 +579,23 @@ const cartTotal = ref(0)
 // Phone
 const phoneNumber = ref('')
 
-// Billing Address
+// Billing Address (extended to support GHN fields)
 const manualBilling = ref({
   firstName: '',
   lastName: '',
   address1: '',
   address2: '',
   city: '',
-  state: '',
+  state: '', // legacy field kept for compatibility
+  stateOrProvince: '',
   zip: '',
-  country: 'Vietnam'
+  postalCode: '', // GHN postal code
+  country: 'Vietnam',
+  provinceId: null,
+  districtId: null,
+  districtName: '',
+  wardCode: '',
+  wardName: ''
 })
 
 // Shipping Address
@@ -551,8 +607,15 @@ const manualShipping = ref({
   address2: '',
   city: '',
   state: '',
+  stateOrProvince: '',
   zip: '',
-  country: 'Vietnam'
+  postalCode: '',
+  country: 'Vietnam',
+  provinceId: null,
+  districtId: null,
+  districtName: '',
+  wardCode: '',
+  wardName: ''
 })
 
 const orderNote = ref('')
@@ -568,6 +631,13 @@ const selectedPayment = ref('cod')
 const selectedShipping = ref('free')
 const isProcessing = ref(false)
 const userProfile = ref(null)
+
+// Location data
+const provinces = ref([])
+const billingDistricts = ref([])
+const billingWards = ref([])
+const shippingDistricts = ref([])
+const shippingWards = ref([])
 
 // QR Modal
 const showQRModal = ref(false)
@@ -592,6 +662,123 @@ const formatPrice = (price) => {
 // Get thumbnail
 const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg'
 
+// Location Methods
+const loadProvinces = async () => {
+  try {
+    const response = await getProvinces()
+    provinces.value = response.data?.result || response.data || []
+  } catch (error) {
+    console.error('Failed to load provinces:', error)
+    toast('Unable to load the list of provinces/cities', 'error')
+  }
+}
+
+const loadBillingDistricts = async (provinceId) => {
+  if (!provinceId) {
+    billingDistricts.value = []
+    billingWards.value = []
+    return
+  }
+  try {
+    const response = await getDistricts(provinceId)
+    billingDistricts.value = response.data?.result || response.data || []
+  } catch (error) {
+    console.error('Failed to load districts:', error)
+    toast('Không thể tải danh sách quận/huyện', 'error')
+  }
+}
+
+const loadBillingWards = async (districtId) => {
+  if (!districtId) {
+    billingWards.value = []
+    return
+  }
+  try {
+    const response = await getWards(districtId)
+    billingWards.value = response.data?.result || response.data || []
+  } catch (error) {
+    console.error('Failed to load wards:', error)
+    toast('Không thể tải danh sách phường/xã', 'error')
+  }
+}
+
+const loadShippingDistricts = async (provinceId) => {
+  if (!provinceId) {
+    shippingDistricts.value = []
+    shippingWards.value = []
+    return
+  }
+  try {
+    const response = await getDistricts(provinceId)
+    shippingDistricts.value = response.data?.result || response.data || []
+  } catch (error) {
+    console.error('Failed to load districts:', error)
+    toast('Không thể tải danh sách quận/huyện', 'error')
+  }
+}
+
+const loadShippingWards = async (districtId) => {
+  if (!districtId) {
+    shippingWards.value = []
+    return
+  }
+  try {
+    const response = await getWards(districtId)
+    shippingWards.value = response.data?.result || response.data || []
+  } catch (error) {
+    console.error('Failed to load wards:', error)
+    toast('Không thể tải danh sách phường/xã', 'error')
+  }
+}
+
+const selectBillingProvince = async (province) => {
+  manualBilling.value.provinceId = province.ProvinceID
+  manualBilling.value.stateOrProvince = province.ProvinceName
+  manualBilling.value.state = province.ProvinceName
+  manualBilling.value.districtId = null
+  manualBilling.value.districtName = ''
+  manualBilling.value.wardCode = ''
+  manualBilling.value.wardName = ''
+  await loadBillingDistricts(province.ProvinceID)
+}
+
+const selectBillingDistrict = async (district) => {
+  manualBilling.value.districtId = district.DistrictID
+  manualBilling.value.districtName = district.DistrictName
+  manualBilling.value.wardCode = ''
+  manualBilling.value.wardName = ''
+  await loadBillingWards(district.DistrictID)
+}
+
+const selectBillingWard = (ward) => {
+  manualBilling.value.wardCode = ward.WardCode
+  manualBilling.value.wardName = ward.WardName
+}
+
+const selectShippingProvince = async (province) => {
+  manualShipping.value.provinceId = province.ProvinceID
+  manualShipping.value.stateOrProvince = province.ProvinceName
+  manualShipping.value.state = province.ProvinceName
+  manualShipping.value.districtId = null
+  manualShipping.value.districtName = ''
+  manualShipping.value.wardCode = ''
+  manualShipping.value.wardName = ''
+  await loadShippingDistricts(province.ProvinceID)
+}
+
+const selectShippingDistrict = async (district) => {
+  manualShipping.value.districtId = district.DistrictID
+  manualShipping.value.districtName = district.DistrictName
+  manualShipping.value.wardCode = ''
+  manualShipping.value.wardName = ''
+  await loadShippingWards(district.DistrictID)
+}
+
+const selectShippingWard = (ward) => {
+  manualShipping.value.wardCode = ward.WardCode
+  manualShipping.value.wardName = ward.WardName
+}
+
 // Methods
 const useDefaultPhone = () => {
   if (userProfile.value?.phone) {
@@ -609,8 +796,15 @@ const useDefaultBillingAddress = () => {
       address2: addr.addressLine2 || '',
       city: addr.city || '',
       state: addr.stateOrProvince || '',
+      stateOrProvince: addr.stateOrProvince || '',
       zip: addr.postalCode || '',
-      country: addr.country || 'Vietnam'
+      postalCode: addr.postalCode || '',
+      country: addr.country || 'Vietnam',
+      provinceId: addr.provinceId ?? addr.province_id ?? null,
+      districtId: addr.districtId ?? addr.district_id ?? null,
+      districtName: addr.districtName || addr.district_name || '',
+      wardCode: addr.wardCode || addr.ward_code || '',
+      wardName: addr.wardName || addr.ward_name || ''
     }
   }
 }
@@ -625,16 +819,23 @@ const useDefaultShippingAddress = () => {
       address2: addr.addressLine2 || '',
       city: addr.city || '',
       state: addr.stateOrProvince || '',
+      stateOrProvince: addr.stateOrProvince || '',
       zip: addr.postalCode || '',
-      country: addr.country || 'Vietnam'
+      postalCode: addr.postalCode || '',
+      country: addr.country || 'Vietnam',
+      provinceId: addr.provinceId ?? addr.province_id ?? null,
+      districtId: addr.districtId ?? addr.district_id ?? null,
+      districtName: addr.districtName || addr.district_name || '',
+      wardCode: addr.wardCode || addr.ward_code || '',
+      wardName: addr.wardName || addr.ward_name || ''
     }
   }
 }
 
 const handleUseSameBilling = () => {
   if (useSameBilling.value) {
-    // Copy billing address to shipping
-    manualShipping.value = { ...manualBilling.value }
+    // Copy billing address to shipping including new fields
+    manualShipping.value = JSON.parse(JSON.stringify(manualBilling.value))
   }
 }
 
@@ -645,7 +846,7 @@ const updateShippingCost = (cost) => {
 
 const applyCoupon = async () => {
   if (!couponCode.value.trim()) {
-    toast('Vui lòng nhập mã giảm giá', 'error')
+    toast('Please enter the discount code.', 'error')
     return
   }
 
@@ -716,18 +917,20 @@ const processPayment = async () => {
 
   // Validate billing address
   if (!manualBilling.value.firstName || !manualBilling.value.lastName ||
-      !manualBilling.value.address1 || !manualBilling.value.city ||
-      !manualBilling.value.zip || !manualBilling.value.country || !manualBilling.value.state) {
-    toast('Vui lòng điền đầy đủ thông tin địa chỉ thanh toán', 'error')
+      !manualBilling.value.address1 ||
+      !manualBilling.value.provinceId || !manualBilling.value.districtId || !manualBilling.value.wardCode ||
+      !(manualBilling.value.zip || manualBilling.value.postalCode) || !manualBilling.value.country) {
+    toast('Please fill in your complete billing address information (including province/city, district/county, ward/commune).', 'error')
     return
   }
 
   // Validate shipping address if NOT using same billing
   if (!useSameBilling.value) {
     if (!manualShipping.value.firstName || !manualShipping.value.lastName ||
-        !manualShipping.value.address1 || !manualShipping.value.city ||
-        !manualShipping.value.zip || !manualShipping.value.country || !manualShipping.value.state) {
-      toast('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng', 'error')
+        !manualShipping.value.address1 ||
+        !manualShipping.value.provinceId || !manualShipping.value.districtId || !manualShipping.value.wardCode ||
+        !(manualShipping.value.zip || manualShipping.value.postalCode) || !manualShipping.value.country) {
+      toast('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng (bao gồm tỉnh/thành, quận/huyện, phường/xã)', 'error')
       return
     }
   }
@@ -780,17 +983,31 @@ const processPayment = async () => {
       billingAddress1: billingData.address1,
       billingAddress2: billingData.address2,
       billingCity: billingData.city,
-      billingState: billingData.state,
-      billingZip: billingData.zip,
+      billingState: billingData.state || billingData.stateOrProvince || '',
+      billingStateOrProvince: billingData.stateOrProvince || billingData.state || '',
+      billingZip: billingData.zip || billingData.postalCode || '',
+      billingPostalCode: billingData.postalCode || billingData.zip || '',
       billingCountry: billingData.country === 'Vietnam' ? 'VN' : billingData.country,
+      billingProvinceId: billingData.provinceId ? Number(billingData.provinceId) : null,
+      billingDistrictId: billingData.districtId ? Number(billingData.districtId) : null,
+      billingDistrictName: billingData.districtName || '',
+      billingWardCode: billingData.wardCode || '',
+      billingWardName: billingData.wardName || '',
       shippingFirstName: shippingData.firstName,
       shippingLastName: shippingData.lastName,
       shippingAddress1: shippingData.address1,
       shippingAddress2: shippingData.address2,
       shippingCity: shippingData.city,
-      shippingState: shippingData.state,
-      shippingZip: shippingData.zip,
+      shippingState: shippingData.state || shippingData.stateOrProvince || '',
+      shippingStateOrProvince: shippingData.stateOrProvince || shippingData.state || '',
+      shippingZip: shippingData.zip || shippingData.postalCode || '',
+      shippingPostalCode: shippingData.postalCode || shippingData.zip || '',
       shippingCountry: shippingData.country === 'Vietnam' ? 'VN' : shippingData.country,
+      shippingProvinceId: shippingData.provinceId ? Number(shippingData.provinceId) : null,
+      shippingDistrictId: shippingData.districtId ? Number(shippingData.districtId) : null,
+      shippingDistrictName: shippingData.districtName || '',
+      shippingWardCode: shippingData.wardCode || '',
+      shippingWardName: shippingData.wardName || '',
       shippingMethod: shippingMethodMap[selectedShipping.value] || 'Standard',
       shippingCost: shippingCost.value,
       couponId: couponId.value,
@@ -897,26 +1114,36 @@ const loadData = async () => {
     // Load cart
     const cart = await cartStore.fetchCart(true)
     if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
-      toast('Giỏ hàng trống! Chuyển về trang giỏ hàng...', 'info')
+      toast('The shopping cart is empty! Go back to the shopping cart page...', 'info')
       await router.push('/cart')
       return
     }
     cartItems.value = cart.cartItems
     cartTotal.value = cart.total
 
-    // Do NOT auto-fill - let forms stay empty
-    // User can click links/checkboxes to fill if needed
   } catch (error) {
     console.error('[Checkout] Load data failed:', error)
-    toast('Không thể tải dữ liệu. Vui lòng thử lại!', 'error')
+    toast('Unable to load data. Please try again!', 'error')
   } finally {
     isLoading.value = false
   }
 }
 
 // Lifecycle
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  await loadProvinces()
+  await loadData()
+
+  // If default address has location data, restore it
+  if (userProfile.value?.defaultAddress) {
+    const addr = userProfile.value.defaultAddress
+    if (addr.provinceId) {
+      await loadBillingDistricts(addr.provinceId)
+      if (addr.districtId) {
+        await loadBillingWards(addr.districtId)
+      }
+    }
+  }
 })
 </script>
 

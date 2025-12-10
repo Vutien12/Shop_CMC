@@ -4,6 +4,7 @@
       v-for="toast in toasts"
       :key="toast.id"
       :class="['toast', toast.type, { removed: toast.removing }]"
+      :style="{ backgroundColor: toast.backgroundColor }"
       @click="remove(toast.id)"
     >
       <span class="toast-message">{{ toast.message }}</span>

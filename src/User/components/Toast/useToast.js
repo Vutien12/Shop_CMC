@@ -6,9 +6,15 @@ const state = reactive({
 });
 
 export function useToast() {
+  const typeColors = {
+    success: '#4caf50',
+    error: '#f44336',
+    warning: '#ff9800',
+    info: '#2196f3'
+  }
   const add = (message, type = 'success', duration = 5000) => {
     const id = Date.now() + Math.random();
-    const toast = { id, message, type, removing: false };
+    const toast = { id, message, type, removing: false, backgroundColor: typeColors[type] || '#333'};
 
     state.toasts.push(toast);
 

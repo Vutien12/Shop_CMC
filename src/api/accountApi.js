@@ -32,6 +32,13 @@ export const getAddresses = (
   });
 };
 
+// New: location helpers (provinces/districts/wards)
+export const getProvinces = () => api.get('/ghn/provinces');
+export const getDistricts = (provinceId) =>
+  api.get('/ghn/districts', { params: { provinceId } });
+export const getWards = (districtId) =>
+  api.get('/ghn/wards', { params: { districtId } });
+
 // Wishlist actions
 export const addToWishlist = async (variantId) => {
   const response = await api.post('/wishlist', { variantId });

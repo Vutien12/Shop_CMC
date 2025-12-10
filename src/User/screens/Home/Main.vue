@@ -531,7 +531,7 @@ const selectProductTab = (tab) => {
 
 // Navigate to product detail
 const navigateToProductDetail = (productId) => {
-  window.location.href = `/product/${productId}`
+  window.location.href = `/productdetail/${productId}`
 }
 
 // Format price helper

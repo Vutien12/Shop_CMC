@@ -45,11 +45,53 @@
                 <td data-label="Product">
                   <div class="product-info">
                     <h3 class="product-name">{{ item.productName }}</h3>
-                    <p class="variant-name">{{ getShortVariantName(item.variantName) }}</p>
+
+                    <!-- Variant Name (if exists) -->
+                    <p v-if="item.variantName" class="variant-name">{{ item.variantName }}</p>
+
+                    <!-- SKU (if exists) -->
+                    <p v-if="item.sku" class="product-sku">
+                      <i class="fa-solid fa-barcode"></i> SKU: <code>{{ item.sku }}</code>
+                    </p>
+
+                    <!-- Deleted Variant Warning -->
+                    <div v-if="isVariantDeleted(item)" class="variant-deleted-banner">
+                      <i class="fa-solid fa-exclamation-triangle"></i>
+                      <span>This variant is no longer available. Displaying saved information.</span>
+                    </div>
+
+                    <!-- Changed Variant Warning -->
+                    <div v-if="isVariantChanged(item)" class="variant-changed-banner">
+                      <i class="fa-solid fa-info-circle"></i>
+                      <span>Product details have been updated since you added it to cart.</span>
+                      <router-link :to="`/productdetail/${item.productId}`" class="btn-check-link">
+                        <i class="fa-solid fa-external-link-alt"></i> View Updates
+                      </router-link>
+                    </div>
+
+                    <!-- Variations -->
+                    <div class="variations-list" v-if="item.cartItemVariations?.length">
+                      <div v-for="variation in item.cartItemVariations" :key="variation.id" class="variation-item">
+                        <span class="variation-label">{{ variation.variationName }}:</span>
+                        <span v-if="variation.type === 'COLOR'" class="variation-color">
+                          <span class="color-swatch" :style="{ backgroundColor: variation.cartItemVariationValues[0]?.value }"></span>
+                          {{ variation.cartItemVariationValues[0]?.label }}
+                        </span>
+                        <span v-else class="variation-value">
+                          {{ variation.cartItemVariationValues[0]?.label }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Options -->
                     <div class="options-list" v-if="item.cartItemOptions?.length">
-                      <small v-for="opt in item.cartItemOptions" :key="opt.id">
-                        {{ opt.optionName }}: <strong>{{ opt.valueLabel }}</strong>
-                      </small>
+                      <div v-for="opt in item.cartItemOptions" :key="opt.id" class="option-item">
+                        <span class="option-label">{{ opt.optionName }}:</span>
+                        <strong class="option-value">{{ opt.valueLabel }}</strong>
+                        <span v-if="opt.price > 0" class="option-price">
+                          (+{{ formatPrice(opt.price) }})
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -151,14 +193,28 @@ const formatPrice = (price) => {
     .replace('₫', 'đ');
 };
 
-// Rút gọn tên biến thể: bỏ tên sản phẩm
-const getShortVariantName = (fullName) => {
-  if (!fullName) return '';
-  const productName = cartItems.value[0]?.productName || '';
-  return fullName.replace(productName, '').trim().replace(/^[-–—]\s*/, '');
+const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg';
+
+// Check if variant is deleted (all variant info is null)
+const isVariantDeleted = (item) => {
+  return item.productVariantId === null && item.variantName === null && item.sku === null;
 };
 
-const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg';
+// Check if variant has changed (variantName differs from generated name from variations)
+const isVariantChanged = (item) => {
+  if (!item.variantName || !item.cartItemVariations || item.cartItemVariations.length === 0) {
+    return false;
+  }
+
+  // Generate expected variant name: productName - label1 - label2 - ...
+  const expectedName = item.productName + ' - ' +
+    item.cartItemVariations
+      .map(v => v.cartItemVariationValues[0]?.label)
+      .filter(Boolean)
+      .join(' - ');
+
+  return item.variantName !== expectedName;
+};
 
 const proceed = () => {
   if (cartItems.value.length === 0) {
@@ -173,7 +229,7 @@ const handleClear = async () => {
   try {
     await cartStore.clear();
     toast('Giỏ hàng đã được xóa!', 'success');
-  } catch (err) {
+  } catch {
     toast('Không thể xóa giỏ hàng', 'error');
   }
 };
@@ -216,7 +272,7 @@ onMounted(async () => {
     const data = await cartStore.fetchCart();
     cartItems.value = data.cartItems || [];
     total.value = data.total || 0;
-  } catch (err) {
+  } catch {
     toast('Không thể tải giỏ hàng', 'error');
   } finally {
     setTimeout(() => (isLoading.value = false), 600);

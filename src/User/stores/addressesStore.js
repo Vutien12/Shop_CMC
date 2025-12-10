@@ -44,7 +44,7 @@ export const useAddressStore = defineStore('address', () => {
         stateOrProvince: addr.stateOrProvince || '',
         postalCode: addr.postalCode || '',
         country: addr.country || 'Vietnam',
-        isDefault: addr.isDefault || false,
+        isDefault: (addr.isDefault === true || addr.isDefault === 1 || addr.isDefault === '1' || addr.isDefault === 'true') ? true : false,
       }));
 
       addresses.value = formatted;

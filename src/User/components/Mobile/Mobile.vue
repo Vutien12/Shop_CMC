@@ -337,24 +337,6 @@
                 >
                   {{ product.badge }}
                 </span>
-                <button
-                  @click="toggleLike(product.id)"
-                  :class="['like-btn', { liked: product.isLiked }]"
-                >
-                  <svg
-                    class="heart-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5
-                      5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78
-                      1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    ></path>
-                  </svg>
-                </button>
               </div>
 
               <div class="product-image" @click="goToProductDetail(product.id)" style="cursor: pointer;">
@@ -581,42 +563,6 @@ export default {
         path: '/productdetail',
         query: { id: productId }
       });
-    },
-    toggleLike(id) {
-      const product = this.allProducts.find((p) => p.id === id);
-      if (!product) return;
-
-      // Toggle liked state
-      product.isLiked = !product.isLiked;
-
-      // Get current wishlist from localStorage
-      let wishlist = JSON.parse(localStorage.getItem('userWishlist') || '[]');
-
-      if (product.isLiked) {
-        // Add to wishlist
-        const wishlistItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price.toFixed(2),
-          image: product.image,
-          availability: product.badge === 'Out of Stock' ? 'Out of Stock' : 'In Stock',
-          availabilityClass: product.badge === 'Out of Stock' ? 'out-of-stock' : 'in-stock'
-        };
-
-        // Check if item already exists
-        const exists = wishlist.some(item => item.id === product.id);
-        if (!exists) {
-          wishlist.push(wishlistItem);
-          localStorage.setItem('userWishlist', JSON.stringify(wishlist));
-        }
-      } else {
-        // Remove from wishlist
-        wishlist = wishlist.filter(item => item.id !== product.id);
-        localStorage.setItem('userWishlist', JSON.stringify(wishlist));
-      }
-
-      // Dispatch event để cập nhật số lượng wishlist trong header
-      window.dispatchEvent(new Event('wishlistChanged'));
     },
     toggleCategory(categoryId) {
       const category = this.categories.find(cat => cat.id === categoryId);

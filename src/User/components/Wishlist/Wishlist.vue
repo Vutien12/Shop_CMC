@@ -447,16 +447,24 @@ onMounted(async () => {
   height: 64px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f8f9fa;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.thumbnail:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 4px;
 }
 
 /* Product Info */

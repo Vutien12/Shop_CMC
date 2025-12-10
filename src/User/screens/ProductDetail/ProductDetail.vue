@@ -1,10 +1,11 @@
 <template>
   <div class="product-detail-container">
-    <UserHeader/>
+    <UserHeader />
     <Loading v-if="isLoading" text="Loading product..." />
 
-    <div v-else-if="product" class="product-container">
+    <div v-if="!isLoading && product" class="product-container">
       <div class="product-content">
+        <!-- Images -->
         <div class="product-images">
           <div class="main-image">
             <img :src="displayImages[selectedImage]" :alt="product.name" />
@@ -26,6 +27,7 @@
         <div class="product-info">
           <h1 class="product-title">{{ product.name }}</h1>
 
+          <!-- Rating -->
           <div class="rating-section">
             <div class="stars">
               <span
@@ -42,20 +44,21 @@
             </span>
           </div>
 
+          <!-- Stock Status -->
           <div class="stock-status" :class="{ 'out-stock': !product.inStock }">
             <span class="in-stock" v-if="product.inStock">In Stock ({{ product.qty }} pcs)</span>
             <span class="out-stock" v-else>Out of Stock</span>
           </div>
 
+          <!-- Wishlist & Compare -->
           <div class="action-buttons">
             <button
               class="btn-wishlist"
-              :class="{ liked: product?.isWishlisted }"
+              :class="{ liked: (selectedVariant?.isWishlisted ?? product?.isWishlisted) }"
               type="button"
               @click="toggleWishlist"
-              :aria-pressed="product?.isWishlisted ? 'true' : 'false'"
             >
-              <i :class="product?.isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+              <i :class="(selectedVariant?.isWishlisted ?? product?.isWishlisted) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
               Wishlist
             </button>
             <button class="btn-compare" type="button">
@@ -65,6 +68,7 @@
 
           <hr class="divider" />
 
+          <!-- Price -->
           <div class="price-section">
             <div class="price-row">
               <span class="price">{{ formatPrice(currentPrice) }}</span>
@@ -74,6 +78,7 @@
             </div>
           </div>
 
+          <!-- Color Variation -->
           <div v-if="colorVariation" class="variation-section color-block">
             <div class="variation-label">
               Color:
@@ -83,14 +88,10 @@
               <button
                 v-for="value in colorVariation.variationValues"
                 :key="value.id"
-                type="button"
                 class="color-option"
-                :class="{
-                  active: selectedColor === value.label,
-                  disabled: !isColorAvailable(value.label),
-                }"
-                :disabled="!isColorAvailable(value.label)"
-                @click="handleColorSelect(value.label)"
+                :class="{ active: selectedColor === value.label, disabled: !isColorAvailable(value) }"
+                :disabled="!isColorAvailable(value)"
+                @click="selectColor(value)"
                 :title="value.label"
               >
                 <span class="color-swatch" :style="{ backgroundColor: value.value }"></span>
@@ -98,29 +99,7 @@
             </div>
           </div>
 
-          <div v-if="storageVariation" class="variation-section storage-block">
-            <div class="variation-label">
-              Storage:
-              <span v-if="selectedStorage" class="selected-value">{{ selectedStorage }}</span>
-            </div>
-            <div class="variation-options storage-options">
-              <button
-                v-for="value in storageVariation.variationValues"
-                :key="value.id"
-                type="button"
-                class="storage-option"
-                :class="{
-                  active: selectedStorage === value.label,
-                  disabled: !isStorageAvailable(value.label),
-                }"
-                :disabled="!isStorageAvailable(value.label)"
-                @click="handleStorageSelect(value.label)"
-              >
-                {{ value.label }}
-              </button>
-            </div>
-          </div>
-
+          <!-- Other Variations (Storage, Size, etc.) -->
           <div
             v-for="variation in otherVariations"
             :key="variation.id"
@@ -129,49 +108,31 @@
           >
             <div class="variation-label">
               {{ variation.name }}:
-              <span class="selected-value">{{ selectedVariations[variation.id] }}</span>
+              <span class="selected-value">{{ selectedVariations[variation.id]?.value?.label || '—' }}</span>
             </div>
-            <div class="variation-options" :class="{ 'color-options': variation.type === 'COLOR' }">
-              <template v-if="variation.type === 'COLOR'">
-                <button
-                  v-for="valueItem in variation.variationValues"
-                  :key="valueItem.id"
-                  type="button"
-                  class="color-option"
-                  :class="{ active: selectedVariations[variation.id] === valueItem.label }"
-                  @click="selectVariation(variation.id, valueItem)"
-                  :title="valueItem.label"
-                >
-                  <span class="color-swatch" :style="{ backgroundColor: valueItem.value }"></span>
-                  <span class="color-name">{{ valueItem.label }}</span>
-                </button>
-              </template>
-              <template v-else>
-                <button
-                  v-for="valueItem in variation.variationValues"
-                  :key="valueItem.id"
-                  type="button"
-                  class="storage-option"
-                  :class="{ active: selectedVariations[variation.id] === valueItem.label }"
-                  @click="selectVariation(variation.id, valueItem)"
-                >
-                  {{ valueItem.label }}
-                </button>
-              </template>
+            <div class="variation-options">
+              <button
+                v-for="value in variation.variationValues"
+                :key="value.id"
+                class="storage-option"
+                :class="{ active: selectedVariations[variation.id]?.value?.id === value.id }"
+                @click="selectVariation(variation.id, value)"
+              >
+                {{ value.label }}
+              </button>
             </div>
           </div>
 
+          <!-- Additional Options -->
           <div v-if="options.length" class="options">
             <h4 class="options-title">Additional Options</h4>
-
             <div class="options-content">
-              <!-- Price Breakdown - Left Side -->
               <div class="price-breakdown">
                 <div class="price-line base">
                   <span>Product Price</span>
                   <strong>{{ formatPrice(currentPrice) }}</strong>
                 </div>
-                <template v-for="option in options" :key="'price-' + option.id">
+                <template v-for="option in options" :key="option.id">
                   <div v-if="getSelectedOptionPrice(option) > 0" class="price-line option-line">
                     <span>+ {{ option.name }}: {{ getSelectedOptionLabel(option) }}</span>
                     <strong>{{ formatPrice(getSelectedOptionPrice(option)) }}</strong>
@@ -183,7 +144,6 @@
                 </div>
               </div>
 
-              <!-- Option Controls - Right Side -->
               <div class="options-controls">
                 <div v-for="option in options" :key="option.id" class="option-section">
                   <div class="option-label">
@@ -192,31 +152,87 @@
                       {{ option.isRequired ? 'required' : 'optional' }}
                     </span>
                   </div>
+
+                  <!-- SELECT -->
                   <template v-if="option.type === 'SELECT'">
-                    <select v-model="selectedOptions[option.id]" class="option-select">
-                      <option v-if="!option.isRequired" value="">Select {{ option.name }}</option>
-                      <option
-                        v-for="optValue in option.optionValues"
-                        :key="optValue.id"
-                        :value="optValue.id"
-                      >
+                    <select v-model="selectedOptions[option.id]" class="option-select" @change="clearOptionError(option.id)">
+                      <!-- placeholder always present; use null value so v-model stays null until user chooses -->
+                      <option :value="null">Select {{ option.name }}</option>
+                      <option v-for="optValue in option.optionValues" :key="optValue.id" :value="optValue.id">
                         {{ optionLabelWithPrice(optValue) }}
                       </option>
                     </select>
                   </template>
-                  <template v-else-if="option.type === 'TEXT'">
-                    <input
-                      v-model="selectedOptions[option.id]"
-                      type="text"
-                      class="option-input"
-                      :placeholder="`Enter ${option.name}`"
-                    />
+
+                  <!-- RADIO / RADIO_CUSTOM -->
+                  <template v-else-if="option.type === 'RADIO' || option.type === 'RADIO_CUSTOM'">
+                    <div class="radio-group">
+                      <label v-for="optValue in option.optionValues" :key="optValue.id" class="radio-item">
+                        <input
+                          type="radio"
+                          :name="`option-${option.id}`"
+                          :value="optValue.id"
+                          v-model="selectedOptions[option.id]"
+                          @change="clearOptionError(option.id)"
+                        />
+                        {{ optionLabelWithPrice(optValue) }}
+                      </label>
+                    </div>
                   </template>
+
+                  <!-- MULTIPLE_SELECT -->
+                  <template v-else-if="option.type === 'MULTIPLE_SELECT'">
+                    <select v-model="selectedOptions[option.id]" multiple class="option-multi-select" @change="clearOptionError(option.id)">
+                      <option v-for="optValue in option.optionValues" :key="optValue.id" :value="optValue.id">
+                        {{ optionLabelWithPrice(optValue) }}
+                      </option>
+                    </select>
+                  </template>
+
+                  <!-- CHECKBOX / CHECKBOX_CUSTOM -->
+                  <template v-else-if="option.type === 'CHECKBOX' || option.type === 'CHECKBOX_CUSTOM'">
+                    <div class="checkbox-group">
+                      <label v-for="optValue in option.optionValues" :key="optValue.id" class="checkbox-item">
+                        <input
+                          type="checkbox"
+                          :value="optValue.id"
+                          :checked="isOptionSelected(option.id, optValue.id)"
+                          @change="toggleOptionValue(option.id, optValue.id)"
+                        />
+                        {{ optionLabelWithPrice(optValue) }}
+                      </label>
+                    </div>
+                  </template>
+
+                  <!-- TEXTAREA -->
+                  <template v-else-if="option.type === 'TEXTAREA'">
+                    <textarea v-model="selectedOptions[option.id]" class="option-textarea" :placeholder="`Enter ${option.name}`" @input="clearOptionError(option.id)"></textarea>
+                  </template>
+
+                  <!-- DATE / TIME / DATETIME -->
+                  <template v-else-if="option.type === 'DATE'">
+                    <input v-model="selectedOptions[option.id]" type="date" class="option-input" @change="clearOptionError(option.id)" />
+                  </template>
+                  <template v-else-if="option.type === 'TIME'">
+                    <input v-model="selectedOptions[option.id]" type="time" class="option-input" @change="clearOptionError(option.id)" />
+                  </template>
+                  <template v-else-if="option.type === 'DATETIME'">
+                    <input v-model="selectedOptions[option.id]" type="datetime-local" class="option-input" @change="clearOptionError(option.id)" />
+                  </template>
+
+                  <!-- Fallback to TEXT -->
+                  <template v-else>
+                    <input v-model="selectedOptions[option.id]" type="text" class="option-input" :placeholder="`Enter ${option.name}`" @input="clearOptionError(option.id)" />
+                  </template>
+
+                  <!-- Error message -->
+                  <div v-if="optionErrors[option.id]" class="error-message">Vui lòng hoàn thành tuỳ chọn bắt buộc</div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Quantity + Add to Cart -->
           <div class="purchase-section">
             <div class="quantity-and-cart">
               <div class="quantity-selector">
@@ -234,7 +250,6 @@
                 :disabled="!selectedVariant || isSubmitting"
               >
                 <span>{{ isSubmitting ? 'Adding…' : 'Add to Cart' }}</span>
-                <span class="btn-total-price"></span>
               </button>
             </div>
           </div>
@@ -277,42 +292,26 @@
         </div>
       </div>
 
-      <!-- Product Tabs -->
+      <!-- Tabs -->
       <div class="product-tabs">
         <div class="tab-navigation">
-          <button
-            class="tab-btn"
-            :class="{ active: activeTab === 'description' }"
-            @click="setActiveTab('description')"
-          >
+          <button class="tab-btn" :class="{ active: activeTab === 'description' }" @click="setActiveTab('description')">
             Description
           </button>
-          <button
-            class="tab-btn"
-            :class="{ active: activeTab === 'specification' }"
-            @click="setActiveTab('specification')"
-          >
+          <button class="tab-btn" :class="{ active: activeTab === 'specification' }" @click="setActiveTab('specification')">
             Specification
           </button>
-          <button
-            class="tab-btn"
-            :class="{ active: activeTab === 'reviews' }"
-            @click="setActiveTab('reviews')"
-          >
+          <button class="tab-btn" :class="{ active: activeTab === 'reviews' }" @click="setActiveTab('reviews')">
             Reviews<span v-if="reviewStore.totalElements > 0"> ({{ reviewStore.totalElements }})</span>
           </button>
         </div>
 
         <div class="tab-content">
-          <!-- Description Tab -->
           <div v-if="activeTab === 'description'" class="tab-panel">
             <h3>{{ product.name }}</h3>
-            <div
-              v-html="isDescriptionLong && !showFullDescription ? truncatedDescription : product.description"
-              class="product-description-html"
-              :class="{ 'description-collapsed': isDescriptionLong && !showFullDescription }"
-            ></div>
-
+            <div v-html="isDescriptionLong && !showFullDescription ? truncatedDescription : product.description"
+                 class="product-description-html"
+                 :class="{ 'description-collapsed': isDescriptionLong && !showFullDescription }"></div>
             <div v-if="isDescriptionLong" class="description-toggle">
               <button @click="toggleDescription()" class="show-more-btn">
                 {{ showFullDescription ? 'Show Less' : 'Show More' }}
@@ -320,58 +319,22 @@
             </div>
           </div>
 
-          <!-- Specification Tab -->
           <div v-if="activeTab === 'specification'" class="tab-panel">
             <h3>Specification</h3>
             <ul>
               <li><strong>Product Name:</strong> {{ product.name }}</li>
               <li><strong>Brand:</strong> {{ product.brand }}</li>
               <li><strong>SKU:</strong> {{ product.sku }}</li>
-              <li v-if="product.categories && product.categories.length">
-                <strong>Category:</strong> {{ product.categories.join(', ') }}
-              </li>
-              <li>
-                <strong>Stock Status:</strong> {{ product.inStock ? 'In Stock' : 'Out of Stock' }}
-              </li>
+              <li v-if="product.categories?.length"><strong>Category:</strong> {{ product.categories.join(', ') }}</li>
+              <li><strong>Stock Status:</strong> {{ product.inStock ? 'In Stock' : 'Out of Stock' }}</li>
               <li><strong>Available Quantity:</strong> {{ product.qty }}</li>
               <li><strong>Current Price:</strong> {{ formatPrice(currentPrice) }}</li>
-              <li v-if="optionsTotal > 0">
-                <strong>Option Add-ons:</strong> {{ formatPrice(optionsTotal) }}
-              </li>
-              <li><strong>Total After Options:</strong> {{ formatPrice(displayTotalPrice) }}</li>
-              <li v-if="currentOriginalPrice">
-                <strong>Original Price:</strong> {{ formatPrice(currentOriginalPrice) }}
-              </li>
-              <li v-if="selectedVariant">
-                <strong>Current Variant:</strong> {{ selectedVariant.name }}
-              </li>
-              <li v-if="selectedVariant">
-                <strong>Variant SKU:</strong> {{ selectedVariant.sku }}
-              </li>
-            </ul>
-
-            <h4 v-if="variations.length > 0">Available Variations:</h4>
-            <ul v-if="variations.length > 0">
-              <li v-for="variation in variations" :key="variation.id">
-                <strong>{{ variation.name }}:</strong>
-                {{ variation.variationValues.map((v) => v.label).join(', ') }}
-              </li>
-            </ul>
-
-            <h4 v-if="options.length > 0">Available Options:</h4>
-            <ul v-if="options.length > 0">
-              <li v-for="option in options" :key="option.id">
-                <strong>{{ option.name }}{{ option.isRequired ? ' *' : '' }}:</strong>
-                <span v-for="(optValue, idx) in option.optionValues" :key="optValue.id">
-                  {{ optValue.label }}
-                  <span v-if="optValue.price > 0">(+{{ formatPrice(optValue.price) }})</span>
-                  <span v-if="idx < option.optionValues.length - 1">, </span>
-                </span>
-              </li>
+              <li v-if="currentOriginalPrice"><strong>Original Price:</strong> {{ formatPrice(currentOriginalPrice) }}</li>
+              <li v-if="selectedVariant"><strong>Current Variant:</strong> {{ selectedVariant.name }}</li>
+              <li v-if="selectedVariant"><strong>Variant SKU:</strong> {{ selectedVariant.sku }}</li>
             </ul>
           </div>
 
-          <!-- Reviews Tab -->
           <div v-if="activeTab === 'reviews'" class="tab-panel">
             <ReviewList :productId="product.id" :showRatingFilter="true" />
           </div>
@@ -393,6 +356,7 @@
         </div>
       </div>
     </div>
+
     <UserFooter v-if="product" />
     <Chatbot />
   </div>
@@ -403,87 +367,57 @@ import UserHeader from '@/User/components/Header1/Header.vue'
 import UserFooter from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
-import { getProductById } from '@/api/productApi.js'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import { getProductById } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
-
+import { useToast } from '@/User/components/Toast/useToast.js'
 export default {
   name: 'ProductDetail',
-  components: {
-    Chatbot,
-    UserHeader,
-    UserFooter,
-    Loading,
-    ReviewList,
-  },
+  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot },
   setup() {
     const reviewStore = useReviewStore()
     const cartStore = useCartStore()
-    return {
-      reviewStore,
-      cartStore
-    }
+    const { add: toast } = useToast()
+    return { reviewStore, cartStore, toast }
   },
   data() {
     return {
       isLoading: true,
       product: null,
-      productData: null,
       selectedImage: 0,
-      productReviews: [],
-      relatedProducts: [
-        {
-          name: 'DUDUALISS Men Long Sleeve Shirt Men...',
-          price: 17.3,
-          image: 'assets/images/related1.jpg',
-          rating: 5,
-        },
-        {
-          name: 'S-5XL Plus Size Brand Clothing Cotton Mens...',
-          price: 7.47,
-          image: 'assets/images/related2.jpg',
-          rating: 4,
-        },
-        {
-          name: '2019 brand casual spring luxury plaid lon...',
-          price: 5.24,
-          image: 'assets/images/related3.jpg',
-          rating: 4,
-        },
-        {
-          name: 'Long-sleeved Camisa Masculina Chamise...',
-          price: 9.69,
-          image: 'assets/images/related4.jpg',
-          rating: 5,
-        },
-        {
-          name: 'Europe size Summer Short Sleeve Solid Polo...',
-          price: 8.35,
-          image: 'assets/images/related5.jpg',
-          rating: 4,
-        },
-      ],
-      showFullDescription: false,
-      descriptionMaxLength: 500,
       quantity: 1,
       activeTab: 'description',
+      showFullDescription: false,
+      descriptionMaxLength: 500,
+      isSubmitting: false,
+
+      // Dữ liệu variation
       variations: [],
       options: [],
-      selectedVariations: {},
+      selectedVariations: {},   // { variationId: valueObject }
       selectedOptions: {},
+      optionErrors: {},
       selectedVariant: null,
       colorVariation: null,
-      storageVariation: null,
       otherVariations: [],
       selectedColor: null,
-      selectedStorage: null,
+
+      // Images
       mediaImages: [],
       placeholderImage: 'https://via.placeholder.com/500x500?text=No+Image',
+
+      // Lookup
       variantLookup: {},
-      availableStoragesByColor: {},
-      isSubmitting: false,
-      submitError: '',
+
+      // Dummy related
+      relatedProducts: [
+        { name: 'DUDUALISS Men Long Sleeve Shirt...', price: 17.3, image: 'assets/images/related1.jpg', rating: 5 },
+        { name: 'S-5XL Plus Size Brand Clothing...', price: 7.47, image: 'assets/images/related2.jpg', rating: 4 },
+        { name: '2019 brand casual spring luxury...', price: 5.24, image: 'assets/images/related3.jpg', rating: 4 },
+        { name: 'Long-sleeved Camisa Masculina...', price: 9.69, image: 'assets/images/related4.jpg', rating: 5 },
+        { name: 'Europe size Summer Short Sleeve...', price: 8.35, image: 'assets/images/related5.jpg', rating: 4 },
+      ],
     }
   },
   async mounted() {
@@ -491,82 +425,63 @@ export default {
   },
   methods: {
     async fetchProductDetail() {
+      console.log('BẮT ĐẦU GỌI API CHI TIẾT SẢN PHẨM')
+      console.log('Route params:', this.$route.params)
+      console.log('Product ID:', this.$route.params.id)
+
       try {
         this.isLoading = true
-        const productId = parseInt(this.$route.params.id)
-
-        console.log('🔍 fetchProductDetail START, productId:', productId);
-
-        if (!productId || isNaN(productId)) {
-          console.error('❌ No product ID provided or invalid ID');
-          alert('No product ID provided! Redirecting to shop...')
-          this.$router.push('/product')
-          return
+        const id = parseInt(this.$route.params.id)
+        if (!id || isNaN(id)) {
+          this.toast('ID sản phẩm không hợp lệ!', 'error')
+          return this.$router.push('/product')
         }
 
-        console.log('🔍 Calling getProductById API...');
-        const response = await getProductById(productId)
-        console.log('✅ Product detail API response:', response)
+        console.log('GỌI API /products/', id)
+        const res = await getProductById(id)
+        console.log('NHẬN KẾT QUẢ:', res)
 
-        if (response.code === 200 && response.result) {
-          this.productData = response.result
-          this.processProductData(response.result)
+        this.processProductData(res.result)
 
-          // Load reviews count for display (ReviewList will load full data when tab is clicked)
-          this.reviewStore.fetchProductReviews(productId, 0, 1).catch(err => {
-            console.warn('Failed to load reviews count:', err);
-          });
-        } else {
-          console.error('❌ Failed to fetch product:', response.message)
-          alert('Product not found! Redirecting to shop...')
-          this.$router.push('/product')
-        }
-      } catch (error) {
-        console.error('❌ Error fetching product:', error)
-        console.error('❌ Error details:', error.message, error.stack)
-        alert('Error loading product! Redirecting to shop...')
+        this.reviewStore.fetchProductReviews(id, 0, 1).catch(() => {})
+      } catch (err) {
+        console.error('LỖI GỌI API:', err)
+        console.error('Response:', err.response?.data)
+        console.error('Status:', err.response?.status)
+        this.toast('Không tải được sản phẩm!', 'error')
         this.$router.push('/product')
       } finally {
         this.isLoading = false
       }
     },
+
     processProductData(data) {
       this.variations = data.variations || []
       this.options = data.options || []
 
-      this.colorVariation = this.variations.find(
-        (variation) => variation.type === 'COLOR' || /color/i.test(variation.name),
-      )
-      this.storageVariation = this.variations.find(
-        (variation) => variation.type === 'TEXT' && /storage|capacity/i.test(variation.name),
-      )
-      this.otherVariations = this.variations.filter(
-        (variation) => variation !== this.colorVariation && variation !== this.storageVariation,
-      )
-
-      this.selectedVariations = {}
-      this.otherVariations.forEach((variation) => {
-        if (variation.variationValues && variation.variationValues.length > 0) {
-          this.selectedVariations[variation.id] = variation.variationValues[0].label
-        }
-      })
-
-      this.selectedOptions = {}
-      this.options.forEach((option) => {
-        if (option.isRequired && option.type === 'SELECT' && option.optionValues?.length > 0) {
-          this.selectedOptions[option.id] = option.optionValues[0].id
+      // Initialize selectedOptions defaults for different option types
+      this.options.forEach(opt => {
+        if (this.selectedOptions[opt.id] !== undefined) return // don't overwrite existing
+        if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(opt.type)) {
+          this.selectedOptions[opt.id] = []
+        } else if (['SELECT', 'RADIO', 'RADIO_CUSTOM'].includes(opt.type)) {
+          // use null for single-choice to avoid browser auto-selecting first option
+          this.selectedOptions[opt.id] = null
         } else {
-          this.selectedOptions[option.id] = ''
+          this.selectedOptions[opt.id] = ''
         }
+        // initialize error flag for option
+        this.optionErrors[opt.id] = false
       })
 
-      const imagePool = [
-        data.thumbnail,
-        ...(Array.isArray(data.gallery) ? data.gallery : []),
-      ].filter(Boolean)
-      this.mediaImages = imagePool.length ? Array.from(new Set(imagePool)) : [this.placeholderImage]
-      this.selectedImage = 0
+      this.colorVariation = this.variations.find(v => v.type === 'COLOR' || /color/i.test(v.name))
+      this.otherVariations = this.variations.filter(v => v !== this.colorVariation)
 
+      // Images
+      const pool = [data.thumbnail, ...(data.gallery || [])].filter(Boolean)
+      this.mediaImages = pool.length ? [...new Set(pool)] : [this.placeholderImage]
+
+      // Product base info
       const variants = data.variants || []
       this.product = {
         id: data.id,
@@ -578,479 +493,410 @@ export default {
         sku: data.sku,
         brand: data.brand,
         categories: data.categories || [],
-        tags: data.categories || [],
+        tags: data.tags || [],
         variants,
         basePrice: variants[0]?.sellingPrice || data.minPrice || 0,
         baseOriginalPrice: variants[0]?.price || null,
-        // reflect API-provided wishlisted flag
-        isWishlisted: (data.isWishlisted !== undefined) ? data.isWishlisted : false
+        // Compute product-level wishlisted if any variant is wishlisted; fall back to top-level flag
+        isWishlisted: (variants.some(v => v.isWishlisted === true) || !!data.isWishlisted),
       }
 
       this.buildVariantLookup(variants)
       this.initializeSelections()
-      // this.loadProductReviews(data.id) // Commented - now using ReviewList component
     },
+
     buildVariantLookup(variants) {
       this.variantLookup = {}
-      this.availableStoragesByColor = {}
 
-      variants.forEach((variant) => {
-        // Extract all variation labels from variant name
-        const variantLabels = {}
-        this.variations.forEach((variation) => {
-          const label = this.extractVariationLabel(variation, variant.name)
-          if (label) {
-            variantLabels[variation.id] = label
-          }
-        })
+      variants.forEach(variant => {
+        let parts = (variant.name || '').split(' - ')
+        if (parts[0] === this.product.name) parts.shift()
 
-        // Build comprehensive key from all variations (sorted by variation ID)
-        const key = this.buildVariantKeyFromAllVariations(variantLabels)
-        if (key) {
-          this.variantLookup[key] = variant
-        }
+        const keyParts = this.variations.map((variation, index) => {
+          const label = parts[index]
+          const value = variation.variationValues.find(vv => vv.label === label)
+          return value ? `v${variation.id}_val${value.id}` : ''
+        }).filter(Boolean)
 
-        // Maintain backward compatibility for color/storage filtering
-        if (this.colorVariation && this.storageVariation) {
-          const colorLabel = this.extractVariationLabel(this.colorVariation, variant.name)
-          const storageLabel = this.extractVariationLabel(this.storageVariation, variant.name)
-          if (colorLabel && storageLabel) {
-            if (!this.availableStoragesByColor[colorLabel]) {
-              this.availableStoragesByColor[colorLabel] = new Set()
-            }
-            this.availableStoragesByColor[colorLabel].add(storageLabel)
-          }
-        }
+        const key = keyParts.join('::')
+        if (key) this.variantLookup[key] = variant
       })
+
+      console.log('variantLookup:', this.variantLookup)
     },
-    buildVariantKeyFromAllVariations(variantLabels) {
-      const keys = Object.entries(variantLabels)
-        .sort(([aId], [bId]) => aId - bId) // Sort by variation ID for consistency
-        .map((entry) => (entry[1] || '').toLowerCase())
-        .filter(k => k)
-      return keys.length > 0 ? keys.join('::') : null
-    },
-    extractVariationLabel(variation, variantName) {
-      if (!variation || !variantName) return null
-      const match = variation.variationValues.find((value) =>
-        variantName.toLowerCase().includes(value.label.toLowerCase()),
-      )
-      return match ? match.label : null
-    },
+
     initializeSelections() {
-      const initialVariant =
-        this.product.variants.find((variant) => variant.inStock) || this.product.variants[0]
+      const first = this.product.variants.find(v => v.inStock && v.isActive) || this.product.variants[0] || {}
 
-      // Extract all variation labels from initial variant
-      this.variations.forEach((variation) => {
-        const label = this.extractVariationLabel(variation, initialVariant?.name)
-        this.selectedVariations[variation.id] = label || variation.variationValues?.[0]?.label || null
+      let parts = (first.name || '').split(' - ')
+      if (parts[0] === this.product.name) parts.shift()
+
+      this.variations.forEach((variation, index) => {
+        const label = parts[index]
+        const val = variation.variationValues.find(vv => vv.label === label) || variation.variationValues[0]
+        if (val) {
+          // LƯU CẢ variation VÀ value
+          this.selectedVariations[variation.id] = {
+            variation: variation,
+            value: val
+          }
+          if (variation === this.colorVariation) this.selectedColor = val.label
+        }
       })
-
-      // Also set color and storage for backward compatibility
-      const initialColor = this.extractVariationLabel(this.colorVariation, initialVariant?.name)
-      const initialStorage = this.extractVariationLabel(this.storageVariation, initialVariant?.name)
-
-      this.selectedColor = initialColor || this.colorVariation?.variationValues?.[0]?.label || null
-      this.selectedStorage =
-        initialStorage || this.storageVariation?.variationValues?.[0]?.label || null
-
-      if (this.colorVariation) {
-        this.selectedVariations[this.colorVariation.id] = this.selectedColor
-      }
-      if (this.storageVariation) {
-        this.selectedVariations[this.storageVariation.id] = this.selectedStorage
-      }
-
-      this.ensureValidStorageSelection()
       this.updateVariantFromSelection()
     },
-    ensureValidStorageSelection() {
-      if (!this.storageVariation || !this.selectedColor) return
-      const availableStorages = this.getAvailableStoragesForColor(this.selectedColor)
-      if (!availableStorages.length) {
-        this.selectedStorage = null
-        this.selectedVariations[this.storageVariation.id] = null
-        return
+
+    selectColor(value) {
+      this.selectedVariations[this.colorVariation.id] = {
+        variation: this.colorVariation,
+        value: value
       }
-      if (!this.selectedStorage || !availableStorages.includes(this.selectedStorage)) {
-        this.selectedStorage = availableStorages[0]
-      }
-      this.selectedVariations[this.storageVariation.id] = this.selectedStorage
-    },
-    handleColorSelect(label) {
-      if (this.selectedColor === label || !this.isColorAvailable(label)) return
-      this.selectedColor = label
-      if (this.colorVariation) {
-        this.selectedVariations[this.colorVariation.id] = label
-      }
-      this.ensureValidStorageSelection()
+      this.selectedColor = value.label
       this.updateVariantFromSelection()
     },
-    handleStorageSelect(label) {
-      if (!this.isStorageAvailable(label)) return
-      this.selectedStorage = label
-      if (this.storageVariation) {
-        this.selectedVariations[this.storageVariation.id] = label
+
+    selectVariation(variationId, value) {
+      const variation = this.variations.find(v => v.id === variationId)
+      this.selectedVariations[variationId] = {
+        variation: variation,
+        value: value
       }
       this.updateVariantFromSelection()
     },
-    getAvailableStoragesForColor(colorLabel) {
-      if (!colorLabel) return []
-      const storagesSet = this.availableStoragesByColor[colorLabel] || new Set()
-      return Array.from(storagesSet)
-    },
-    isVariantActive(variationLabels) {
-      // Trả về true nếu tồn tại variant với các label này và isActive: true
-      const key = this.buildVariantKeyFromAllVariations(variationLabels)
-      const variant = key ? this.variantLookup[key] : null
-      return variant && variant.isActive === true
-    },
-    isColorAvailable(colorLabel) {
-      // Chỉ cho phép chọn màu nếu tồn tại ít nhất 1 variant với màu này và isActive: true
-      if (!this.colorVariation) return false
-      const labels = { ...this.selectedVariations, [this.colorVariation.id]: colorLabel }
-      // Nếu có storage, kiểm tra từng storage
-      if (this.storageVariation) {
-        return this.storageVariation.variationValues.some(storage => {
-          const testLabels = { ...labels, [this.storageVariation.id]: storage.label }
-          return this.isVariantActive(testLabels)
-        })
-      } else {
-        return this.isVariantActive(labels)
-      }
-    },
-    isStorageAvailable(storageLabel) {
-      // Chỉ cho phép chọn storage nếu tồn tại variant với color+storage và isActive: true
-      if (!this.storageVariation || !this.selectedColor) return false
-      const labels = { ...this.selectedVariations, [this.storageVariation.id]: storageLabel, [this.colorVariation?.id]: this.selectedColor }
-      return this.isVariantActive(labels)
-    },
-    isOtherVariationAvailable(variation, valueLabel) {
-      // Chỉ cho phép chọn value nếu tồn tại variant với các lựa chọn hiện tại và value này, isActive: true
-      const labels = { ...this.selectedVariations, [variation.id]: valueLabel }
-      return this.isVariantActive(labels)
-    },
+
     updateVariantFromSelection() {
-      if (!this.product || !this.product.variants.length) return
-      const variantLabels = {}
-      this.variations.forEach((variation) => {
-        const label = this.selectedVariations[variation.id] || (variation === this.colorVariation ? this.selectedColor : null) || (variation === this.storageVariation ? this.selectedStorage : null)
-        if (label) variantLabels[variation.id] = label
-      })
-      const key = this.buildVariantKeyFromAllVariations(variantLabels)
-      let variant = key ? this.variantLookup[key] : null
-      // Ưu tiên variant isActive: true && inStock, sau đó isActive: true
-      if (!variant || !variant.isActive) {
-        variant = this.product.variants.find(v => v.isActive && v.inStock) || this.product.variants.find(v => v.isActive) || null
-      }
-      this.selectedVariant = variant || null
-      if (variant) {
-        this.product.inStock = variant.inStock
-        this.product.qty = variant.qty
+      const key = this.variations
+        .map(v => this.selectedVariations[v.id]?.value?.id ? `v${v.id}_val${this.selectedVariations[v.id].value.id}` : '')
+        .filter(Boolean)
+        .join('::')
+
+      this.selectedVariant = this.variantLookup[key] || null
+      if (this.selectedVariant) {
+        this.product.inStock = this.selectedVariant.inStock
+        this.product.qty = this.selectedVariant.qty
       }
     },
+
+    isColorAvailable(value) {
+      const testKey = this.variations
+        .map(v => v.id === this.colorVariation.id ? `v${v.id}_val${value.id}` :
+          this.selectedVariations[v.id]?.value?.id ? `v${v.id}_val${this.selectedVariations[v.id].value.id}` : '')
+        .filter(Boolean)
+        .join('::')
+      const variant = this.variantLookup[testKey]
+      if (!variant || variant.isActive === false) return false
+      return true
+    },
+
     async addToCart() {
       if (!this.selectedVariant) return
+
       if (!this.selectedVariant.isActive) {
-        alert('Biến thể này hiện không khả dụng!')
+        this.toast('Sản phẩm này hiện đã ngừng kinh doanh!', 'warning')
+        return
+      }
+      if (!this.selectedVariant.inStock) {
+        this.toast('Biến thể này đã hết hàng!', 'warning')
         return
       }
       if (this.isSubmitting) return
-      const requiredOptions = this.options.filter((o) => o.isRequired)
-      const missingRequired = requiredOptions.find((o) => {
-        const value = this.selectedOptions[o.id]
-        return value === null || value === undefined || value === ''
-      })
-      if (missingRequired) {
-        alert(`Please select: ${missingRequired.name}`)
-        return
+
+      // Validate required options and show error messages
+      if (!this.validateOptions()) {
+        // scroll to first option section with error message
+        this.$nextTick(() => {
+          const el = this.$el.querySelector('.option-section .error-message')
+          if (el) el.closest('.option-section').scrollIntoView({ behavior: 'smooth', block: 'center' })
+        })
+        return this.toast('Vui lòng hoàn tất các tuỳ chọn bắt buộc.', 'warning')
       }
-      const cartPayload = this.buildCartPayload()
+
+      const payload = this.buildCartPayload()
       this.isSubmitting = true
-      this.submitError = ''
       try {
-        await this.cartStore.addItem(cartPayload)
-        console.log('Added to cart successfully')
-        alert('Đã thêm vào giỏ hàng!')
-      } catch (error) {
-        console.error('Failed to add to cart', error)
-        this.submitError = error.response?.data?.message || 'Failed to add to cart'
-        alert(this.submitError)
+        await this.cartStore.addItem(payload)
+        this.toast('Đã thêm vào giỏ hàng!', 'success')
+      } catch (err) {
+        this.toast(err.response?.data?.message || 'Thêm vào giỏ thất bại', 'error')
       } finally {
         this.isSubmitting = false
       }
     },
+
     async toggleWishlist() {
-      if (!this.product) return;
-      const currentlyWishlisted = !!this.product.isWishlisted;
+      const variant = this.selectedVariant || this.product.variants[0]
+      const variantId = variant?.id
+      if (!variantId) return this.toast('Không tìm thấy variant', 'error')
+
+      const api = await import('@/api/accountApi.js')
       try {
-        const api = await import('@/api/accountApi.js');
-        // const { getProductById } = await import('@/api/productApi.js'); // Xóa biến không dùng
+        const currentlyWishlisted = !!(variant?.isWishlisted ?? this.product?.isWishlisted)
 
-        // Determine variant id to operate on
-        const variantId = this.selectedVariant?.id || this.product.variants?.[0]?.id;
-        if (!variantId) {
-          alert('Cannot update wishlist: No variant available');
-          return;
+        if (currentlyWishlisted) {
+          // Removal: find wishlist entry id (wishlistId) corresponding to this variant
+          const { useWishlistStore } = await import('@/User/stores/wishlistStore.js')
+          const wishlistStore = useWishlistStore()
+
+          if (!wishlistStore.items || wishlistStore.items.length === 0) {
+            await wishlistStore.fetchWishlist(0).catch(err => console.debug('Failed to prefetch wishlist for lookup:', err))
+          }
+
+          const match = (wishlistStore.items || []).find(i => String(i.variantId) === String(variantId) || String(i.productVariantId) === String(variantId))
+
+          if (match && match.id) {
+            await api.removeFromWishlist(match.id)
+          } else {
+            // fallback: try deleting by variant id (older backend)
+            await api.removeFromWishlist(variantId)
+          }
+
+          // Update UI state for that variant and recompute product-level flag
+          if (variant) variant.isWishlisted = false
+          if (this.product?.variants && Array.isArray(this.product.variants)) {
+            const any = this.product.variants.some(v => v.isWishlisted === true)
+            this.product.isWishlisted = any
+          } else {
+            this.product.isWishlisted = false
+          }
+
+          this.toast('Đã xóa khỏi wishlist', 'success')
+        } else {
+          // Add to wishlist by variant id
+          await api.addToWishlist(variantId)
+
+          // Update UI state
+          if (variant) variant.isWishlisted = true
+          if (this.product?.variants && Array.isArray(this.product.variants)) {
+            const any = this.product.variants.some(v => v.isWishlisted === true)
+            this.product.isWishlisted = any
+          } else {
+            this.product.isWishlisted = true
+          }
+
+          this.toast('Đã thêm vào wishlist', 'success')
         }
 
-        if (!currentlyWishlisted) {
-          if (typeof api.addToWishlist === 'function') {
-            await api.addToWishlist(variantId);
-            this.product.isWishlisted = true;
-            alert('Added to wishlist!');
-            window.dispatchEvent(new Event('wishlistChanged'));
-          } else {
-            alert('Add to wishlist API not available.');
-          }
-        } else {
-          if (typeof api.removeFromWishlist === 'function') {
-            await api.removeFromWishlist(variantId);
-            this.product.isWishlisted = false;
-            alert('Removed from wishlist!');
-            window.dispatchEvent(new Event('wishlistChanged'));
-          } else {
-            // Fallback: inform user removal may be managed elsewhere
-            alert('Remove from wishlist not implemented. Please manage wishlist from the Wishlist page.');
-          }
-        }
-      } catch (error) {
-        console.error('Wishlist toggle failed', error);
-        if (error.response?.status === 401) {
-          alert('Please login to manage wishlist');
-        } else {
-          alert('Failed to update wishlist. Please try again.');
-        }
+        window.dispatchEvent(new Event('wishlistChanged'))
+      } catch (err) {
+        this.toast(err.response?.status === 401 ? 'Vui lòng đăng nhập' : 'Lỗi wishlist', 'error')
       }
     },
+
     buildCartPayload() {
-      const cartItemVariations = []
+      const unitPrice = this.selectedVariant?.sellingPrice || 0
 
-      if (this.colorVariation && this.selectedColor) {
-        const colorValue = this.colorVariation.variationValues.find(
-          (value) => value.label === this.selectedColor,
-        )
-        cartItemVariations.push({
-          variationId: this.colorVariation.id,
-          type: this.colorVariation.type,
-          value: colorValue?.value,
-          cartItemVariationValues: [
-            {
-              variationValueId: colorValue.id,
-            },
-          ],
-        })
-      }
+      // variations
+      const cartItemVariations = Object.values(this.selectedVariations).map(item => ({
+        variationId: item.variation.id,
+        type: item.variation.type,
+        value: item.value.value ?? item.value.label,
+        cartItemVariationValues: [{ variationValueId: item.value.id }]
+      }))
 
-      if (this.storageVariation && this.selectedStorage) {
-        const storageValue = this.storageVariation.variationValues.find(
-          (value) => value.label === this.selectedStorage,
-        )
-        cartItemVariations.push({
-          variationId: this.storageVariation.id,
-          type: this.storageVariation.type,
-          value: storageValue?.value,
-          cartItemVariationValues: [
-            {
-              variationValueId: storageValue.id,
-            },
-          ],
-        })
-      }
+      // options
+      const cartItemOptions = this.options.map(option => {
+        const type = option.type
 
-      this.otherVariations.forEach((variation) => {
-        const selectedLabel = this.selectedVariations[variation.id]
-        const valueObj = variation.variationValues.find((val) => val.label === selectedLabel)
-        if (valueObj) {
-          cartItemVariations.push({
-            variationId: variation.id,
-            type: variation.type,
-            value: valueObj.value,
-            cartItemVariationValues: [
-              {
-                variationValueId: valueObj.id,
-              },
-            ],
-          })
-        }
-      })
-
-      const cartItemOptions = this.options
-        .map((option) => {
-          if (option.type === 'TEXT') {
-            const textValue = this.selectedOptions[option.id]
-            const textConfig = option.optionValues?.[0]
-
-            // For optional TEXT options, only include if user entered value
-            if (!option.isRequired && !textValue) {
-              return null  // Skip optional empty options
-            }
-
-            return {
-              optionId: option.id,
-              optionName: option.name,
-              type: option.type,
-              isRequired: option.isRequired,
-              valueLabel: textValue || '',
-              price: textConfig?.price || 0,
-              priceType: textConfig?.priceType || 'FIXED',
-              cartItemOptionValues: [
-                {
-                  optionValueId: textConfig?.id,
-                  valueLabel: textValue || '',
-                  price: textConfig?.price || 0,
-                  priceType: textConfig?.priceType || 'FIXED',
-                },
-              ],
-            }
-          }
-
-          const selectedId = this.selectedOptions[option.id]
-          const optionValue = option.optionValues.find((ov) => `${ov.id}` === `${selectedId}`)
-
-          // For optional SELECT options, only include if user selected value
-          if (!option.isRequired && !selectedId) {
-            return null  // Skip optional unselected options
-          }
-
+        // Text-like types (TEXT, TEXTAREA, DATE, TIME, DATETIME)
+        if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) {
+          const val = this.selectedOptions[option.id] || ''
+          if (!option.isRequired && !val) return null
+          const base = option.optionValues[0] || {}
           return {
             optionId: option.id,
             optionName: option.name,
-            type: option.type,
+            type,
             isRequired: option.isRequired,
-            valueLabel: optionValue?.label || '',
-            price: optionValue?.price || 0,
-            priceType: optionValue?.priceType || 'FIXED',
-            cartItemOptionValues: optionValue
-              ? [
-                  {
-                    optionValueId: optionValue.id,
-                    valueLabel: optionValue.label,
-                    price: optionValue.price || 0,
-                    priceType: optionValue.priceType || 'FIXED',
-                  },
-                ]
-              : [],
+            valueLabel: val,
+            price: base.price || 0,
+            priceType: base.priceType || 'FIXED',
+            cartItemOptionValues: [{
+              optionValueId: base.id,
+              valueLabel: val,
+              price: base.price || 0,
+              priceType: base.priceType || 'FIXED'
+            }]
           }
-        })
-        .filter((option) => option !== null)  // Remove null entries (skipped optional options)
+        }
+
+        // Single choice types (SELECT, RADIO, RADIO_CUSTOM)
+        if (['SELECT', 'RADIO', 'RADIO_CUSTOM'].includes(type)) {
+          const selId = this.selectedOptions[option.id]
+          if (!option.isRequired && (selId === '' || selId === undefined || selId === null)) return null
+          const sel = option.optionValues.find(ov => String(ov.id) === String(selId))
+          if (!sel) return null
+          return {
+            optionId: option.id,
+            optionName: option.name,
+            type,
+            isRequired: option.isRequired,
+            valueLabel: sel.label,
+            price: sel.price || 0,
+            priceType: sel.priceType || 'FIXED',
+            cartItemOptionValues: [{
+              optionValueId: sel.id,
+              valueLabel: sel.label,
+              price: sel.price || 0,
+              priceType: sel.priceType || 'FIXED'
+            }]
+          }
+        }
+
+        // Multi choice types (MULTIPLE_SELECT, CHECKBOX, CHECKBOX_CUSTOM)
+        if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+          const selArr = this.selectedOptions[option.id] || []
+          if (!Array.isArray(selArr) || selArr.length === 0) return null
+          const vals = option.optionValues.filter(ov => selArr.includes(ov.id))
+          if (!vals.length) return null
+          const totalPrice = vals.reduce((s, v) => s + (v.price || 0), 0)
+          return {
+            optionId: option.id,
+            optionName: option.name,
+            type,
+            isRequired: option.isRequired,
+            valueLabel: vals.map(v => v.label).join(', '),
+            price: totalPrice,
+            priceType: vals[0]?.priceType || 'FIXED',
+            cartItemOptionValues: vals.map(v => ({
+              optionValueId: v.id,
+              valueLabel: v.label,
+              price: v.price || 0,
+              priceType: v.priceType || 'FIXED'
+            }))
+          }
+        }
+
+        return null
+      }).filter(Boolean)
 
       return {
-        cartItems: [
-          {
-            productId: this.product.id,
-            productVariantId: this.selectedVariant?.id,
-            qty: this.quantity,
-            cartItemVariations,
-            cartItemOptions,
-          },
-        ],
+        cartItems: [{
+          productId: this.product.id,
+          productVariantId: this.selectedVariant.id,
+          qty: this.quantity,
+          unitPrice,
+          cartItemVariations,
+          cartItemOptions
+        }]
       }
     },
-    setActiveTab(tab) {
-      this.activeTab = tab
+
+    // Helper to check and toggle multi/select options
+    isOptionSelected(optionId, valueId) {
+      const arr = this.selectedOptions[optionId]
+      return Array.isArray(arr) ? arr.includes(valueId) : String(arr) === String(valueId)
     },
-    toggleDescription() {
-      this.showFullDescription = !this.showFullDescription
+    toggleOptionValue(optionId, valueId) {
+      const cur = this.selectedOptions[optionId]
+      if (!Array.isArray(cur)) {
+        // if not an array, convert to array with single value toggled
+        this.selectedOptions[optionId] = cur === valueId ? [] : [valueId]
+        this.clearOptionError(optionId)
+        return
+      }
+      const idx = cur.indexOf(valueId)
+      if (idx === -1) cur.push(valueId)
+      else cur.splice(idx, 1)
+      // ensure reactivity (assignment not strictly required but safe)
+      this.selectedOptions[optionId] = [...cur]
+      this.clearOptionError(optionId)
     },
-    shareProduct(platform) {
-      console.log('Sharing on', platform)
-      alert(`Sharing on ${platform}`)
-    },
-    getStars(rating) {
-      return Array(5)
-        .fill('')
-        .map((_, i) => (i < rating ? 'star' : 'star_border'))
-    },
-    // DEPRECATED: Now using ReviewList component with reviewStore
-    // loadProductReviews(productId) {
-    //   const allReviews = JSON.parse(localStorage.getItem('productReviews') || '[]')
-    //   this.productReviews = allReviews.filter((review) => review.productId === productId)
-    //   console.log('Loaded reviews for product', productId, ':', this.productReviews)
-    // },
-    formatDate(dateString) {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+
+    // Validation helpers
+    validateOptions() {
+      let ok = true
+      this.options.forEach(opt => {
+        if (!opt.isRequired) {
+          this.optionErrors[opt.id] = false
+          return
+        }
+
+        const type = opt.type
+        const val = this.selectedOptions[opt.id]
+        let satisfied = true
+
+        if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) {
+          satisfied = String(val || '').trim().length > 0
+        } else if (['SELECT', 'RADIO', 'RADIO_CUSTOM'].includes(type)) {
+          satisfied = val !== '' && val !== undefined && val !== null
+        } else if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+          satisfied = Array.isArray(val) && val.length > 0
+        } else {
+          satisfied = String(val || '').trim().length > 0
+        }
+
+        this.optionErrors[opt.id] = !satisfied
+        if (!satisfied) ok = false
       })
+      return ok
     },
-    getSelectedOptionLabel(option) {
-      if (option.type === 'TEXT') {
-        const textValue = this.selectedOptions[option.id]
-        return textValue || '—'
+
+    clearOptionError(optionId) {
+      if (this.optionErrors && this.optionErrors[optionId]) this.optionErrors[optionId] = false
+    },
+
+    // UI Helpers
+    selectImage(i) { this.selectedImage = i },
+    changeQuantity(delta) { this.quantity = Math.max(1, this.quantity + delta) },
+    setActiveTab(tab) { this.activeTab = tab },
+    toggleDescription() { this.showFullDescription = !this.showFullDescription },
+    shareProduct() { },
+    getStars(r) { return Array(5).fill('').map((_, i) => (i < r ? 'star' : 'star_border')) },
+
+    formatPrice(p) {
+      if (p == null) return '—'
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p)
+    },
+
+    optionLabelWithPrice(v) {
+      return v.price > 0 ? `${v.label} (+${this.formatPrice(v.price)})` : v.label
+    },
+    getSelectedOptionLabel(o) {
+      const type = o.type
+      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) return this.selectedOptions[o.id] || '—'
+      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+        const arr = this.selectedOptions[o.id] || []
+        if (!Array.isArray(arr) || arr.length === 0) return '—'
+        const labels = o.optionValues.filter(ov => arr.includes(ov.id)).map(ov => ov.label)
+        return labels.length ? labels.join(', ') : '—'
       }
-      const selectedId = this.selectedOptions[option.id]
-      if (!selectedId) return '—'
-      const optionValue = option.optionValues?.find((ov) => `${ov.id}` === `${selectedId}`)
-      return optionValue?.label || '—'
+      return (o.optionValues.find(ov => String(ov.id) === String(this.selectedOptions[o.id])) || {}).label || '—'
     },
-    getSelectedOptionPrice(option) {
-      if (option.type === 'TEXT') {
-        const textValue = this.selectedOptions[option.id]
-        if (!textValue) return 0
-        const valueDef = option.optionValues?.[0]
-        return valueDef?.price || 0
+    getSelectedOptionPrice(o) {
+      const type = o.type
+      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) return this.selectedOptions[o.id] ? (o.optionValues[0]?.price || 0) : 0
+      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+        const arr = this.selectedOptions[o.id] || []
+        if (!Array.isArray(arr) || arr.length === 0) return 0
+        return o.optionValues.filter(ov => arr.includes(ov.id)).reduce((s, v) => s + (v.price || 0), 0)
       }
-      const selectedId = this.selectedOptions[option.id]
-      if (!selectedId) return 0
-      const optionValue = option.optionValues?.find((ov) => `${ov.id}` === `${selectedId}`)
-      return optionValue?.price || 0
-    },
+      return (o.optionValues.find(ov => String(ov.id) === String(this.selectedOptions[o.id])) || {}).price || 0
+    }
   },
+
   computed: {
-    averageRating() {
-      if (this.productReviews.length === 0) return 0
-      const sum = this.productReviews.reduce((acc, review) => acc + review.userRating, 0)
-      return sum / this.productReviews.length
-    },
-    displayImages() {
-      return this.mediaImages.length ? this.mediaImages : [this.placeholderImage]
-    },
-    currentPrice() {
-      if (this.selectedVariant && this.selectedVariant.sellingPrice != null) {
-        return this.selectedVariant.sellingPrice
-      }
-      return this.product?.basePrice || 0
-    },
+    displayImages() { return this.mediaImages.length ? this.mediaImages : [this.placeholderImage] },
+    currentPrice() { return this.selectedVariant?.sellingPrice ?? this.product?.basePrice ?? 0 },
     currentOriginalPrice() {
-      if (this.selectedVariant && this.selectedVariant.price != null) {
-        return this.selectedVariant.price !== this.currentPrice ? this.selectedVariant.price : null
-      }
-      if (this.product?.baseOriginalPrice && this.product.baseOriginalPrice !== this.currentPrice) {
-        return this.product.baseOriginalPrice
-      }
-      return null
+      if (!this.selectedVariant) return null
+      return this.selectedVariant.price !== this.currentPrice ? this.selectedVariant.price : null
     },
     optionsTotal() {
-      return this.selectedOptionsTotal()
+      return this.options.reduce((sum, o) => sum + this.getSelectedOptionPrice(o), 0)
     },
-    displayTotalPrice() {
-      return this.currentPrice + this.optionsTotal
-    },
-    // Kiểm tra description có dài không (dựa vào plain text length)
+    displayTotalPrice() { return this.currentPrice + this.optionsTotal },
     isDescriptionLong() {
       if (!this.product?.description) return false
-      const plainText = this.product.description.replace(/<[^>]*>/g, '')
-      return plainText.length > this.descriptionMaxLength
+      return this.product.description.replace(/<[^>]*>/g, '').length > this.descriptionMaxLength
     },
-    // Tạo version rút gọn của description
     truncatedDescription() {
       if (!this.product?.description) return ''
-      const plainText = this.product.description.replace(/<[^>]*>/g, '')
-      if (plainText.length <= this.descriptionMaxLength) {
-        return this.product.description
-      }
-      // Lấy khoảng 500 ký tự đầu của HTML
-      let tempDiv = document.createElement('div')
-      tempDiv.innerHTML = this.product.description
-      let text = tempDiv.textContent || tempDiv.innerText || ''
-      let truncated = text.substring(0, this.descriptionMaxLength) + '...'
-      return `<div>${truncated}</div>`
-    },
-  },
+      const div = document.createElement('div')
+      div.innerHTML = this.product.description
+      const text = div.textContent || div.innerText || ''
+      return `<div>${text.substring(0, this.descriptionMaxLength)}...</div>`
+    }
+  }
 }
 </script>
 
@@ -1075,5 +921,12 @@ export default {
 /* Optional: slightly emphasize the button when liked */
 .btn-wishlist.liked {
   font-weight: 600;
+}
+
+/* Simple validation error message */
+.error-message {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #e00;
 }
 </style>

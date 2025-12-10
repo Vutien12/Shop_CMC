@@ -245,24 +245,41 @@ export const useProductStore = defineStore('product', () => {
         try {
           const { removeFromWishlist } = await import('@/api/accountApi.js');
           if (typeof removeFromWishlist === 'function') {
-            // If API expects variantId or productVariantId, we attempt to fetch variant id
             const { getProductById } = await import('@/api/productApi.js');
             const productDetail = await getProductById(product.id);
             const variants = productDetail.result?.variants || [];
             const firstVariantId = variants[0]?.id;
-            if (firstVariantId) {
-              await removeFromWishlist(firstVariantId);
+            if (!firstVariantId) {
+              throw new Error('No variant id available to identify wishlist entry');
+            }
+
+            // Import wishlist store and ensure it's loaded so we can find the wishlist entry id
+            const { useWishlistStore } = await import('@/User/stores/wishlistStore.js');
+            const wishlistStore = useWishlistStore();
+            if (!wishlistStore.items || wishlistStore.items.length === 0) {
+              try {
+                await wishlistStore.fetchWishlist(0);
+              } catch (e) {
+                // ignore - we'll handle not-found below
+                console.debug('Failed to prefetch wishlist for lookup:', e);
+              }
+            }
+
+            const match = (wishlistStore.items || []).find(i => i.variantId === firstVariantId || i.productVariantId === firstVariantId);
+            if (match && match.id) {
+              await removeFromWishlist(match.id);
               window.dispatchEvent(new Event('wishlistChanged'));
-              console.log('✅ Removed from wishlist:', product.name);
+              console.log('Removed from wishlist:', product.name);
               alert('Removed from wishlist!');
             } else {
-              throw new Error('No variant id available to remove from wishlist');
+              // Could not find wishlist entry id for this variant
+              throw new Error('Wishlist entry not found for this variant');
             }
           } else {
             throw new Error('removeFromWishlist not implemented');
           }
         } catch (err) {
-          // If removal not implemented, revert and notify
+          // If removal not implemented or failed, revert and notify
           product.isWishlisted = wasWishlisted;
           alert('Remove from wishlist is not available. Please manage wishlist from the Wishlist page.');
           console.warn('Remove from wishlist failed or not implemented', err);

@@ -40,28 +40,44 @@
 
             <!-- Details -->
             <div class="item-details">
-              <h4 class="item-name">{{ item.productName }}</h4>
-              <p class="variant-name">{{ getShortVariantName(item.variantName) }}</p>
-
-              <!-- Options -->
-              <div class="options-list" v-if="item.cartItemOptions?.length">
-                <small v-for="opt in item.cartItemOptions" :key="opt.id">
-                  {{ opt.optionName }}: <strong>{{ opt.valueLabel }}</strong>
-                </small>
+              <div class="item-header">
+                <h4 class="item-name">{{ item.productName }}</h4>
               </div>
 
-              <!-- Price -->
-              <div class="item-price">{{ formatPrice(item.unitPrice) }}</div>
+              <!-- Compact Variations - Single Line with dash separator -->
+              <div v-if="item.cartItemVariations?.length" class="item-meta">
+                <span v-for="(variation, idx) in item.cartItemVariations" :key="variation.id" class="meta-item">
+                  <span v-if="variation.type === 'COLOR'" class="color-dot-mini" :style="{ backgroundColor: variation.cartItemVariationValues[0]?.value }"></span>
+                  {{ variation.cartItemVariationValues[0]?.label }}<span v-if="idx < item.cartItemVariations.length - 1"> - </span>
+                </span>
+              </div>
 
-              <!-- Quantity -->
-              <div class="item-quantity">
-                <button class="qty-btn" @click="decrease(item.id, item.qty)">
-                  <i class="fa-solid fa-minus"></i>
-                </button>
-                <span class="qty-value">{{ item.qty }}</span>
-                <button class="qty-btn" @click="increase(item.id, item.qty)">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
+              <!-- Compact Options - Single Line -->
+              <div v-if="item.cartItemOptions?.length" class="item-options-compact">
+                <span v-for="(option, idx) in item.cartItemOptions" :key="option.id" class="option-compact">
+                  {{ option.optionName }}: {{ option.valueLabel }}<span v-if="idx < item.cartItemOptions.length - 1">; </span>
+                </span>
+              </div>
+
+              <!-- Warning Icons Row -->
+              <div v-if="isVariantDeleted(item) || isVariantChanged(item)" class="warning-row">
+                <i v-if="isVariantDeleted(item)" class="warning-icon deleted fa-solid fa-exclamation-circle" title="No longer available"></i>
+                <i v-else-if="isVariantChanged(item)" class="warning-icon changed fa-solid fa-info-circle" title="Product updated"></i>
+              </div>
+
+              <!-- Bottom Row: Price + Quantity -->
+              <div class="item-footer">
+                <div class="item-price">{{ formatPrice(item.unitPrice) }}</div>
+
+                <div class="item-quantity">
+                  <button class="qty-btn" @click="decrease(item.id, item.qty)">
+                    <i class="fa-solid fa-minus"></i>
+                  </button>
+                  <span class="qty-value">{{ item.qty }}</span>
+                  <button class="qty-btn" @click="increase(item.id, item.qty)">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -133,17 +149,27 @@ const formatPrice = (price) => {
     .replace('₫', 'đ')
 }
 
-// Rút gọn tên biến thể
-const getShortVariantName = (fullName) => {
-  if (!fullName) return ''
-  const productName = cartStore.cart?.cartItems[0]?.productName || ''
-  return fullName
-    .replace(productName, '')
-    .trim()
-    .replace(/^[-–—]\s*/, '')
+const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg'
+
+// Check if variant is deleted
+const isVariantDeleted = (item) => {
+  return item.productVariantId === null && item.variantName === null && item.sku === null
 }
 
-const getThumb = (item) => item.productThumbnail || '/images/placeholder.jpg'
+// Check if variant has changed
+const isVariantChanged = (item) => {
+  if (!item.variantName || !item.cartItemVariations || item.cartItemVariations.length === 0) {
+    return false
+  }
+
+  const expectedName = item.productName + ' - ' +
+    item.cartItemVariations
+      .map(v => v.cartItemVariationValues[0]?.label)
+      .filter(Boolean)
+      .join(' - ')
+
+  return item.variantName !== expectedName
+}
 
 // Tăng/giảm số lượng
 const increase = async (cartItemId, qty) => {

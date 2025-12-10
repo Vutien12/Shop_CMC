@@ -46,6 +46,9 @@ library.add(
   faGithub
 )
 
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css'
+
 const app = createApp(App)
 const pinia = createPinia();
 
@@ -53,6 +56,7 @@ app.component('FontAwesomeIcon', FontAwesomeIcon)
 app.use(pinia);
 app.use(router)
 app.component('ToastContainer', ToastContainer);
+app.component('VSelect', vSelect);
 app.directive('auto-animate', {
   mounted(el) {
     autoAnimate(el);

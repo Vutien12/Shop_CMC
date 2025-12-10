@@ -50,7 +50,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
 
         return {
           id: item.id,
-          productId: item.productId,  // IMPORTANT: Need for adding to cart
+          productId: item.productId,
           variantId: item.variantId,
           productName,           // Tên chính
           variantDisplay,        // Biến thể

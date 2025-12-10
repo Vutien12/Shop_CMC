@@ -147,24 +147,70 @@
                   </span>
                 </div>
 
-                <!-- State/Province & City & Postal Code & Country -->
+                <!-- Province & District & Ward -->
                 <div class="form-row">
+                  <!-- Province -->
                   <div class="form-group">
-                    <label>State / Province <span class="required">*</span></label>
+                    <label for="newAddressProvince">Province / City <span class="required">*</span></label>
                     <div class="input-wrapper">
-                      <input v-model="form.stateOrProvince" class="form-input" :class="{ 'error': errors.stateOrProvince }" placeholder="Hanoi" />
-                      <div v-if="errors.stateOrProvince" class="error-tooltip">{{ errors.stateOrProvince }}</div>
+                      <VSelect
+                        :options="filteredProvinces"
+                        label="ProvinceName"
+                        :reduce="p => p.ProvinceID"
+                        v-model="form.provinceId"
+                        :class="{ 'vselect-error': errors.provinceId }"
+                        placeholder="Find or select a province/city"
+                        @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectProvince(p); }"
+                        inputId="newAddressProvince"
+                      />
+                      <div v-if="errors.provinceId" class="error-tooltip">{{ errors.provinceId }}</div>
                     </div>
-                    <span v-if="errors.stateOrProvince" class="error-text">{{ errors.stateOrProvince }}</span>
+                    <span v-if="errors.provinceId" class="error-text">{{ errors.provinceId }}</span>
                   </div>
+
+                  <!-- District -->
                   <div class="form-group">
-                    <label>City <span class="required">*</span></label>
+                    <label for="newAddressDistrict">District / County <span class="required">*</span></label>
                     <div class="input-wrapper">
-                      <input v-model="form.city" class="form-input" :class="{ 'error': errors.city }" placeholder="Hanoi City" />
-                      <div v-if="errors.city" class="error-tooltip">{{ errors.city }}</div>
+                      <VSelect
+                        :options="filteredDistricts"
+                        label="DistrictName"
+                        :reduce="d => d.DistrictID"
+                        v-model="form.districtId"
+                        :class="{ 'vselect-error': errors.districtId }"
+                        placeholder="Find or select a district"
+                        :disabled="!form.provinceId"
+                        @input="(val) => { const d = districts.find(x => x.DistrictID === val); if (d) selectDistrict(d); }"
+                        inputId="newAddressDistrict"
+                      />
+                      <div v-if="errors.districtId" class="error-tooltip">{{ errors.districtId }}</div>
                     </div>
-                    <span v-if="errors.city" class="error-text">{{ errors.city }}</span>
+                    <span v-if="errors.districtId" class="error-text">{{ errors.districtId }}</span>
                   </div>
+
+                  <!-- Ward -->
+                  <div class="form-group">
+                    <label for="newAddressWard">Ward / Commune <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                      <VSelect
+                        :options="filteredWards"
+                        label="WardName"
+                        :reduce="w => w.WardCode"
+                        v-model="form.wardCode"
+                        :class="{ 'vselect-error': errors.wardCode }"
+                        placeholder="Find or select a commune/ward"
+                        :disabled="!form.districtId"
+                        @input="(val) => { const w = wards.find(x => x.WardCode === val); if (w) selectWard(w); }"
+                        inputId="newAddressWard"
+                      />
+                      <div v-if="errors.wardCode" class="error-tooltip">{{ errors.wardCode }}</div>
+                    </div>
+                    <span v-if="errors.wardCode" class="error-text">{{ errors.wardCode }}</span>
+                  </div>
+                </div>
+
+                <!-- Postal Code & Country -->
+                <div class="form-row">
                   <div class="form-group">
                     <label>Postal Code / ZIP <span class="required">*</span></label>
                     <div class="input-wrapper">
@@ -173,11 +219,11 @@
                     </div>
                     <span v-if="errors.postalCode" class="error-text">{{ errors.postalCode }}</span>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group has-select">
                     <label>Country <span class="required">*</span></label>
                     <div class="input-wrapper">
                       <select v-model="form.country" class="form-select" :class="{ 'error': errors.country }">
-                        <option value=""> Chọn quốc gia </option>
+                        <option value=""> Select country </option>
                         <option value="Vietnam">Vietnam</option>
                       </select>
                       <div v-if="errors.country" class="error-tooltip">{{ errors.country }}</div>
@@ -216,7 +262,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
@@ -225,8 +271,9 @@ import { useAddressStore } from '@/User/stores/addressesStore.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
 import { useAuth } from '@/User/components/useAuth.js';
 import { usePrefetch } from '@/User/stores/usePrefetch.js';
-import { getAddressById, createAddress, updateAddress } from '@/api/accountApi.js';
+import { getAddressById, createAddress, updateAddress, getProvinces, getDistricts, getWards } from '@/api/accountApi.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import 'vue-select/dist/vue-select.css';
 
 const router = useRouter();
 const route = useRoute();
@@ -241,20 +288,42 @@ const formLoading = ref(false);
 const isEditMode = ref(false);
 const saving = ref(false);
 
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+
+// Searchable dropdown: using vue-select component; no separate query refs needed
+const filteredProvinces = computed(() => provinces.value || []);
+const filteredDistricts = computed(() => districts.value || []);
+const filteredWards = computed(() => wards.value || []);
+
 const form = ref({
   firstName: '',
   lastName: '',
   phone: '',
   addressLine: '',
   addressLine2: '',
+  // new fields to match AddressRequest
+  provinceId: null,
   stateOrProvince: '',
   city: '',
   postalCode: '',
+  districtId: null,
+  districtName: '',
+  wardCode: '',
+  wardName: '',
   country: '',
   isDefault: false
 });
 
+// Validation errors container
 const errors = ref({});
+
+// Helper to normalize boolean-like values from API
+const normalizeBoolean = (v) => {
+  if (v === true || v === 1 || v === '1' || v === 'true') return true;
+  return false;
+};
 
 // Focus vào lỗi đầu tiên
 const focusFirstError = () => {
@@ -278,6 +347,42 @@ const handleValidationError = (err) => {
   return false;
 };
 
+// Location loaders
+const loadProvinces = async () => {
+  try {
+    const res = await getProvinces();
+    provinces.value = res.data.result || res.data || [];
+  } catch (e) {
+    console.error('loadProvinces error', e);
+    provinces.value = [];
+  }
+};
+
+const loadDistricts = async (provinceId) => {
+  districts.value = [];
+  wards.value = [];
+  if (!provinceId) return;
+  try {
+    const res = await getDistricts(provinceId);
+    districts.value = res.data.result || res.data || [];
+  } catch (e) {
+    console.error('loadDistricts error', e);
+    districts.value = [];
+  }
+};
+
+const loadWards = async (districtId) => {
+  wards.value = [];
+  if (!districtId) return;
+  try {
+    const res = await getWards(districtId);
+    wards.value = res.data.result || res.data || [];
+  } catch (e) {
+    console.error('loadWards error', e);
+    wards.value = [];
+  }
+};
+
 // Load địa chỉ khi edit
 const loadAddress = async (id) => {
   formLoading.value = true;
@@ -294,9 +399,41 @@ const loadAddress = async (id) => {
       stateOrProvince: addr.stateOrProvince || '',
       postalCode: addr.postalCode || '',
       country: addr.country || '',
-      isDefault: addr.isDefault || false
+      // normalize isDefault explicitly to boolean (handles 'true'/'1'/1/true)
+      isDefault: normalizeBoolean(addr.isDefault),
+      // new fields
+      provinceId: addr.provinceId ?? addr.province_id ?? null,
+      districtId: addr.districtId ?? addr.district_id ?? null,
+      districtName: addr.districtName || addr.district_name || '',
+      wardCode: addr.wardCode || addr.ward_code || '',
+      wardName: addr.wardName || addr.ward_name || ''
     });
-  } catch {
+
+    // load locations to populate selects
+    await loadProvinces();
+    // if provinceId exists in address, try to set the province name from loaded list
+    if (form.value.provinceId) {
+      const p = provinces.value.find(p => p.ProvinceID === form.value.provinceId || p.ProvinceID == form.value.provinceId);
+      if (p) {
+        form.value.stateOrProvince = p.ProvinceName || form.value.stateOrProvince;
+      }
+      await loadDistricts(form.value.provinceId);
+    }
+    if (form.value.districtId) {
+      const d = districts.value.find(d => d.DistrictID === form.value.districtId || d.DistrictID == form.value.districtId);
+      if (d) {
+        form.value.districtName = d.DistrictName || form.value.districtName;
+      }
+      await loadWards(form.value.districtId);
+    }
+    if (form.value.wardCode) {
+      const w = wards.value.find(w => w.WardCode === form.value.wardCode || w.WardCode == form.value.wardCode);
+      if (w) {
+        form.value.wardName = w.WardName || form.value.wardName;
+      }
+    }
+  } catch (e) {
+    console.error(e);
     toast('Không tải được địa chỉ.', 'error');
     await router.push('/addresses');
   } finally {
@@ -305,13 +442,29 @@ const loadAddress = async (id) => {
 };
 
 // Save
-// Save
 const saveAddress = async () => {
   errors.value = {};
   saving.value = true;
 
   try {
-    const payload = { ...form.value };
+    // prepare payload matching AddressRequest
+    const payload = {
+      firstName: form.value.firstName,
+      lastName: form.value.lastName,
+      phone: form.value.phone,
+      addressLine: form.value.addressLine,
+      addressLine2: form.value.addressLine2,
+      districtId: form.value.districtId ? Number(form.value.districtId) : null,
+      districtName: form.value.districtName || '',
+      wardCode: form.value.wardCode || '',
+      wardName: form.value.wardName || '',
+      provinceId: form.value.provinceId ? Number(form.value.provinceId) : null,
+      stateOrProvince: form.value.stateOrProvince || '',
+      city: form.value.city || '',
+      postalCode: form.value.postalCode || '',
+      country: form.value.country || '',
+      isDefault: !!form.value.isDefault
+    };
 
     if (isEditMode.value) {
       await updateAddress(route.params.id, payload);
@@ -338,6 +491,7 @@ const cancel = () => router.push('/addresses');
 
 // onMounted
 onMounted(async () => {
+  await loadProvinces();
   const id = route.params.id;
   if (id) {
     isEditMode.value = true;
@@ -360,43 +514,47 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
 }
 
-.error-text {
-  color: #f44336;
-  font-size: 12px;
-  margin-top: 4px;
+/* Make native select match text inputs visually and be full width */
+.form-select {
   display: block;
-}
-
-.error-tooltip {
-  position: absolute;
-  top: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #f44336;
-  color: white;
+  width: 100%;
+  min-height: 44px;
   padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 10;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  color: #111827;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
-.input-wrapper:hover .error-tooltip {
-  opacity: 1;
-  visibility: visible;
+/* align select caret to the right and ensure it doesn't overlap text */
+.form-group { position: relative; }
+.form-group .form-select { padding-right: 36px; }
+.form-group .form-select::-ms-expand { display: none; }
+
+/* Error visuals for native select */
+.form-select.error {
+  border-color: #f44336;
+  box-shadow: 0 0 0 3px rgba(244,67,54,0.08);
 }
 
-.error-tooltip::after {
+/* caret for native select: small chevron using inline SVG */
+.form-group.has-select::after {
   content: '';
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #f44336;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='%236b7280' d='M5.5 7.5l4.5 4.5 4.5-4.5' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  pointer-events: none;
+  opacity: 0.9;
 }
 
 /* Checkbox group */
@@ -461,5 +619,140 @@ onMounted(async () => {
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Override for vue-select error state */
+.vselect-error {
+  border-color: #f44336 !important;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1) !important;
+}
+
+/* Modern styling for vue-select (v4) to match project inputs */
+/* VSelect Styling - Modern Design */
+.vue-select,
+.v-select {
+  width: 100%;
+}
+
+.vue-select .vs__dropdown-toggle {
+  width: 100%;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 46px;
+  align-items: center;
+  display: flex;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.vue-select .vs__dropdown-toggle:hover {
+  border-color: #9ca3af;
+}
+
+.vue-select.vs--open .vs__dropdown-toggle {
+  border-color: #0068e1;
+  box-shadow: 0 0 0 3px rgba(0, 104, 225, 0.1);
+}
+
+.vue-select .vs__selected {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 2px 0;
+  padding: 0;
+}
+
+.vue-select .vs__search {
+  color: #111827;
+  font-size: 14px;
+  margin: 2px 0;
+  padding: 0;
+}
+
+.vue-select .vs__search::placeholder {
+  color: #9ca3af;
+}
+
+.vue-select .vs__actions {
+  padding: 0 6px 0 3px;
+}
+
+.vue-select .vs__clear,
+.vue-select .vs__open-indicator {
+  fill: #6b7280;
+  transition: fill 0.2s;
+}
+
+.vue-select:hover .vs__clear,
+.vue-select:hover .vs__open-indicator {
+  fill: #374151;
+}
+
+.vue-select .vs__dropdown-menu {
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  max-height: 280px;
+  overflow: auto;
+  margin-top: 4px;
+  background: #fff;
+  z-index: 60;
+}
+
+.vue-select .vs__dropdown-option {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background 0.15s;
+}
+
+.vue-select .vs__dropdown-option--highlight {
+  background: #f0f7ff;
+  color: #0068e1;
+}
+
+.vue-select .vs__dropdown-option--selected {
+  background: #0068e1;
+  color: white;
+  font-weight: 600;
+}
+
+.vue-select .vs__no-options {
+  padding: 14px;
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Disabled state */
+.vue-select.vs--disabled .vs__dropdown-toggle {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.vue-select.vs--disabled .vs__search,
+.vue-select.vs--disabled .vs__selected {
+  color: #9ca3af;
+}
+
+/* Error state */
+.vselect-error .vs__dropdown-toggle {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Small responsiveness */
+@media (max-width: 640px) {
+  .vue-select .vs__dropdown-toggle {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+  .vue-select .vs__dropdown-option {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
 }
 </style>
