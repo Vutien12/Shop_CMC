@@ -20,6 +20,8 @@ import Checkout from "../User/screens/Checkout/Checkout.vue";
 import OrderComplete from "../User/screens/OrderComplete/OrderComplete.vue";
 import PaymentCancel from "@/User/screens/PaymentCancel/PaymentCancel.vue";
 import MyOrder from "../User/components/MyOrder/MyOrder.vue";
+import MyCases from "../User/components/MyCases/MyCases.vue";
+import CaseDetail from "../User/components/CaseDetail/CaseDetail.vue";
 import Review from "../User/screens/Review/Review.vue";
 import Header from "../User/components/Header1/Header.vue";
 import OAuth2 from '@/OAuth2/OAuth2.vue';
@@ -52,6 +54,7 @@ import ReviewEdit from "../Review/edit.vue";
 import FlashSaleIndex from "../Flashsale/indext.vue";
 import FlashSaleCreate from "../Flashsale/create.vue";
 import RefundIndex from "@/Refund/indext.vue";
+import RefundDetail from "@/Refund/detail.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -82,6 +85,8 @@ const routes = [
   { path: '/order-complete/:id', name: 'OrderComplete', component: OrderComplete, meta: { requiresAuth: true } },
   { path: '/payment-cancel', name: 'PaymentCancel', component: PaymentCancel, meta: { requiresAuth: true } },
   { path: '/orders', name: 'MyOrder', component: MyOrder, meta: { requiresAuth: true } },
+  { path: '/my-cases', name: 'MyCases', component: MyCases, meta: { requiresAuth: true } },
+  { path: '/case-detail/:id', name: 'CaseDetail', component: CaseDetail, meta: { requiresAuth: true } },
   { path: '/review', name: 'Review', component: Review, meta: { requiresAuth: true } },
   { path: '/orderdetail/:id', name: 'Orderdetail', component: Orderdetail, meta: { requiresAuth: true } },
   { path: "/:pathMatch(.*)*", redirect: "/" },
@@ -250,7 +255,12 @@ const routes = [
             {
                 name: 'admin.cancellations.index',
                 component: RefundIndex,
-                path: 'cancellations-returns',
+                path: 'refund',
+            },
+            {
+                name: 'admin.cancellations.detail',
+                component: RefundDetail,
+                path: 'refund/:id',
             },
         ]
     },

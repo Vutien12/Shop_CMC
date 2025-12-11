@@ -11,23 +11,27 @@
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <nav class="sidebar-nav">
-            <router-link to="/account" class="nav-item">
+            <router-link to="/account" @mouseenter="prefetch('/account')" @mouseleave="cancel" class="nav-item">
               <i class="fa-solid fa-gauge"></i>
               <span>Dashboard</span>
             </router-link>
-            <router-link to="/orders" class="nav-item">
+            <router-link to="/orders" @mouseenter="prefetch('/orders')" @mouseleave="cancel" class="nav-item">
               <i class="fa-solid fa-cart-shopping"></i>
               <span>My Orders</span>
             </router-link>
-            <router-link to="/wishlist" class="nav-item">
+            <router-link to="/my-cases" @mouseenter="prefetch('/my-cases')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>My Cases</span>
+            </router-link>
+            <router-link to="/wishlist" @mouseenter="prefetch('/wishlist')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-heart"></i>
               <span>My Wishlist</span>
             </router-link>
-            <router-link to="/addresses" class="nav-item">
+            <router-link to="/addresses" @mouseenter="prefetch('/addresses')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-address-book"></i>
               <span>My Addresses</span>
             </router-link>
-            <router-link to="/profile" class="nav-item">
+            <router-link to="/profile" @mouseenter="prefetch('/profile')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-user"></i>
               <span>My Profile</span>
             </router-link>
@@ -193,18 +197,45 @@
               </div>
             </div>
 
-            <!-- Back Button -->
+            <!-- Action Buttons -->
             <div class="action-buttons">
               <router-link to="/orders" class="btn-back">
                 <i class="fa-solid fa-arrow-left"></i> Back to Orders
               </router-link>
+
+              <div v-if="showCaseButtons" class="order-actions">
+                <!-- Show Cancel button for non-completed orders -->
+                <button
+                  v-if="canCancelOrder"
+                  @click="openCaseModal('CANCEL')"
+                  class="btn-action btn-cancel"
+                >
+                  <i class="fa-solid fa-ban"></i> Cancel Order
+                </button>
+
+                <!-- Show Refund and Exchange buttons for completed orders -->
+                <button
+                  v-if="canRefundOrder"
+                  @click="openCaseModal('REFUND')"
+                  class="btn-action btn-refund"
+                >
+                  <i class="fa-solid fa-money-bill-wave"></i> Request Refund
+                </button>
+                <button
+                  v-if="canExchangeOrder"
+                  @click="openCaseModal('EXCHANGE')"
+                  class="btn-action btn-exchange"
+                >
+                  <i class="fa-solid fa-arrows-rotate"></i> Exchange Order
+                </button>
+              </div>
             </div>
           </div>
 
           <div v-else class="error-state">
             <i class="fa-solid fa-exclamation-circle"></i>
             <p>Order not found</p>
-            <router-link to="/orders" class="btn-back">Back to Orders</router-link>
+            <router-link to="/orders" @mouseenter="prefetch('/orders')" @mouseleave="cancel"  class="btn-back">Back to Orders</router-link>
           </div>
         </main>
       </div>
@@ -221,11 +252,56 @@
       @close="closeReviewModal"
       @submit="handleReviewSubmit"
     />
+
+    <!-- Case Request Modal -->
+    <div v-if="showCaseModal" class="modal-overlay" @click="closeCaseModal">
+      <div class="modal-dialog case-modal" @click.stop>
+        <div class="modal-header">
+          <h3>{{ getCaseTypeTitle(caseType) }}</h3>
+          <button type="button" class="btn-close" @click="closeCaseModal">×</button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="submitCase">
+            <!-- Show refund amount info for REFUND type -->
+            <div v-if="caseType === 'REFUND'" class="refund-info-box">
+              <div class="refund-info-item">
+                <i class="fa-solid fa-info-circle"></i>
+                <div>
+                  <strong>Refund Amount:</strong>
+                  <span class="refund-amount-value">{{ formatPrice(orderDetail.total) }}</span>
+                </div>
+              </div>
+              <p class="refund-note">The total order amount will be refunded after approval.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="reason">Reason <span class="required">*</span></label>
+              <textarea
+                id="reason"
+                v-model="caseReason"
+                class="form-control"
+                rows="6"
+                :placeholder="getReasonPlaceholder(caseType)"
+                required
+              ></textarea>
+              <small class="form-hint">Please provide detailed information about your request.</small>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" @click="closeCaseModal">Cancel</button>
+              <button type="submit" class="btn-primary" :disabled="submittingCase">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ submittingCase ? 'Submitting...' : 'Submit Request' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
@@ -233,9 +309,12 @@ import Loading from '@/User/components/Loading/Loading.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import Review from '@/User/screens/Review/Review.vue'
 import { getOrderById } from '@/api/orderApi.js'
+import { createOrderCase } from '@/api/orderCaseApi.js'
 import { useAuth } from '@/User/components/useAuth.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
+import { usePrefetch } from '@/User/stores/usePrefetch.js'
 
+const { prefetch, cancel } = usePrefetch();
 const route = useRoute()
 const router = useRouter()
 const { handleLogout: authLogout } = useAuth()
@@ -249,6 +328,41 @@ const orderId = ref(route.params.id)
 const showReviewModal = ref(false)
 const selectedProduct = ref(null)
 const canReview = ref(false)
+
+// Case modal state
+const showCaseModal = ref(false)
+const caseType = ref('CANCEL')
+const caseReason = ref('')
+const submittingCase = ref(false)
+
+// Computed: Can cancel/refund/exchange order based on status
+const canCancelOrder = computed(() => {
+  if (!orderDetail.value) return false
+  const status = orderDetail.value.status
+  // Can cancel if not COMPLETED, CANCELLED, or REFUNDED
+  return ['PENDING', 'PENDING_PAYMENT', 'PAID', 'PROCESSING', 'SHIPPED'].includes(status)
+})
+
+const canRefundOrder = computed(() => {
+  if (!orderDetail.value) return false
+  const status = orderDetail.value.status
+  // Can refund only if COMPLETED
+  return status === 'COMPLETED'
+})
+
+const canExchangeOrder = computed(() => {
+  if (!orderDetail.value) return false
+  const status = orderDetail.value.status
+  // Can exchange only if COMPLETED
+  return status === 'COMPLETED'
+})
+
+const showCaseButtons = computed(() => {
+  if (!orderDetail.value) return false
+  const status = orderDetail.value.status
+  // Don't show any buttons if CANCELLED or REFUNDED
+  return !['CANCELLED', 'REFUNDED'].includes(status)
+})
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
@@ -334,7 +448,80 @@ const handleReviewSubmit = (reviewData) => {
     : 'Cảm ơn bạn đã đánh giá sản phẩm!';
   toast(message, 'success')
   // Review creation/update is handled by Review component and API
-  closeReviewModal()
+}
+
+// Case modal handlers
+const openCaseModal = (type) => {
+  caseType.value = type
+  caseReason.value = ''
+  showCaseModal.value = true
+}
+
+const closeCaseModal = () => {
+  showCaseModal.value = false
+  caseType.value = 'CANCEL'
+  caseReason.value = ''
+}
+
+const getCaseTypeTitle = (type) => {
+  const titles = {
+    'CANCEL': 'Cancel Order Request',
+    'REFUND': 'Refund Request',
+    'EXCHANGE': 'Exchange Request',
+    'REQUEST_INFO': 'Request Information'
+  }
+  return titles[type] || 'Submit Request'
+}
+
+const getReasonPlaceholder = (type) => {
+  const placeholders = {
+    'CANCEL': 'Please explain why you want to cancel this order...',
+    'REFUND': 'Please provide the reason for requesting a refund...',
+    'EXCHANGE': 'Please specify which product you want to exchange and what you prefer instead...',
+    'REQUEST_INFO': 'Please provide additional information...'
+  }
+  return placeholders[type] || 'Please provide details about your request...'
+}
+
+const submitCase = async () => {
+  if (!caseReason.value.trim()) {
+    toast('Please provide a reason for your request', 'error')
+    return
+  }
+
+  try {
+    submittingCase.value = true
+
+    const caseData = {
+      orderId: parseInt(orderId.value),
+      type: caseType.value,
+      reason: caseReason.value
+    }
+
+    // Add refundAmount for REFUND type
+    if (caseType.value === 'REFUND' && orderDetail.value) {
+      caseData.refundAmount = orderDetail.value.total
+    }
+
+    const response = await createOrderCase(caseData)
+
+    // Support both code 200 and 1000
+    if (response.code === 1000 || response.code === 200) {
+      toast('Your request has been submitted successfully!', 'success')
+      closeCaseModal() // Close modal immediately
+      // Redirect to my cases page
+      setTimeout(() => {
+        router.push('/my-cases')
+      }, 1500)
+    } else {
+      toast(response.message || 'Failed to submit request', 'error')
+    }
+  } catch (error) {
+    console.error('Error submitting case:', error)
+    toast('Error submitting request. Please try again.', 'error')
+  } finally {
+    submittingCase.value = false
+  }
 }
 
 onMounted(async () => {

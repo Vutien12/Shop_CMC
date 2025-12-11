@@ -57,6 +57,9 @@ export * from './cartApi.js';
 // Order APIs
 export * from './orderApi.js';
 
+// Order Case APIs (Refunds, Cancellations, Returns)
+export * from './orderCaseApi.js';
+
 // Auth APIs
 export * from './authApi.js';
 

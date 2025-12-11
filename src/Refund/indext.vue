@@ -11,19 +11,17 @@
         <template #filters>
             <div class="filter-group">
                 <select class="filter-select" v-model="filterType">
-                    <option value="">-- Request Type --</option>
-                    <option value="CANCEL">Cancel Order</option>
-                    <option value="RETURN_REFUND">Return & Refund</option>
-                    <option value="REFUND_ONLY">Refund Only</option>
+                    <option value="">Request Type</option>
+                    <option value="CANCEL">Cancel</option>
+                    <option value="REFUND">Refund</option>
                     <option value="EXCHANGE">Exchange</option>
-                    <option value="COMPLAINT">Complaint</option>
                     <option value="REQUEST_INFO">Request Info</option>
                 </select>
             </div>
 
             <div class="filter-group">
                 <select class="filter-select" v-model="filterStatus">
-                    <option value="">-- Status --</option>
+                    <option value="">Status</option>
                     <option value="PENDING">Pending</option>
                     <option value="REQUESTING_INFO">Requesting Info</option>
                     <option value="USER_RESPONDED">User Responded</option>
@@ -38,14 +36,19 @@
             </div>
         </template>
 
-        <!-- Custom cell for Order Code -->
-        <template #cell-order_code="{ value }">
+        <!-- Custom cell for Order ID -->
+        <template #cell-orderId="{ value }">
             <span class="order-code">{{ value }}</span>
         </template>
 
-        <!-- Custom cell for User -->
-        <template #cell-user_name="{ value }">
+        <!-- Custom cell for User Name -->
+        <template #cell-userName="{ value }">
             <span class="user-name">{{ value }}</span>
+        </template>
+
+        <!-- Custom cell for User Email -->
+        <template #cell-userEmail="{ value }">
+            <span class="user-email">{{ value }}</span>
         </template>
 
         <!-- Custom cell for Type column -->
@@ -63,93 +66,27 @@
         </template>
 
         <!-- Custom cell for Refund Amount -->
-        <template #cell-refund_amount="{ value }">
+        <template #cell-refundAmount="{ value }">
             <span class="refund-amount">{{ formatCurrency(value) }}</span>
         </template>
 
         <!-- Custom cell for Created column -->
-        <template #cell-created_at="{ value }">
+        <template #cell-createdAt="{ value }">
             {{ formatDate(value) }}
         </template>
     </DataTable>
 
-    <!-- Detail Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-        <div class="modal-dialog" @click.stop>
-            <div class="modal-header">
-                <h5 class="modal-title">Request Details</h5>
-                <button type="button" class="btn-close" @click="closeModal">×</button>
-            </div>
 
-            <div class="modal-body">
-                <div class="info-section">
-                    <h6>General Information</h6>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>ID</label>
-                            <div class="info-value">{{ selectedCase?.id }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>Order Code</label>
-                            <div class="info-value">{{ selectedCase?.order_code }}</div>
-                        </div>
-                        <div class="info-item">
-                            <label>User</label>
-                            <div class="info-value">{{ selectedCase?.user_name }}</div>
-                        </div>
-                    </div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Type</label>
-                            <span :class="['type-badge', getTypeClass(selectedCase?.type)]">
-                                {{ getTypeLabel(selectedCase?.type) }}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <label>Status</label>
-                            <span :class="['status-badge', getStatusClass(selectedCase?.status)]">
-                                {{ getStatusLabel(selectedCase?.status) }}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <label>Refund Amount</label>
-                            <div class="info-value">{{ formatCurrency(selectedCase?.refund_amount) }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <h6>Request Details</h6>
-                    <div class="info-item">
-                        <label>Reason</label>
-                        <div class="info-text">{{ selectedCase?.reason }}</div>
-                    </div>
-                    <div class="info-item" style="margin-top: 20px;">
-                        <label>Admin Note</label>
-                        <textarea class="form-textarea" rows="3" v-model="adminNote" placeholder="Add admin note..."></textarea>
-                    </div>
-                    <div class="info-item" style="margin-top: 20px;">
-                        <label class="checkbox-label">
-                            <input type="checkbox" :checked="selectedCase?.need_return" disabled>
-                            <span>Need Return</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @click="closeModal">Close</button>
-                <button class="btn btn-success" @click="handleApprove">Approve</button>
-                <button class="btn btn-danger" @click="handleReject">Reject</button>
-            </div>
-        </div>
-    </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import DataTable from '@/Admin/view/components/DataTable.vue';
+import {
+    searchOrderCases,
+    batchDeleteOrderCases
+} from '@/api/orderCaseApi.js';
 
 export default {
     name: 'CancellationsReturnsPage',
@@ -162,110 +99,73 @@ export default {
         const filterType = ref('');
         const filterStatus = ref('');
         const searchQuery = ref('');
-        const selectedCase = ref(null);
-        const adminNote = ref('');
-        const showModal = ref(false);
+        const loading = ref(false);
+        const currentPage = ref(0);
+        const pageSize = ref(10);
+        const totalElements = ref(0);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
-            { key: 'order_code', label: 'Order Code', sortable: true, width: '120px' },
-            { key: 'user_name', label: 'User', sortable: true,width: '150px' },
+            { key: 'orderId', label: 'Order ID', sortable: true, width: '100px' },
+            { key: 'userName', label: 'User', sortable: true, width: '150px' },
+            { key: 'userEmail', label: 'Email', sortable: true, width: '200px' },
             { key: 'type', label: 'Type', sortable: true, width: '150px' },
             { key: 'status', label: 'Status', sortable: true, width: '140px' },
-
-            { key: 'created_at', label: 'Created', sortable: true, width: '150px' }
+            { key: 'refundAmount', label: 'Refund Amount', sortable: true, width: '140px' },
+            { key: 'createdAt', label: 'Created', sortable: true, width: '150px' }
         ];
 
         const loadCancellations = async () => {
             try {
+                loading.value = true;
 
-                cancellations.value = [
-                    {
-                        id: 1,
-                        order_code: 'ORD-001',
-                        user_name: 'Nguyen Van A',
-                        type: 'RETURN_REFUND',
-                        status: 'PENDING',
-                        refund_amount: 500000,
-                        reason: 'Product has minor defects, want to return and get refund',
-                        need_return: true,
-                        created_at: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        order_code: 'ORD-002',
-                        user_name: 'Tran Thi B',
-                        type: 'CANCEL',
-                        status: 'APPROVED',
-                        refund_amount: 1200000,
-                        reason: 'Changed mind, want to cancel order',
-                        need_return: false,
-                        created_at: new Date(Date.now() - 86400000).toISOString()
-                    },
-                    {
-                        id: 3,
-                        order_code: 'ORD-003',
-                        user_name: 'Le Van C',
-                        type: 'REFUND_ONLY',
-                        status: 'REFUNDED',
-                        refund_amount: 300000,
-                        reason: 'Wrong item received, need refund only',
-                        need_return: false,
-                        created_at: new Date(Date.now() - 172800000).toISOString()
-                    },
-                    {
-                        id: 4,
-                        order_code: 'ORD-004',
-                        user_name: 'Pham Thi D',
-                        type: 'COMPLAINT',
-                        status: 'REQUESTING_INFO',
-                        refund_amount: 0,
-                        reason: 'Product quality is not as described',
-                        need_return: true,
-                        created_at: new Date(Date.now() - 259200000).toISOString()
+                // Always use searchOrderCases for consistency
+                const searchParams = {
+                    page: currentPage.value,
+                    size: pageSize.value,
+                    sort: 'createdAt,desc'
+                };
+
+                if (filterType.value) searchParams.type = filterType.value;
+                if (filterStatus.value) searchParams.status = filterStatus.value;
+                if (searchQuery.value) searchParams.search = searchQuery.value;
+
+                const response = await searchOrderCases(searchParams);
+                console.log('Search order cases response:', response);
+
+                // Support both code 200 and 1000
+                if (response.code === 1000 || response.code === 200) {
+                    // Handle paginated response
+                    if (response.result.content) {
+                        cancellations.value = response.result.content;
+                        totalElements.value = response.result.totalElements || 0;
+                    } else if (Array.isArray(response.result)) {
+                        // Handle array response
+                        cancellations.value = response.result;
+                        totalElements.value = response.result.length;
+                    } else {
+                        cancellations.value = [];
+                        totalElements.value = 0;
                     }
-                ];
+                    console.log('Loaded cases:', cancellations.value);
+                }
             } catch (error) {
-                console.error('Error loading cancellations:', error);
+                console.error('Error loading order cases:', error);
+                alert('Failed to load order cases. Please try again.');
+            } finally {
+                loading.value = false;
             }
         };
+
+        // Watch for filter changes
+        watch([filterType, filterStatus, searchQuery], () => {
+            currentPage.value = 0;
+            loadCancellations();
+        });
 
         const handleRowClick = (row) => {
-            selectedCase.value = row;
-            adminNote.value = '';
-            showModal.value = true;
-        };
-
-        const closeModal = () => {
-            showModal.value = false;
-            selectedCase.value = null;
-            adminNote.value = '';
-        };
-
-        const handleApprove = async () => {
-            try {
-                console.log('Approving case:', selectedCase.value?.id, 'Note:', adminNote.value);
-                // Add approve API call here
-                alert('Case approved successfully!');
-                closeModal();
-                await loadCancellations();
-            } catch (error) {
-                console.error('Error approving case:', error);
-                alert('Failed to approve case');
-            }
-        };
-
-        const handleReject = async () => {
-            try {
-                console.log('Rejecting case:', selectedCase.value?.id, 'Note:', adminNote.value);
-                // Add reject API call here
-                alert('Case rejected successfully!');
-                closeModal();
-                await loadCancellations();
-            } catch (error) {
-                console.error('Error rejecting case:', error);
-                alert('Failed to reject case');
-            }
+            // Navigate to detail page instead of showing modal
+            router.push(`/admin/refund/${row.id}`);
         };
 
         const handleDelete = async (selectedIds) => {
@@ -274,14 +174,15 @@ export default {
             }
 
             try {
-                // Add delete API call here
-                console.log('Delete items:', selectedIds);
-
+                loading.value = true;
+                await batchDeleteOrderCases(selectedIds);
                 await loadCancellations();
                 alert('Item(s) deleted successfully!');
             } catch (error) {
                 console.error('Error deleting items:', error);
                 alert('Error deleting item(s). Please try again.');
+            } finally {
+                loading.value = false;
             }
         };
 
@@ -314,11 +215,9 @@ export default {
 
         const getTypeLabel = (type) => {
             const labels = {
-                'CANCEL': 'Cancel Order',
-                'RETURN_REFUND': 'Return & Refund',
-                'REFUND_ONLY': 'Refund Only',
+                'CANCEL': 'Cancel',
+                'REFUND': 'Refund',
                 'EXCHANGE': 'Exchange',
-                'COMPLAINT': 'Complaint',
                 'REQUEST_INFO': 'Request Info'
             };
             return labels[type] || type;
@@ -327,10 +226,8 @@ export default {
         const getTypeClass = (type) => {
             const classes = {
                 'CANCEL': 'type-cancel',
-                'RETURN_REFUND': 'type-return',
-                'REFUND_ONLY': 'type-refund',
+                'REFUND': 'type-refund',
                 'EXCHANGE': 'type-exchange',
-                'COMPLAINT': 'type-complaint',
                 'REQUEST_INFO': 'type-info'
             };
             return classes[type] || '';
@@ -378,14 +275,9 @@ export default {
             filterType,
             filterStatus,
             searchQuery,
-            selectedCase,
-            adminNote,
-            showModal,
+            loading,
             handleRowClick,
             handleDelete,
-            handleApprove,
-            handleReject,
-            closeModal,
             formatDate,
             formatCurrency,
             getTypeLabel,
@@ -428,8 +320,14 @@ export default {
     color: #374151;
 }
 
+.user-email {
+    color: #6b7280;
+    font-size: 13px;
+}
+
 .refund-amount {
     color: #059669;
+    font-weight: 600;
 }
 
 .type-badge {
@@ -690,6 +588,33 @@ export default {
     min-height: 80px;
 }
 
+.form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+}
+
+.form-input:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .form-textarea {
     width: 100%;
     padding: 12px;
@@ -712,6 +637,12 @@ export default {
 
 .form-textarea::placeholder {
     color: #9ca3af;
+}
+
+.form-textarea:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .checkbox-label {
@@ -758,7 +689,7 @@ export default {
     color: #374151;
 }
 
-.modal-footer .btn-secondary:hover {
+.modal-footer .btn-secondary:hover:not(:disabled) {
     background-color: #e5e7eb;
 }
 
@@ -767,7 +698,7 @@ export default {
     color: #fff;
 }
 
-.modal-footer .btn-success:hover {
+.modal-footer .btn-success:hover:not(:disabled) {
     background-color: #047857;
 }
 
@@ -776,8 +707,31 @@ export default {
     color: #fff;
 }
 
-.modal-footer .btn-danger:hover {
+.modal-footer .btn-danger:hover:not(:disabled) {
     background-color: #b91c1c;
+}
+
+.modal-footer .btn-info {
+    background-color: #0ea5e9;
+    color: #fff;
+}
+
+.modal-footer .btn-info:hover:not(:disabled) {
+    background-color: #0284c7;
+}
+
+.modal-footer .btn-primary {
+    background-color: #3b82f6;
+    color: #fff;
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.modal-footer .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Responsive Styles */
