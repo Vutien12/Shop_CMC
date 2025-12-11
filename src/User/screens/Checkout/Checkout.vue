@@ -314,7 +314,7 @@
                   </span>
                 </label>
 
-                <label class="payment-option" :class="{ selected: selectedPayment === 'vnpay' }">
+                <label class="payment-option" :class="{ selected: selectedPayment === 'card' }">
                   <input
                     type="radio"
                     name="payment"
@@ -324,6 +324,19 @@
                   <span class="payment-info">
                     <strong>💳 CARD</strong>
                     <span class="payment-desc">Payment via card.</span>
+                  </span>
+                </label>
+
+                <label class="payment-option" :class="{ selected: selectedPayment === 'payos_qr' }">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="payos_qr"
+                    v-model="selectedPayment"
+                  />
+                  <span class="payment-info">
+                    <strong>📱 PayOS QR</strong>
+                    <span class="payment-desc">Scan QR code to pay via PayOS.</span>
                   </span>
                 </label>
               </div>
@@ -1030,7 +1043,8 @@ const processPayment = async () => {
     const paymentMethodMap = {
       'cod': 'COD',
       'bank_transfer': 'VIETQR',
-      'card': 'DEBIT_CARD'
+      'card': 'DEBIT_CARD',
+      'payos_qr': 'PAYOS_QR'
     }
 
     // Map shipping method
@@ -1119,6 +1133,21 @@ const processPayment = async () => {
             router.push(`/order-complete/${orderId}`)
           }, 500)
         }
+      }
+    } else if (paymentMethod === 'PAYOS_QR') {
+      // Redirect to PayOS checkout using checkoutUrl (with webhook support)
+      if (orderData.checkoutUrl) {
+        console.log('[Checkout] PAYOS_QR redirecting to PayOS:', {
+          orderId: orderData.id,
+          paymentProvider: orderData.paymentProvider
+        })
+        window.location.href = orderData.checkoutUrl
+      } else {
+        console.warn('[Checkout] No checkoutUrl in response for PAYOS_QR')
+        toast('Unable to create PayOS payment session. Please try again!', 'error')
+        setTimeout(() => {
+          router.push(`/order-complete/${orderId}`)
+        }, 500)
       }
     } else {
       // COD - direct to order complete

@@ -508,6 +508,15 @@ export default {
     buildVariantLookup(variants) {
       this.variantLookup = {}
 
+      // If no variations, store the first variant with empty key
+      if (this.variations.length === 0) {
+        if (variants.length > 0) {
+          this.variantLookup[''] = variants[0]
+        }
+        console.log('variantLookup (no variations):', this.variantLookup)
+        return
+      }
+
       variants.forEach(variant => {
         let parts = (variant.name || '').split(' - ')
         if (parts[0] === this.product.name) parts.shift()
@@ -527,6 +536,16 @@ export default {
 
     initializeSelections() {
       const first = this.product.variants.find(v => v.inStock && v.isActive) || this.product.variants[0] || {}
+
+      // If no variations exist, directly select the first variant
+      if (this.variations.length === 0) {
+        this.selectedVariant = first
+        if (this.selectedVariant) {
+          this.product.inStock = this.selectedVariant.inStock
+          this.product.qty = this.selectedVariant.qty
+        }
+        return
+      }
 
       let parts = (first.name || '').split(' - ')
       if (parts[0] === this.product.name) parts.shift()

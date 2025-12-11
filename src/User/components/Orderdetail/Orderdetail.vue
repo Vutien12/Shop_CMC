@@ -273,7 +273,10 @@ const formatPaymentMethod = (method) => {
     'DEBIT_CARD': 'Debit Card',
     'CREDIT_CARD': 'Credit Card',
     'CASH': 'Cash on Delivery',
-    'BANK_TRANSFER': 'Bank Transfer'
+    'BANK_TRANSFER': 'Bank Transfer',
+    'PAYOS_QR': 'PayOS QR',
+    'VIETQR': 'VietQR',
+    'COD': 'Cash on Delivery'
   }
   return methods[method] || method
 }
