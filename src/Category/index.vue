@@ -31,27 +31,47 @@
                     <div class="box-body clearfix">
                         <div class="tab-wrapper">
                             <ul class="nav nav-tabs">
-                                <li class="active">
-                                    <a href="#">General</a>
+                                <li :class="{ active: activeTab === 'general' }">
+                                    <a href="#" @click.prevent="activeTab = 'general'">General</a>
+                                </li>
+                                <li :class="{ active: activeTab === 'image' }">
+                                    <a href="#" @click.prevent="activeTab = 'image'">Image</a>
                                 </li>
                             </ul>
                             <form @submit.prevent="handleSubmit">
                                 <div class="tab-content">
-                                    <div class="form-group row">
-                                        <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
-                                        <div class="col-md-9">
-                                            <input type="text" class="form-control" v-model="form.name">
+                                    <!-- General Tab -->
+                                    <div v-show="activeTab === 'general'">
+                                        <div class="form-group row">
+                                            <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
+                                            <div class="col-md-9">
+                                                <input type="text" class="form-control" v-model="form.name">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-md-3 control-label">Status</label>
-                                        <div class="col-md-9">
-                                            <div class="checkbox-wrapper">
-                                                <input type="checkbox" id="is_active" v-model="form.is_active">
-                                                <label for="is_active">Enable the category</label>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 control-label">Status</label>
+                                            <div class="col-md-9">
+                                                <div class="checkbox-wrapper">
+                                                    <input type="checkbox" id="is_active" v-model="form.is_active">
+                                                    <label for="is_active">Enable the category</label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Image Tab -->
+                                    <div v-show="activeTab === 'image'">
+                                        <div class="form-group row">
+                                            <label class="col-md-3 control-label">Logo</label>
+                                            <div class="col-md-9">
+                                                <ImageUploader
+                                                    v-model="form.logo"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Buttons -->
                                     <div class="form-group row">
                                         <label class="col-md-3 control-label"></label>
                                         <div class="col-md-9">
@@ -80,12 +100,14 @@ import 'jstree';
 import 'jstree/dist/themes/default/style.min.css';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
+import ImageUploader from '@/Category/components/ImageUploader.vue';
 import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi';
 
 export default {
     name: 'CategoryPage',
     components: {
-        PageBreadcrumb
+        PageBreadcrumb,
+        ImageUploader
     },
     setup() {
         const notification = useNotification();
@@ -94,12 +116,14 @@ export default {
         const loading = ref(false);
         const saving = ref(false);
         const categories = ref([]);
+        const activeTab = ref('general');
 
         const form = ref({
             id: null,
             name: '',
             is_searchable: false,
-            is_active: false
+            is_active: false,
+            logo: ''
         });
 
         const isNewCategory = computed(() => !form.value.id);
@@ -172,8 +196,10 @@ export default {
                             id: cat.id,
                             name: cat.name,
                             is_searchable: cat.isSearchable || false,
-                            is_active: cat.isActive
+                            is_active: cat.isActive,
+                            logo: cat.logo || ''
                         };
+                        activeTab.value = 'general';
                     }
                 } catch (error) {
                     console.error('Failed to load category:', error);
@@ -188,8 +214,10 @@ export default {
                 name: '',
                 is_searchable: false,
                 is_active: true,
-                parentId: null
+                parentId: null,
+                logo: ''
             };
+            activeTab.value = 'general';
             if (categoryTree.value) $(categoryTree.value).jstree('deselect_all');
         };
 
@@ -200,8 +228,10 @@ export default {
                 name: '',
                 is_searchable: false,
                 is_active: true,
-                parentId: parseInt(selectedNode.value.id)
+                parentId: parseInt(selectedNode.value.id),
+                logo: ''
             };
+            activeTab.value = 'general';
         };
 
         const collapseAll = () => {
@@ -225,7 +255,8 @@ export default {
                     parentId: form.value.parentId || null,
                     name: form.value.name,
                     isSearchable: form.value.is_searchable,
-                    isActive: form.value.is_active
+                    isActive: form.value.is_active,
+                    logo: form.value.logo || null
                 };
 
                 if (form.value.id) {
@@ -299,6 +330,7 @@ export default {
             selectedNode,
             loading,
             saving,
+            activeTab,
             form,
             isNewCategory,
             loadCategories,
