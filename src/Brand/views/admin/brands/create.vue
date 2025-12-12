@@ -1,5 +1,12 @@
 <template>
-    <section class="content">
+    <div class="brand-create-page">
+        <PageBreadcrumb 
+            title="Create Brand"
+            :breadcrumbs="[
+                { label: 'Brands', route: { name: 'admin.brands.index' } },
+                { label: 'Create' }
+            ]"
+        />
         <form @submit.prevent="save" class="form-horizontal" id="brand-create-form">
             <div class="accordion-content clearfix">
                 <!-- Left Sidebar -->
@@ -123,16 +130,19 @@
             @close="closeFileManager"
             @select="handleImageSelect"
         />
-    </section>
+    </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import { createBrand, attachFileToBrand } from '@/api/brandApi';
 
 const router = useRouter();
+const notification = useNotification();
 const activeTab = ref('general');
 const loading = ref(false);
 const logoPreview = ref(null);
@@ -180,8 +190,23 @@ const save = async () => {
 
     // Validation
     if (!form.name.trim()) {
-        errors.name = 'The name field is required.';
+        errors.name = 'Brand name is required';
         activeTab.value = 'general';
+        notification.warning('Missing Information!', 'Please enter brand name');
+        return;
+    }
+
+    if (form.name.length < 2) {
+        errors.name = 'Brand name must be at least 2 characters';
+        activeTab.value = 'general';
+        notification.warning('Invalid Data!', 'Brand name is too short');
+        return;
+    }
+
+    if (form.name.length > 100) {
+        errors.name = 'Brand name cannot exceed 100 characters';
+        activeTab.value = 'general';
+        notification.warning('Invalid Data!', 'Brand name is too long');
         return;
     }
 
@@ -210,14 +235,24 @@ const save = async () => {
                     zone: 'LOGO'
                 });
             }
-            alert('Brand created successfully!');
+            notification.success('Success!', 'Brand created successfully');
 
             // Navigate to brands list
             await router.push({ name: 'admin.brands.index' });
+        } else {
+            notification.error('Error!', response.message || 'Failed to create brand');
         }
     } catch (error) {
         console.error('Error saving brand:', error);
-        alert('Error saving brand. Please try again.');
+        if (error.response?.status === 400) {
+            notification.error('Invalid Data!', error.response.data?.message || 'Please check your information');
+        } else if (error.response?.status === 409) {
+            notification.error('Duplicate!', 'Brand name already exists');
+        } else if (error.response?.status === 500) {
+            notification.error('Server Error!', 'Please try again later');
+        } else {
+            notification.error('Error!', 'Failed to save brand');
+        }
     } finally {
         loading.value = false;
     }
@@ -225,6 +260,10 @@ const save = async () => {
 </script>
 
 <style scoped>
+.brand-create-page {
+  padding: 20px;
+}
+
 /* Accordion Layout */
 .accordion-content {
     display: flex;

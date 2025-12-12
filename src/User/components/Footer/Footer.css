@@ -1,16 +1,24 @@
 /* Base Styles */
-body {
+html, body {
+  width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
 }
+
 footer {
-    font-family: sans-serif;
-    color: #333;
+  font-family: sans-serif;
+  color: #333;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .container {
-    width: 1400px;
-    margin: 0 auto;
-    padding: 0 15px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 15px;
+  box-sizing: border-box;
 }
 
 /* -------------------------------------- */
@@ -184,6 +192,31 @@ footer {
 /* ============================= */
 /* Responsive Styles */
 /* ============================= */
+
+/* Progressive Padding */
+@media (min-width: 768px) {
+  .container {
+    padding: 0 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 25px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    padding: 0 30px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .container {
+    padding: 0 40px;
+  }
+}
 
 /* Tablet (≤ 1024px) */
 @media (max-width: 1024px) {

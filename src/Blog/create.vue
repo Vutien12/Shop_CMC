@@ -1,12 +1,12 @@
 <template>
-    <div class="content-wrapper">
-        <div class="page-header">
-            <div>
-                <h2 class="main-content-title tx-24 mg-b-5">
-                    {{ isEditMode ? 'Edit Blog Post' : 'Create Blog Post' }}
-                </h2>
-            </div>
-        </div>
+    <div class="blog-create-page">
+        <PageBreadcrumb 
+            :title="isEditMode ? 'Edit Blog Post' : 'Create Blog Post'"
+            :breadcrumbs="[
+                { label: 'Blogs', route: { name: 'admin.blogs.index' } },
+                { label: isEditMode ? 'Edit' : 'Create' }
+            ]"
+        />
 
         <form @submit.prevent="handleSubmit">
             <div class="row row-gap">
@@ -146,6 +146,7 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import TinyMCEEditor from '@/Admin/components/TinyMCEEditor.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import { createBlog, updateBlog, getBlogById } from '@/api/blogApi.js';
@@ -183,6 +184,7 @@ class Errors {
 export default {
     name: 'BlogCreate',
     components: {
+        PageBreadcrumb,
         TinyMCEEditor,
         SelectImage
     },
@@ -451,6 +453,10 @@ export default {
 </script>
 
 <style scoped>
+.blog-create-page {
+    padding: 20px;
+}
+
 .content-wrapper {
     padding: 25px;
     background: #f8f9fa;

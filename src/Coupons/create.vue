@@ -1,5 +1,12 @@
 <template>
-    <section class="content">
+    <div class="coupon-create-page">
+        <PageBreadcrumb 
+            :title="isEditMode ? 'Edit Coupon' : 'Create Coupon'"
+            :breadcrumbs="[
+                { label: 'Coupons', route: { name: 'admin.coupons.index' } },
+                { label: isEditMode ? 'Edit' : 'Create' }
+            ]"
+        />
         <div v-if="isLoading" class="loading-overlay">
             <div class="loading-spinner">Loading...</div>
         </div>
@@ -162,16 +169,19 @@
         </form>
 
         <!-- File Manager removed for this component -->
-    </section>
+    </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useNotification } from '@/Admin/composables/useNotification.js'
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue'
 import { createCoupon, getCouponById, updateCoupon } from '@/api/couponsApi'
 
 const router = useRouter()
 const route = useRoute()
+const notification = useNotification()
 const activeTab = ref('general')
 const isSubmitting = ref(false)
 const submitMessage = ref('')
@@ -232,8 +242,7 @@ const loadCoupon = async () => {
         
     } catch (error) {
         console.error('Failed to load coupon:', error)
-        submitMessage.value = 'Failed to load coupon data'
-        submitSuccess.value = false
+        notification.error('Lỗi!', 'Không thể tải dữ liệu mã giảm giá')
     } finally {
         isLoading.value = false
     }
@@ -317,14 +326,13 @@ async function onSubmit() {
         let response
         if (isEditMode.value) {
             response = await updateCoupon(couponId.value, couponData)
-            submitMessage.value = 'Coupon updated successfully!'
+            notification.success('Thành công!', 'Đã cập nhật mã giảm giá thành công')
         } else {
             response = await createCoupon(couponData)
-            submitMessage.value = 'Coupon created successfully!'
+            notification.success('Thành công!', 'Đã tạo mã giảm giá thành công')
         }
         
         console.log('API Response:', response)
-        submitSuccess.value = true
         
         // Dispatch event for list to reload (only on create)
         if (!isEditMode.value) {
@@ -374,20 +382,22 @@ async function onSubmit() {
         console.error('Error saving coupon:', error)
         console.error('Error response:', error.response?.data)
         
-        // Show detailed error message
-        let errorMsg = isEditMode.value ? 'Failed to update coupon. ' : 'Failed to create coupon. '
-        if (error.response?.data?.message) {
-            errorMsg += error.response.data.message
-        } else if (error.response?.data?.errors) {
-            // Handle validation errors
-            const errors = error.response.data.errors
-            errorMsg += Object.values(errors).flat().join(', ')
-        } else if (error.message) {
-            errorMsg += error.message
+        // Show detailed error message with notification
+        if (error.response?.status === 400) {
+            const errorData = error.response.data
+            if (errorData.errors) {
+                const errorMessages = Object.values(errorData.errors).flat().join(', ')
+                notification.error('Dữ liệu không hợp lệ!', errorMessages)
+            } else {
+                notification.error('Dữ liệu không hợp lệ!', errorData.message || 'Vui lòng kiểm tra lại thông tin')
+            }
+        } else if (error.response?.status === 409) {
+            notification.error('Trùng lặp!', 'Mã giảm giá đã tồn tại')
+        } else if (error.response?.status === 500) {
+            notification.error('Lỗi máy chủ!', 'Vui lòng thử lại sau')
+        } else {
+            notification.error('Lỗi!', isEditMode.value ? 'Không thể cập nhật mã giảm giá' : 'Không thể tạo mã giảm giá')
         }
-        
-        submitMessage.value = errorMsg
-        submitSuccess.value = false
     } finally {
         isSubmitting.value = false
     }
@@ -395,6 +405,10 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+.coupon-create-page {
+    padding: 20px;
+}
+
 /* Loading Overlay */
 .loading-overlay {
     position: fixed;

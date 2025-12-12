@@ -89,27 +89,33 @@
                     </label>
 
                     <div class="field-with-error-tooltip">
-                        <!-- Selected categories as tags -->
-                        <div class="selected-categories-tags">
-                            <div
-                                v-for="catId in form.categories"
-                                :key="catId"
-                                class="category-tag"
-                            >
-                                <span>{{ getCategoryName(catId) }}</span>
-                                <button
-                                    type="button"
-                                    @click="removeCategory(catId)"
-                                    class="btn-remove-tag"
-                                    title="Remove"
-                                >
-                                    ✕
-                                </button>
+                        <!-- Input to trigger dropdown with selected tags inside -->
+                        <div class="category-input-wrapper" @click="toggleCategoryDropdown">
+                            <div class="category-input-content">
+                                <!-- Selected categories as tags inside input -->
+                                <div v-if="form.categories.length > 0" class="selected-tags-inline">
+                                    <span
+                                        v-for="catId in form.categories"
+                                        :key="catId"
+                                        class="tag-inline"
+                                    >
+                                        {{ getCategoryName(catId) }}
+                                        <button
+                                            type="button"
+                                            @click.stop="removeCategory(catId)"
+                                            class="btn-remove-inline"
+                                        >
+                                            ✕
+                                        </button>
+                                    </span>
+                                </div>
+                                <span v-else class="placeholder-text">Click to select categories...</span>
                             </div>
                         </div>
 
                         <!-- Simple Multi-select dropdown -->
                         <select
+                            v-show="isCategoryDropdownOpen"
                             multiple
                             name="categories"
                             id="categories"
@@ -122,6 +128,7 @@
                                 v-for="category in getCategoryTree()"
                                 :key="category.id"
                                 :value="category.id"
+                                :selected="form.categories.includes(category.id)"
                             >
                                 {{ getIndent(category.level) }} {{ category.name }}
                             </option>
@@ -130,9 +137,6 @@
                             {{ errors.get('categories') }}
                         </div>
                     </div>
-                    <small class="form-text text-muted d-block mt-2">
-                        Hold <strong>Ctrl</strong> (Windows) or <strong>Cmd</strong> (Mac) + Click to select multiple categories
-                    </small>
                 </div>
 
                 <!-- Status Field - Right Side -->
@@ -200,11 +204,15 @@ export default {
     },
     data() {
         return {
-            // No need for selectizeInstance with native select
+            isCategoryDropdownOpen: false,
         };
     },
     mounted() {
-        // No Selectize initialization needed - using native select
+        // Close dropdown when clicking outside
+        document.addEventListener('click', this.handleClickOutside);
+    },
+    beforeUnmount() {
+        document.removeEventListener('click', this.handleClickOutside);
     },
     watch: {
         'form.categories': {
@@ -327,6 +335,22 @@ export default {
                 return isNaN(val) ? val : parseInt(val);
             });
             this.form.categories = selectedOptions;
+        },
+        toggleCategoryDropdown(event) {
+            event.stopPropagation();
+            this.isCategoryDropdownOpen = !this.isCategoryDropdownOpen;
+        },
+        getCategoryDisplayValue() {
+            const count = this.form.categories.length;
+            if (count === 0) return '';
+            if (count === 1) return this.getCategoryName(this.form.categories[0]);
+            return `${count} categories selected`;
+        },
+        handleClickOutside(event) {
+            const container = this.$el.querySelector('.field-with-error-tooltip');
+            if (container && !container.contains(event.target)) {
+                this.isCategoryDropdownOpen = false;
+            }
         }
     },
 };
@@ -473,7 +497,112 @@ export default {
     text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
+/* Category Input Wrapper */
+.category-input-wrapper {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    margin-bottom: 8px;
+}
+
+.category-input-wrapper:hover {
+    border-color: #80bdff;
+}
+
+.category-input-wrapper:focus-within {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.category-input-content {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-height: 24px;
+}
+
+.selected-tags-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #007bff;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.btn-remove-inline {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    font-weight: bold;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.btn-remove-inline:hover {
+    opacity: 0.8;
+}
+
+.placeholder-text {
+    color: #999;
+    font-size: 14px;
+}
+
+.dropdown-icon {
+    margin-left: 8px;
+    color: #666;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* Category Input */
+.category-input {
+    margin-bottom: 8px;
+}
+
+.category-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
 .categories-select {
-    border-radius: 0 0 4px 4px;
+    border-radius: 4px;
+    margin-top: 8px;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

@@ -1,6 +1,9 @@
 <template>
     <DataTable
         title="Coupons"
+        :breadcrumbs="[
+            { label: 'Coupons' }
+        ]"
         :data="coupons"
         :columns="columns"
         :create-route="{ name: 'admin.coupons.create' }"
@@ -34,6 +37,7 @@
 <script>
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getCoupons, deleteCoupon, deleteCoupons } from '@/api/couponsApi';
 
@@ -44,6 +48,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const coupons = ref([]);
 
         const columns = [
@@ -86,7 +91,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} coupon(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Xác nhận xóa',
+                `Bạn có chắc chắn muốn xóa ${selectedIds.length} mã giảm giá?`
+            );
+            
+            if (confirmed) {
                 try {
                     if (selectedIds.length === 1) {
                         await deleteCoupon(selectedIds[0]);
@@ -95,9 +105,10 @@ export default {
                     }
                     // Reload after successful delete
                     await loadCoupons();
+                    notification.success('Thành công!', 'Đã xóa mã giảm giá thành công');
                 } catch (error) {
                     console.error('Failed to delete coupons:', error);
-                    alert('Failed to delete coupons. Please try again.');
+                    notification.error('Lỗi!', 'Không thể xóa mã giảm giá');
                 }
             }
         };

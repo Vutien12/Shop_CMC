@@ -1,6 +1,7 @@
 <template>
     <DataTable
         title="Variations"
+        :breadcrumbs="[{ label: 'Variations' }]"
         :data="variations"
         :columns="columns"
         :create-route="{ name: 'admin.variations.create' }"
@@ -24,6 +25,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
 
@@ -34,6 +36,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const variations = ref([]);
         const loading = ref(false);
 
@@ -67,7 +70,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to load variations:', error);
-                alert('Failed to load variations. Please try again.');
+                notification.error('Lỗi!', 'Không thể tải danh sách biến thể');
             } finally {
                 loading.value = false;
             }
@@ -78,7 +81,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} variation(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Xác nhận xóa',
+                `Bạn có chắc chắn muốn xóa ${selectedIds.length} biến thể?`
+            );
+            
+            if (confirmed) {
                 try {
                     loading.value = true;
 
@@ -90,10 +98,10 @@ export default {
 
                     // Reload variations after deletion
                     await loadVariations();
-                    alert('Variation(s) deleted successfully!');
+                    notification.success('Thành công!', 'Đã xóa biến thể thành công');
                 } catch (error) {
                     console.error('Failed to delete variations:', error);
-                    alert('Failed to delete variations. Please try again.');
+                    notification.error('Lỗi!', 'Không thể xóa biến thể');
                 } finally {
                     loading.value = false;
                 }

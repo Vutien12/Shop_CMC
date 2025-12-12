@@ -1,20 +1,11 @@
 <template>
     <div class="data-table-page">
         <!-- Header -->
-        <div class="page-header">
-            <div class="header-left">
-                <h1 class="page-title">{{ title }}</h1>
-            </div>
-            <div class="header-right">
-                <nav class="breadcrumb-nav">
-                    <a href="#" class="breadcrumb-home">
-                        <i class="fa fa-home"></i>
-                    </a>
-                    <span class="breadcrumb-separator">›</span>
-                    <span class="breadcrumb-current">{{ title }}</span>
-                </nav>
-            </div>
-        </div>
+        <PageBreadcrumb 
+            :title="title" 
+            :breadcrumbs="breadcrumbs"
+            :home-route="homeRoute"
+        />
 
         <!-- Action Bar -->
         <div class="action-bar" v-if="createRoute">
@@ -77,7 +68,7 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th class="th-checkbox" v-if="selectable">
+                            <th class="th-checkbox" v-if="selectable" @click.stop>
                                 <input 
                                     type="checkbox" 
                                     id="select-all"
@@ -111,7 +102,7 @@
                             :class="['table-row', { 'clickable-row': rowClickable }]"
                             @click="handleRowClick(row)"
                         >
-                            <td v-if="selectable">
+                            <td v-if="selectable" @click.stop>
                                 <input 
                                     type="checkbox" 
                                     :value="row[rowKey]"
@@ -199,14 +190,27 @@
 <script>
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import PageBreadcrumb from './PageBreadcrumb.vue';
 
 export default {
     name: 'DataTable',
+    components: {
+        PageBreadcrumb
+    },
     emits: ['delete', 'row-click'],
     props: {
         title: {
             type: String,
             required: true
+        },
+        breadcrumbs: {
+            type: Array,
+            default: () => []
+            // Format: [{ label: 'Products', route: { name: 'admin.products.index' } }]
+        },
+        homeRoute: {
+            type: [String, Object],
+            default: () => ({ name: 'admin.dashboard' })
         },
         data: {
             type: Array,
@@ -465,7 +469,6 @@ export default {
 .data-table-page {
     margin:20px;
     padding:0,5px;
-    background: #f5f7fa;
     min-height: 100vh;
 }
 
@@ -644,6 +647,7 @@ export default {
 /* Table */
 .table-wrapper {
     overflow-x: visible;
+    padding:20px;
 }
 
 .data-table {

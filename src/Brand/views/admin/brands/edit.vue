@@ -1,5 +1,12 @@
 <template>
     <section class="content">
+        <PageBreadcrumb 
+            title="Edit Brand"
+            :breadcrumbs="[
+                { label: 'Brands', route: { name: 'admin.brands.index' } },
+                { label: 'Edit' }
+            ]"
+        />
         <form @submit.prevent="update" class="form-horizontal" id="brand-edit-form">
             <div class="accordion-content clearfix">
                 <!-- Left Sidebar -->
@@ -129,11 +136,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import { getBrandById, updateBrand, attachFileToBrand, getBrandFiles, deleteEntityFile } from '@/api/brandApi';
 
 const router = useRouter();
 const route = useRoute();
+const notification = useNotification();
 const activeTab = ref('general');
 const loading = ref(false);
 const logoPreview = ref(null);
@@ -229,7 +239,7 @@ const loadBrand = async () => {
         }
     } catch (error) {
         console.error('Failed to load brand:', error);
-        alert('Failed to load brand data. Please try again.');
+        notification.error('Lỗi!', 'Không thể tải dữ liệu thương hiệu');
     } finally {
         loading.value = false;
     }
@@ -241,8 +251,23 @@ const update = async () => {
 
     // Validation
     if (!form.name.trim()) {
-        errors.name = 'The name field is required.';
+        errors.name = 'Tên thương hiệu không được để trống';
         activeTab.value = 'general';
+        notification.warning('Thiếu thông tin!', 'Vui lòng nhập tên thương hiệu');
+        return;
+    }
+
+    if (form.name.length < 2) {
+        errors.name = 'Tên thương hiệu phải có ít nhất 2 ký tự';
+        activeTab.value = 'general';
+        notification.warning('Dữ liệu không hợp lệ!', 'Tên thương hiệu quá ngắn');
+        return;
+    }
+
+    if (form.name.length > 100) {
+        errors.name = 'Tên thương hiệu không được vượt quá 100 ký tự';
+        activeTab.value = 'general';
+        notification.warning('Dữ liệu không hợp lệ!', 'Tên thương hiệu quá dài');
         return;
     }
 
@@ -304,13 +329,23 @@ const update = async () => {
         }
 
 
-        alert('Brand updated successfully!');
+        notification.success('Thành công!', 'Đã cập nhật thương hiệu thành công');
 
         // Navigate to brands list
         router.push({ name: 'admin.brands.index' });
     } catch (error) {
         console.error('Error updating brand:', error);
-        alert('Error updating brand. Please try again.');
+        if (error.response?.status === 400) {
+            notification.error('Dữ liệu không hợp lệ!', error.response.data?.message || 'Vui lòng kiểm tra lại thông tin');
+        } else if (error.response?.status === 404) {
+            notification.error('Không tìm thấy!', 'Thương hiệu không tồn tại');
+        } else if (error.response?.status === 409) {
+            notification.error('Trùng lặp!', 'Tên thương hiệu đã tồn tại');
+        } else if (error.response?.status === 500) {
+            notification.error('Lỗi máy chủ!', 'Vui lòng thử lại sau');
+        } else {
+            notification.error('Lỗi!', 'Không thể cập nhật thương hiệu');
+        }
     } finally {
         loading.value = false;
     }
@@ -322,6 +357,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+section.content {
+  padding: 20px;
+}
+
 /* Accordion Layout */
 .accordion-content {
     display: flex;

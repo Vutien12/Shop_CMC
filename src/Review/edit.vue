@@ -1,5 +1,13 @@
 <template>
     <div class="review-edit-wrapper">
+        <PageBreadcrumb
+            title="Edit Review"
+            :breadcrumbs="[
+                { label: 'Reviews', route: { name: 'admin.reviews.index' } },
+                { label: 'Edit Review' }
+            ]"
+        />
+        
         <div class="accordion-content clearfix">
             <div class="col-lg-3 col-md-4">
                 <div class="accordion-box">
@@ -192,6 +200,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getReview, updateReviewStatus } from '@/api/reviewApi.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 
 export default {
     name: 'ReviewEdit',

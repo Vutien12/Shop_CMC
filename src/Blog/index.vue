@@ -1,6 +1,9 @@
 <template>
     <DataTable
         title="Blogs"
+        :breadcrumbs="[
+            { label: 'Blogs' }
+        ]"
         :data="blogs"
         :columns="columns"
         :create-route="{ name: 'admin.blogs.create' }"

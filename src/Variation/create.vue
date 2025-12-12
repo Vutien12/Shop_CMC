@@ -1,23 +1,13 @@
 <template>
-  <section class="content-header clearfix">
-    <h3>{{ isEditMode ? 'Edit' : 'Create' }} Variation</h3>
+  <div class="variation-create-page">
+    <PageBreadcrumb
+      :title="isEditMode ? 'Edit Variation' : 'Create Variation'"
+      :breadcrumbs="[
+        { label: 'Variations', route: { name: 'admin.variations.index' } },
+        { label: isEditMode ? 'Edit' : 'Create' }
+      ]"
+    />
 
-    <ol class="breadcrumb">
-      <li>
-        <a href="#" class="breadcrumb-home-icon" @click.prevent="$router.push({ name: 'admin.dashboard' })">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 18V15" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M10.07 2.81997L3.13999 8.36997C2.35999 8.98997 1.85999 10.3 2.02999 11.28L3.35999 19.24C3.59999 20.66 4.95999 21.81 6.39999 21.81H17.6C19.03 21.81 20.4 20.65 20.64 19.24L21.97 11.28C22.13 10.3 21.63 8.98997 20.86 8.36997L13.93 2.82997C12.86 1.96997 11.13 1.96997 10.07 2.81997Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </a>
-      </li>
-
-      <li><a href="#" @click.prevent="$router.push({ name: 'admin.variations.index' })">Variations</a></li>
-      <li class="active">{{ isEditMode ? 'Edit' : 'Create' }} Variation</li>
-    </ol>
-  </section>
-
-  <section class="content">
     <div class="box">
       <div class="box-body">
         <div v-if="loading" class="loading-state">
@@ -194,17 +184,20 @@
       @close="closeFileManager"
       @select="handleImageSelect"
     />
-  </section>
+  </div>
 </template>
 
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import { createVariation, getVariationById, updateVariation, attachFileToVariationValue } from '@/api/variationApi';
 import SelectImage from '@/Media/SelectImage.vue';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 
 const router = useRouter();
 const route = useRoute();
+const notification = useNotification();
 const formSubmitting = ref(false);
 const loading = ref(false);
 
@@ -349,12 +342,12 @@ const loadVariation = async () => {
         return value;
       });
     } else {
-      alert('Failed to load variation');
+      notification.error('Lỗi!', 'Không thể tải dữ liệu biến thể');
       await router.push({ name: 'admin.variations.index' });
     }
   } catch (error) {
     console.error('Error loading variation:', error);
-    alert('Error loading variation. Redirecting to list...');
+    notification.error('Lỗi!', 'Không thể tải biến thể');
     await router.push({ name: 'admin.variations.index' });
   } finally {
     loading.value = false;
@@ -365,17 +358,17 @@ const loadVariation = async () => {
 const saveForm = async () => {
   // Validate form
   if (!form.name.trim()) {
-    alert('Please enter variation name');
+    notification.warning('Cảnh báo!', 'Vui lòng nhập tên biến thể');
     return;
   }
 
   if (!form.type) {
-    alert('Please select variation type');
+    notification.warning('Cảnh báo!', 'Vui lòng chọn loại biến thể');
     return;
   }
 
   if (form.values.length === 0 || !form.values.some(v => v.label.trim())) {
-    alert('Please add at least one value with a label');
+    notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị có nhãn');
     return;
   }
 
@@ -446,14 +439,14 @@ const saveForm = async () => {
         await Promise.all(attachPromises);
       }
 
-      alert(`Variation ${isEditMode.value ? 'updated' : 'created'} successfully!`);
+      notification.success('Thành công!', `Đã ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể thành công`);
       await router.push({ name: 'admin.variations.index' });
     } else {
-      alert(`Failed to ${isEditMode.value ? 'update' : 'create'} variation: ` + (response.message || 'Unknown error'));
+      notification.error('Lỗi!', `Không thể ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể: ` + (response.message || 'Lỗi không xác định'));
     }
   } catch (error) {
     console.error(`Error ${isEditMode.value ? 'updating' : 'creating'} variation:`, error);
-    alert(`Error ${isEditMode.value ? 'updating' : 'creating'} variation. Please try again.`);
+    notification.error('Lỗi!', `Không thể ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể`);
   } finally {
     formSubmitting.value = false;
   }
@@ -466,6 +459,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.variation-create-page {
+  padding: 20px;
+}
+
 .text-red {
   color: red;
 }

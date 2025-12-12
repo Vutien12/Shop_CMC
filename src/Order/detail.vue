@@ -1,20 +1,11 @@
 <template>
-  <section class="content-header clearfix">
-    <h3>Order #{{ order.id || '...' }}</h3>
-
-    <ol class="breadcrumb">
-      <li>
-        <a href="#" class="breadcrumb-home-icon" @click.prevent="$router.push({ name: 'admin.dashboard' })">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 18V15" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M10.07 2.81997L3.13999 8.36997C2.35999 8.98997 1.85999 10.3 2.02999 11.28L3.35999 19.24C3.59999 20.66 4.95999 21.81 6.39999 21.81H17.6C19.03 21.81 20.4 20.65 20.64 19.24L21.97 11.28C22.13 10.3 21.63 8.98997 20.86 8.36997L13.93 2.82997C12.86 1.96997 11.13 1.96997 10.07 2.81997Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </a>
-      </li>
-      <li><a href="#" @click.prevent="$router.push({ name: 'admin.orders.index' })">Orders</a></li>
-      <li class="active">Order #{{ order.id || '...' }}</li>
-    </ol>
-  </section>
+  <PageBreadcrumb
+    :title="`Order #${order.id || '...'}`"
+    :breadcrumbs="[
+      { label: 'Orders', route: { name: 'admin.orders.index' } },
+      { label: `Order #${order.id || '...'}` }
+    ]"
+  />
 
   <section class="content" v-if="isLoading">
     <div class="loading-container">
@@ -312,10 +303,13 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import { getOrderById, updateOrderStatus, sendOrderEmail } from '@/api/orderApi.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 
 const router = useRouter();
 const route = useRoute();
+const notification = useNotification();
 const isLoading = ref(true);
 const isSaving = ref(false);
 const statusError = ref(''); // Error message for status
@@ -498,7 +492,7 @@ const loadOrderData = async () => {
 
   } catch (error) {
     console.error('Failed to load order:', error);
-    alert('Failed to load order details. Please try again.');
+    notification.error('Lỗi!', 'Không thể tải thông tin đơn hàng');
     await router.push({ name: 'admin.orders.index' });
   } finally {
     isLoading.value = false;
@@ -547,7 +541,7 @@ const save = async () => {
     isSaving.value = true;
     statusError.value = ''; // Clear previous error
     await updateOrderStatus(order.id, order.status);
-    alert('Order updated successfully!');
+    notification.success('Thành công!', 'Đã cập nhật đơn hàng thành công');
     await loadOrderData(); // Reload to get latest data
   } catch (error) {
     console.error('Failed to save order:', error);
@@ -591,10 +585,10 @@ const sendEmail = async () => {
   try {
     isSaving.value = true;
     await sendOrderEmail(order.id);
-    alert('Email sent to customer successfully!');
+    notification.success('Thành công!', 'Đã gửi email cho khách hàng');
   } catch (error) {
     console.error('Failed to send email:', error);
-    alert('Failed to send email. Please try again.');
+    notification.error('Lỗi!', 'Không thể gửi email');
   } finally {
     isSaving.value = false;
   }

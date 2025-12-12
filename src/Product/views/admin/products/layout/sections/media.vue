@@ -34,8 +34,7 @@
                             class="btn-add-main-thumbnail"
                             @click="openFileManagerForThumbnail"
                         >
-                            <i class="fa fa-camera"></i>
-                            <span>Add Main Image</span>
+                            <img :src="placeholderImage" alt="Add image" class="placeholder-icon">
                         </button>
                     </div>
                 </div>
@@ -51,10 +50,10 @@
                     class="product-media-grid"
                     force-fallback="true"
                     handle=".handle"
-                    :list="galleryImagesList"
+                    :list="form.gallery"
                     @end="onDragEnd"
                 >
-                    <div class="media-grid-item handle" v-for="(media, index) in galleryImagesList" :key="media.id || index">
+                    <div class="media-grid-item handle" v-for="(media, index) in galleryImages" :key="media.id || index">
                         <div class="image-holder">
                             <img :src="media.path" alt="Product gallery">
                             <button type="button" class="btn remove-image" @click="removeGalleryImage(index)">
@@ -73,8 +72,7 @@
                                 class="btn-add-media"
                                 @click="openFileManagerForGallery"
                             >
-                                <i class="fa fa-plus"></i>
-                                <span>Add More</span>
+                                <img :src="placeholderImage" alt="Add more" class="placeholder-icon-small">
                             </button>
                         </div>
                     </div>
@@ -114,34 +112,17 @@ export default {
     data() {
         return {
             showMediaPicker: true,
-            placeholderImage: `${this.baseUrl}build/assets/placeholder_image.png`,
-            galleryImagesList: [], // Local mutable array for drag and drop
+            placeholderImage: new URL('@/Admin/assets/images/placeholder_image.png', import.meta.url).href,
         };
     },
     computed: {
         thumbnailImage() {
             // Use form.thumbnail directly (not from media array)
             return this.form.thumbnail || null;
-        }
-    },
-    watch: {
-        'form.gallery': {
-            handler(newGallery) {
-                // Sync galleryImagesList with form.gallery directly
-                if (newGallery && newGallery.length > 0) {
-                    this.galleryImagesList = [...newGallery];
-                } else {
-                    this.galleryImagesList = [];
-                }
-            },
-            immediate: true,
-            deep: true
-        }
-    },
-    mounted() {
-        // Initialize galleryImagesList from form.gallery
-        if (this.form.gallery && this.form.gallery.length > 0) {
-            this.galleryImagesList = [...this.form.gallery];
+        },
+        galleryImages() {
+            // Use form.gallery directly
+            return this.form.gallery || [];
         }
     },
     methods: {
@@ -175,8 +156,8 @@ export default {
         },
 
         onDragEnd() {
-            // Sync the reordered gallery images back to form.gallery
-            this.$emit('update-gallery', [...this.galleryImagesList]);
+            // Draggable modifies form.gallery directly, emit to sync
+            this.$emit('update-gallery', [...this.form.gallery]);
         },
 
         removeThumbnail() {
@@ -185,8 +166,14 @@ export default {
         },
 
         removeGalleryImage(galleryIndex) {
+            console.log('[Remove Gallery] Click detected', { 
+                index: galleryIndex, 
+                gallery: this.form.gallery,
+                length: this.form.gallery ? this.form.gallery.length : 0 
+            });
             // Emit gallery index directly (0-based in gallery array)
             this.$emit('remove-gallery', galleryIndex);
+            console.log('[Remove Gallery] Event emitted');
         },
 
         openFileManagerForThumbnail() {
@@ -264,12 +251,11 @@ export default {
 
 .main-thumbnail-placeholder {
     aspect-ratio: 1;
-    border: 3px dashed #007bff;
+    border: 2px dashed #a6a7a9;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 .btn-add-main-thumbnail {
@@ -292,8 +278,15 @@ export default {
     color: #0056b3;
 }
 
-.btn-add-main-thumbnail i {
-    font-size: 32px;
+.btn-add-main-thumbnail .placeholder-icon {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    opacity: 0.6;
+}
+
+.btn-add-main-thumbnail:hover .placeholder-icon {
+    opacity: 0.8;
 }
 
 .btn-add-main-thumbnail span {
@@ -401,8 +394,15 @@ export default {
     background-color: rgba(0, 123, 255, 0.05);
 }
 
-.btn-add-media i {
-    font-size: 20px;
+.btn-add-media .placeholder-icon-small {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    opacity: 0.5;
+}
+
+.btn-add-media:hover .placeholder-icon-small {
+    opacity: 0.7;
 }
 
 .btn-add-media span {

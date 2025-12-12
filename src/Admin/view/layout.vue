@@ -59,7 +59,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Footer from './partials/footer.vue';
 import Sidebar from './partials/sidebar.vue';
 import Topnav from './partials/top_nav.vue';
-import adminCssUrl from '@/Admin/assets/css/main.css?url'
+import adminCssUrl from '@/Admin/assets/sass/main.css?url'
 
 export default {
   name: 'AppLayout',

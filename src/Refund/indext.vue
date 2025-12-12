@@ -1,6 +1,8 @@
+
 <template>
     <DataTable
         title="Refund"
+        :breadcrumbs="[{ label: 'Refund' }]"
         :data="cancellations"
         :columns="columns"
         :row-clickable="true"
