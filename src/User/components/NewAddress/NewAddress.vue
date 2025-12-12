@@ -164,7 +164,7 @@
                         v-model="form.provinceId"
                         :class="{ 'vselect-error': errors.provinceId }"
                         placeholder="Find or select a province/city"
-                        @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectProvince(p); }"
+                        @update:modelValue="onProvinceChange"
                         inputId="newAddressProvince"
                       />
                       <div v-if="errors.provinceId" class="error-tooltip">{{ errors.provinceId }}</div>
@@ -184,7 +184,7 @@
                         :class="{ 'vselect-error': errors.districtId }"
                         placeholder="Find or select a district"
                         :disabled="!form.provinceId"
-                        @input="(val) => { const d = districts.find(x => x.DistrictID === val); if (d) selectDistrict(d); }"
+                        @update:modelValue="onDistrictChange"
                         inputId="newAddressDistrict"
                       />
                       <div v-if="errors.districtId" class="error-tooltip">{{ errors.districtId }}</div>
@@ -204,7 +204,7 @@
                         :class="{ 'vselect-error': errors.wardCode }"
                         placeholder="Find or select a commune/ward"
                         :disabled="!form.districtId"
-                        @input="(val) => { const w = wards.find(x => x.WardCode === val); if (w) selectWard(w); }"
+                        @update:modelValue="onWardChange"
                         inputId="newAddressWard"
                       />
                       <div v-if="errors.wardCode" class="error-tooltip">{{ errors.wardCode }}</div>
@@ -277,6 +277,7 @@ import { useAuth } from '@/User/components/useAuth.js';
 import { usePrefetch } from '@/User/stores/usePrefetch.js';
 import { getAddressById, createAddress, updateAddress, getProvinces, getDistricts, getWards } from '@/api/accountApi.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import VSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 
 const router = useRouter();
@@ -384,6 +385,64 @@ const loadWards = async (districtId) => {
   } catch (e) {
     console.error('loadWards error', e);
     wards.value = [];
+  }
+};
+
+// Province/District/Ward change handlers
+const onProvinceChange = async (provinceId) => {
+  if (!provinceId) {
+    districts.value = [];
+    wards.value = [];
+    form.value.districtId = null;
+    form.value.districtName = '';
+    form.value.wardCode = '';
+    form.value.wardName = '';
+    form.value.stateOrProvince = '';
+    return;
+  }
+
+  const province = provinces.value.find(p => p.ProvinceID === provinceId);
+  if (province) {
+    form.value.stateOrProvince = province.ProvinceName;
+    form.value.city = province.ProvinceName;
+  }
+
+  form.value.districtId = null;
+  form.value.districtName = '';
+  form.value.wardCode = '';
+  form.value.wardName = '';
+
+  await loadDistricts(provinceId);
+};
+
+const onDistrictChange = async (districtId) => {
+  if (!districtId) {
+    wards.value = [];
+    form.value.wardCode = '';
+    form.value.wardName = '';
+    return;
+  }
+
+  const district = districts.value.find(d => d.DistrictID === districtId);
+  if (district) {
+    form.value.districtName = district.DistrictName;
+  }
+
+  form.value.wardCode = '';
+  form.value.wardName = '';
+
+  await loadWards(districtId);
+};
+
+const onWardChange = (wardCode) => {
+  if (!wardCode) {
+    form.value.wardName = '';
+    return;
+  }
+
+  const ward = wards.value.find(w => w.WardCode === wardCode);
+  if (ward) {
+    form.value.wardName = ward.WardName;
   }
 };
 

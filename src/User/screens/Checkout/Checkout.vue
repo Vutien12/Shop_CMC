@@ -96,7 +96,7 @@
                       :reduce="p => p.ProvinceID"
                       v-model="manualBilling.provinceId"
                       placeholder="Select province/city"
-                      @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectBillingProvince(p); }"
+                      @update:modelValue="onBillingProvinceChange"
                       class="form-select-vue"
                       inputId="billingProvince"
                     />
@@ -110,7 +110,7 @@
                       v-model="manualBilling.districtId"
                       placeholder="Select district"
                       :disabled="!manualBilling.provinceId"
-                      @input="(val) => { const d = billingDistricts.find(x => x.DistrictID === val); if (d) selectBillingDistrict(d); }"
+                      @update:modelValue="onBillingDistrictChange"
                       class="form-select-vue"
                       inputId="billingDistrict"
                     />
@@ -127,7 +127,7 @@
                       v-model="manualBilling.wardCode"
                       placeholder="Select ward/commune"
                       :disabled="!manualBilling.districtId"
-                      @input="(val) => { const w = billingWards.find(x => x.WardCode === val); if (w) selectBillingWard(w); }"
+                      @update:modelValue="onBillingWardChange"
                       class="form-select-vue"
                       inputId="billingWard"
                     />
@@ -215,7 +215,7 @@
                         :reduce="p => p.ProvinceID"
                         v-model="manualShipping.provinceId"
                         placeholder="Select province/city"
-                        @input="(val) => { const p = provinces.find(x => x.ProvinceID === val); if (p) selectShippingProvince(p); }"
+                        @update:modelValue="onShippingProvinceChange"
                         class="form-select-vue"
                         inputId="shippingProvince"
                       />
@@ -229,7 +229,7 @@
                         v-model="manualShipping.districtId"
                         placeholder="Select district"
                         :disabled="!manualShipping.provinceId"
-                        @input="(val) => { const d = shippingDistricts.find(x => x.DistrictID === val); if (d) selectShippingDistrict(d); }"
+                        @update:modelValue="onShippingDistrictChange"
                         class="form-select-vue"
                         inputId="shippingDistrict"
                       />
@@ -246,7 +246,7 @@
                         v-model="manualShipping.wardCode"
                         placeholder="Select ward/commune"
                         :disabled="!manualShipping.districtId"
-                        @input="(val) => { const w = shippingWards.find(x => x.WardCode === val); if (w) selectShippingWard(w); }"
+                        @update:modelValue="onShippingWardChange"
                         class="form-select-vue"
                         inputId="shippingWard"
                       />
@@ -724,52 +724,121 @@ const loadShippingWards = async (districtId) => {
   }
 }
 
-const selectBillingProvince = async (province) => {
-  manualBilling.value.provinceId = province.ProvinceID
-  manualBilling.value.stateOrProvince = province.ProvinceName
-  manualBilling.value.state = province.ProvinceName
+const onBillingProvinceChange = async (provinceId) => {
+  if (!provinceId) {
+    billingDistricts.value = []
+    billingWards.value = []
+    manualBilling.value.districtId = null
+    manualBilling.value.districtName = ''
+    manualBilling.value.wardCode = ''
+    manualBilling.value.wardName = ''
+    return
+  }
+
+  const province = provinces.value.find(p => p.ProvinceID === provinceId)
+  if (province) {
+    manualBilling.value.stateOrProvince = province.ProvinceName
+    manualBilling.value.state = province.ProvinceName
+  }
+
   manualBilling.value.districtId = null
   manualBilling.value.districtName = ''
   manualBilling.value.wardCode = ''
   manualBilling.value.wardName = ''
-  await loadBillingDistricts(province.ProvinceID)
+
+  await loadBillingDistricts(provinceId)
 }
 
-const selectBillingDistrict = async (district) => {
-  manualBilling.value.districtId = district.DistrictID
-  manualBilling.value.districtName = district.DistrictName
+const onBillingDistrictChange = async (districtId) => {
+  if (!districtId) {
+    billingWards.value = []
+    manualBilling.value.wardCode = ''
+    manualBilling.value.wardName = ''
+    return
+  }
+
+  const district = billingDistricts.value.find(d => d.DistrictID === districtId)
+  if (district) {
+    manualBilling.value.districtName = district.DistrictName
+  }
+
   manualBilling.value.wardCode = ''
   manualBilling.value.wardName = ''
-  await loadBillingWards(district.DistrictID)
+
+  await loadBillingWards(districtId)
 }
 
-const selectBillingWard = (ward) => {
-  manualBilling.value.wardCode = ward.WardCode
-  manualBilling.value.wardName = ward.WardName
+const onBillingWardChange = (wardCode) => {
+  if (!wardCode) {
+    manualBilling.value.wardName = ''
+    return
+  }
+
+  const ward = billingWards.value.find(w => w.WardCode === wardCode)
+  if (ward) {
+    manualBilling.value.wardName = ward.WardName
+  }
 }
 
-const selectShippingProvince = async (province) => {
-  manualShipping.value.provinceId = province.ProvinceID
-  manualShipping.value.stateOrProvince = province.ProvinceName
-  manualShipping.value.state = province.ProvinceName
+const onShippingProvinceChange = async (provinceId) => {
+  if (!provinceId) {
+    shippingDistricts.value = []
+    shippingWards.value = []
+    manualShipping.value.districtId = null
+    manualShipping.value.districtName = ''
+    manualShipping.value.wardCode = ''
+    manualShipping.value.wardName = ''
+    shippingCost.value = 0
+    return
+  }
+
+  const province = provinces.value.find(p => p.ProvinceID === provinceId)
+  if (province) {
+    manualShipping.value.stateOrProvince = province.ProvinceName
+    manualShipping.value.state = province.ProvinceName
+  }
+
   manualShipping.value.districtId = null
   manualShipping.value.districtName = ''
   manualShipping.value.wardCode = ''
   manualShipping.value.wardName = ''
-  await loadShippingDistricts(province.ProvinceID)
+  shippingCost.value = 0
+
+  await loadShippingDistricts(provinceId)
 }
 
-const selectShippingDistrict = async (district) => {
-  manualShipping.value.districtId = district.DistrictID
-  manualShipping.value.districtName = district.DistrictName
+const onShippingDistrictChange = async (districtId) => {
+  if (!districtId) {
+    shippingWards.value = []
+    manualShipping.value.wardCode = ''
+    manualShipping.value.wardName = ''
+    shippingCost.value = 0
+    return
+  }
+
+  const district = shippingDistricts.value.find(d => d.DistrictID === districtId)
+  if (district) {
+    manualShipping.value.districtName = district.DistrictName
+  }
+
   manualShipping.value.wardCode = ''
   manualShipping.value.wardName = ''
-  await loadShippingWards(district.DistrictID)
+  shippingCost.value = 0
+
+  await loadShippingWards(districtId)
 }
 
-const selectShippingWard = async (ward) => {
-  manualShipping.value.wardCode = ward.WardCode
-  manualShipping.value.wardName = ward.WardName
+const onShippingWardChange = async (wardCode) => {
+  if (!wardCode) {
+    manualShipping.value.wardName = ''
+    shippingCost.value = 0
+    return
+  }
+
+  const ward = shippingWards.value.find(w => w.WardCode === wardCode)
+  if (ward) {
+    manualShipping.value.wardName = ward.WardName
+  }
 
   // Tính phí vận chuyển khi đã có đủ thông tin
   await calculateShippingFee()
@@ -863,7 +932,7 @@ const useDefaultPhone = () => {
   }
 }
 
-const useDefaultBillingAddress = () => {
+const useDefaultBillingAddress = async () => {
   if (userProfile.value?.defaultAddress) {
     const addr = userProfile.value.defaultAddress
     manualBilling.value = {
@@ -883,10 +952,19 @@ const useDefaultBillingAddress = () => {
       wardCode: addr.wardCode || addr.ward_code || '',
       wardName: addr.wardName || addr.ward_name || ''
     }
+
+    // Load districts and wards for the selected province/district
+    if (manualBilling.value.provinceId) {
+      await loadBillingDistricts(manualBilling.value.provinceId)
+
+      if (manualBilling.value.districtId) {
+        await loadBillingWards(manualBilling.value.districtId)
+      }
+    }
   }
 }
 
-const useDefaultShippingAddress = () => {
+const useDefaultShippingAddress = async () => {
   if (userProfile.value?.defaultAddress) {
     const addr = userProfile.value.defaultAddress
     manualShipping.value = {
@@ -906,6 +984,20 @@ const useDefaultShippingAddress = () => {
       wardCode: addr.wardCode || addr.ward_code || '',
       wardName: addr.wardName || addr.ward_name || ''
     }
+
+    // Load districts and wards for the selected province/district
+    if (manualShipping.value.provinceId) {
+      await loadShippingDistricts(manualShipping.value.provinceId)
+
+      if (manualShipping.value.districtId) {
+        await loadShippingWards(manualShipping.value.districtId)
+
+        // Calculate shipping fee if we have complete address
+        if (manualShipping.value.wardCode) {
+          await calculateShippingFee()
+        }
+      }
+    }
   }
 }
 
@@ -914,12 +1006,22 @@ const handleUseSameBilling = async () => {
     // Copy billing address to shipping including new fields
     manualShipping.value = JSON.parse(JSON.stringify(manualBilling.value))
 
-    // If we have complete address info, calculate shipping fee
-    if (manualShipping.value.districtId && manualShipping.value.wardCode) {
+    // Load districts and wards for the copied address
+    if (manualShipping.value.provinceId) {
       await loadShippingDistricts(manualShipping.value.provinceId)
-      await loadShippingWards(manualShipping.value.districtId)
-      await calculateShippingFee()
+
+      if (manualShipping.value.districtId) {
+        await loadShippingWards(manualShipping.value.districtId)
+
+        // Calculate shipping fee if we have complete address info
+        if (manualShipping.value.wardCode) {
+          await calculateShippingFee()
+        }
+      }
     }
+  } else {
+    // Reset shipping cost when unchecking
+    shippingCost.value = 0
   }
 }
 
