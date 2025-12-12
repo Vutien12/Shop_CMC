@@ -49,7 +49,7 @@ export default {
     props: {
         title: {
             type: String,
-            required: true
+            default: 'Image'
         },
         modelValue: {
             type: String,

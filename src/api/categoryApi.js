@@ -59,3 +59,37 @@ export const getTrendingCategories = async () => {
   return response.data
 }
 
+/**
+ * Attach a file to a category (thumbnail)
+ * @param {Object} entityFileData - Entity file data
+ * @returns {Promise}
+ */
+export const attachFileToCategory = async (entityFileData) => {
+  // Convert entityType and zone to uppercase (API requires uppercase values)
+  const normalizedData = {
+    ...entityFileData,
+    entityType: entityFileData.entityType.toUpperCase(),
+    zone: entityFileData.zone.toUpperCase()
+  }
+  const response = await api.post('/entity-files', normalizedData)
+  return response.data
+}
+
+/**
+ * Get entity files for a category
+ * @param {number} entityId - Category ID
+ * @param {string} entityType - Entity type (default: "CATEGORY")
+ * @param {string} zone - Zone (default: "THUMBNAIL")
+ * @returns {Promise}
+ */
+export const getCategoryFiles = async (entityId, entityType = 'CATEGORY', zone = 'THUMBNAIL') => {
+  const response = await api.get('/entity-files', {
+    params: {
+      entityId,
+      entityType: entityType.toUpperCase(),
+      zone: zone.toUpperCase(),
+    },
+  })
+  return response.data
+}
+

@@ -1,6 +1,6 @@
 <template>
     <section class="content">
-        <PageBreadcrumb 
+        <PageBreadcrumb
             title="Categories"
             :breadcrumbs="[
                 { label: 'Categories' }
@@ -62,10 +62,12 @@
                                     <!-- Image Tab -->
                                     <div v-show="activeTab === 'image'">
                                         <div class="form-group row">
-                                            <label class="col-md-3 control-label">Logo</label>
+                                            <label class="col-md-3 control-label">Thumbnail</label>
                                             <div class="col-md-9">
                                                 <ImageUploader
-                                                    v-model="form.logo"
+                                                    title="Category Thumbnail"
+                                                    v-model="form.thumbnail"
+                                                    @update:fileId="selectedThumbnailFileId = $event"
                                                 />
                                             </div>
                                         </div>
@@ -101,7 +103,7 @@ import 'jstree/dist/themes/default/style.min.css';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import ImageUploader from '@/Category/components/ImageUploader.vue';
-import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi';
+import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory, attachFileToCategory } from '@/api/categoryApi';
 
 export default {
     name: 'CategoryPage',
@@ -123,8 +125,10 @@ export default {
             name: '',
             is_searchable: false,
             is_active: false,
-            logo: ''
+            thumbnail: ''
         });
+
+        const selectedThumbnailFileId = ref(null);
 
         const isNewCategory = computed(() => !form.value.id);
 
@@ -197,8 +201,9 @@ export default {
                             name: cat.name,
                             is_searchable: cat.isSearchable || false,
                             is_active: cat.isActive,
-                            logo: cat.logo || ''
+                            thumbnail: cat.thumbnail || ''
                         };
+                        selectedThumbnailFileId.value = null;
                         activeTab.value = 'general';
                     }
                 } catch (error) {
@@ -215,8 +220,9 @@ export default {
                 is_searchable: false,
                 is_active: true,
                 parentId: null,
-                logo: ''
+                thumbnail: ''
             };
+            selectedThumbnailFileId.value = null;
             activeTab.value = 'general';
             if (categoryTree.value) $(categoryTree.value).jstree('deselect_all');
         };
@@ -229,8 +235,9 @@ export default {
                 is_searchable: false,
                 is_active: true,
                 parentId: parseInt(selectedNode.value.id),
-                logo: ''
+                thumbnail: ''
             };
+            selectedThumbnailFileId.value = null;
             activeTab.value = 'general';
         };
 
@@ -255,13 +262,23 @@ export default {
                     parentId: form.value.parentId || null,
                     name: form.value.name,
                     isSearchable: form.value.is_searchable,
-                    isActive: form.value.is_active,
-                    logo: form.value.logo || null
+                    isActive: form.value.is_active
                 };
 
                 if (form.value.id) {
                     // Update existing category
                     await updateCategory(form.value.id, categoryData);
+
+                    // Attach thumbnail if a new one was selected
+                    if (selectedThumbnailFileId.value) {
+                        await attachFileToCategory({
+                            fileId: selectedThumbnailFileId.value,
+                            entityId: form.value.id,
+                            entityType: 'category',
+                            zone: 'category'
+                        });
+                        selectedThumbnailFileId.value = null;
+                    }
 
                     // Update tree node name
                     if (selectedNode.value) {
@@ -274,6 +291,18 @@ export default {
                     const response = await createCategory(categoryData);
 
                     if (response.code === 200 && response.result) {
+                        const categoryId = response.result.id;
+
+                        // Attach thumbnail if selected
+                        if (selectedThumbnailFileId.value) {
+                            await attachFileToCategory({
+                                fileId: selectedThumbnailFileId.value,
+                                entityId: categoryId,
+                                entityType: 'CATEGORY',
+                                zone: 'THUMBNAIL'
+                            });
+                        }
+
                         notification.success('Thành công!', 'Đã tạo danh mục thành công');
 
                         // Reload categories to update tree
@@ -295,7 +324,7 @@ export default {
                 'Xác nhận xóa',
                 'Bạn có chắc chắn muốn xóa danh mục này?'
             );
-            
+
             if (confirmed) {
                 try {
                     saving.value = true;
@@ -332,6 +361,7 @@ export default {
             saving,
             activeTab,
             form,
+            selectedThumbnailFileId,
             isNewCategory,
             loadCategories,
             addRootCategory,

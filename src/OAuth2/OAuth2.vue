@@ -2,7 +2,7 @@
 <template>
   <div class="callback-container">
     <Loading />
-    <p>Đang đăng nhập...</p>
+    <p>Signing in...</p>
   </div>
 </template>
 
