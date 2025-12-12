@@ -1,6 +1,7 @@
 <template>
     <DataTable
         title="Products"
+        :breadcrumbs="[{ label: 'Products' }]"
         :data="products"
         :columns="columns"
         :create-route="{ name: 'admin.products.create' }"
@@ -62,8 +63,9 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { searchProducts, deleteProduct } from '@/api';
+import { searchProducts, deleteProduct } from '@/api/productApi';
 
 export default {
     name: 'ProductPage',
@@ -72,6 +74,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const products = ref([]);
 
         const columns = [
@@ -126,7 +129,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (!confirm(`Are you sure you want to delete ${selectedIds.length} product(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Confirm Delete',
+                `Are you sure you want to delete ${selectedIds.length} product(s)?`
+            );
+            
+            if (!confirmed) {
                 return;
             }
 
@@ -141,10 +149,10 @@ export default {
                 // Reload danh sách products
                 await loadProducts();
 
-                alert('Products deleted successfully!');
+                notification.success('Success!', 'Products deleted successfully');
             } catch (error) {
                 console.error('Error deleting products:', error);
-                alert('Error deleting products: ' + (error.message || 'Unknown error'));
+                notification.error('Error!', 'Failed to delete products: ' + (error.message || 'Unknown error'));
             }
         };
 

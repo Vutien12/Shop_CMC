@@ -1,6 +1,9 @@
 <template>
     <DataTable
         title="Options"
+        :breadcrumbs="[
+            { label: 'Options' }
+        ]"
         :data="options"
         :columns="columns"
         :create-route="{ name: 'admin.options.create' }"
@@ -24,6 +27,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
 
@@ -34,6 +38,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const options = ref([]);
 
         const columns = [
@@ -68,7 +73,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (!confirm(`Are you sure you want to delete ${selectedIds.length} option(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Xác nhận xóa',
+                `Bạn có chắc chắn muốn xóa ${selectedIds.length} tùy chọn?`
+            );
+            
+            if (!confirmed) {
                 return;
             }
 
@@ -80,10 +90,10 @@ export default {
                 }
 
                 await loadOptions();
-                alert('Option(s) deleted successfully!');
+                notification.success('Thành công!', 'Đã xóa tùy chọn thành công');
             } catch (error) {
                 console.error('Error deleting options:', error);
-                alert('Error deleting option(s). Please try again.');
+                notification.error('Lỗi!', 'Không thể xóa tùy chọn');
             }
         };
 

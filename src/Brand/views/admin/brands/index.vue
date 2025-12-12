@@ -1,6 +1,9 @@
 <template>
     <DataTable
         title="Brands"
+        :breadcrumbs="[
+            { label: 'Brands' }
+        ]"
         :data="brands"
         :columns="columns"
         :create-route="{ name: 'admin.brands.create' }"
@@ -36,6 +39,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getBrands, deleteBrand, deleteManyBrands } from '@/api/brandApi';
 
@@ -46,14 +50,15 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const brands = ref([]);
         const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
             { key: 'logo', label: 'Logo', sortable: false, width: '100px' },
-            { key: 'name', label: 'Name', sortable: true },
-            { key: 'updated_at', label: 'Updated', sortable: true, width: '150px' }
+            { key: 'name', label: 'Name', sortable: true,width: '150px' },
+            { key: 'updated_at', label: 'Updated', sortable: true, width: '130px' }
         ];
 
         const loadBrands = async () => {
@@ -62,18 +67,17 @@ export default {
                 const response = await getBrands();
 
                 if (response.code === 200) {
-                    // Map API response to component format
                     brands.value = response.result.map(brand => ({
                         id: brand.id,
                         name: brand.name,
-                        logo: brand.fileLogo || null, // fileLogo is already a string URL
-                        updated_at: brand.createdAt, // Use createdAt as updated_at
+                        logo: brand.fileLogo || null,
+                        updated_at: brand.createdAt,
                         isActive: brand.isActive
                     }));
                 }
             } catch (error) {
                 console.error('Failed to load brands:', error);
-                alert('Failed to load brands. Please try again.');
+                notification.error('Error!', 'Failed to load brands');
             } finally {
                 loading.value = false;
             }
@@ -84,7 +88,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} brand(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Confirm Delete',
+                `Are you sure you want to delete ${selectedIds.length} brand(s)?`
+            );
+            
+            if (confirmed) {
                 try {
                     loading.value = true;
 
@@ -96,10 +105,10 @@ export default {
 
                     // Reload brands after deletion
                     await loadBrands();
-                    alert('Brand(s) deleted successfully!');
+                    notification.success('Success!', 'Brands deleted successfully');
                 } catch (error) {
                     console.error('Failed to delete brands:', error);
-                    alert('Failed to delete brands. Please try again.');
+                    notification.error('Error!', 'Failed to delete brands');
                 } finally {
                     loading.value = false;
                 }

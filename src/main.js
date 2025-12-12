@@ -58,4 +58,17 @@ app.directive('auto-animate', {
     autoAnimate(el);
   }
 });
+
+// Notification plugin
+const notificationRef = { current: null };
+app.config.globalProperties.$notification = {
+  success: (...args) => notificationRef.current?.success(...args),
+  error: (...args) => notificationRef.current?.error(...args),
+  warning: (...args) => notificationRef.current?.warning(...args),
+  info: (...args) => notificationRef.current?.info(...args),
+  confirm: (...args) => notificationRef.current?.confirm(...args)
+};
+
 app.mount('#app')
+
+export { notificationRef };

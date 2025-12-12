@@ -7,30 +7,21 @@
 
       <div class="brands-container">
         <div class="brands-slider-wrapper">
-          <div ref="brandsSwiper" class="brands-swiper swiper">
-            <div class="swiper-wrapper">
-              <router-link
-                v-for="brand in brands"
-                :key="brand.id"
-                :to="`/products?brand=${brand.id}`"
-                class="swiper-slide brand-card"
-              >
-                <img
-                  :src="brand.fileLogo"
-                  :alt="brand.name"
-                  class="brand-logo"
-                  @error="handleImageError"
-                />
-              </router-link>
-            </div>
+          <div class="brands-track">
+            <router-link
+              v-for="brand in duplicatedBrands"
+              :key="`${brand.id}-${brand.duplicateIndex}`"
+              :to="`/products?brand=${brand.id}`"
+              class="brand-card"
+            >
+              <img
+                :src="brand.fileLogo"
+                :alt="brand.name"
+                class="brand-logo"
+                @error="handleImageError"
+              />
+            </router-link>
           </div>
-
-          <button class="brands-nav-button brands-nav-prev" type="button">
-            <span class="nav-arrow">‹</span>
-          </button>
-          <button class="brands-nav-button brands-nav-next" type="button">
-            <span class="nav-arrow">›</span>
-          </button>
         </div>
       </div>
     </div>
@@ -38,67 +29,35 @@
 </template>
 
 <script setup>
-import { defineProps, ref, onMounted, nextTick } from 'vue'
-import Swiper from 'swiper'
-import { Navigation } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/navigation'
+import { defineProps, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   brands: {
     type: Array,
     required: true
   }
 })
 
-const brandsSwiper = ref(null)
+// Duplicate brands 3 times for seamless loop
+const duplicatedBrands = computed(() => {
+  const result = []
+  for (let i = 0; i < 3; i++) {
+    props.brands.forEach((brand, index) => {
+      result.push({
+        ...brand,
+        duplicateIndex: `${i}-${index}`
+      })
+    })
+  }
+  return result
+})
 
 const handleImageError = (e) => {
   e.target.src = 'https://via.placeholder.com/80x80?text=Brand'
 }
-
-onMounted(async () => {
-  await nextTick()
-
-  if (brandsSwiper.value) {
-    new Swiper(brandsSwiper.value, {
-      modules: [Navigation],
-      slidesPerView: 8,
-      spaceBetween: 0,
-      loop: false,
-      navigation: {
-        nextEl: '.brands-nav-next',
-        prevEl: '.brands-nav-prev',
-      },
-      breakpoints: {
-        320: {
-          slidesPerView: 2,
-          spaceBetween: 0,
-        },
-        480: {
-          slidesPerView: 3,
-          spaceBetween: 0,
-        },
-        768: {
-          slidesPerView: 4,
-          spaceBetween: 0,
-        },
-        1024: {
-          slidesPerView: 6,
-          spaceBetween: 0,
-        },
-        1400: {
-          slidesPerView: 8,
-          spaceBetween: 0,
-        },
-      },
-    })
-  }
-})
 </script>
 
 <style scoped>
-
 .brands-container {
   position: relative;
   width: 100%;
@@ -114,8 +73,23 @@ onMounted(async () => {
   width: 100%;
 }
 
-.brands-swiper {
-  overflow: hidden;
+.brands-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-brands 20s linear infinite;
+}
+
+.brands-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-brands {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
 }
 
 .brand-card {
@@ -129,8 +103,12 @@ onMounted(async () => {
   height: 120px;
   overflow: visible;
   position: relative;
+  min-width: 200px;
+  flex-shrink: 0;
 }
-
+.brands-section{
+  margin-top: 40px;
+}
 .brand-logo {
   max-width: 100%;
   max-height: 100%;
@@ -144,73 +122,11 @@ onMounted(async () => {
   transform: scale(1.15);
 }
 
-/* Navigation Buttons */
-.brands-nav-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
-  background: #0066cc;
-  border: none;
-  border-radius: 50%;
-  z-index: 10;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.25);
-  cursor: pointer;
-  outline: none;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.brands-slider-wrapper:hover .brands-nav-button {
-  opacity: 1;
-  visibility: visible;
-}
-
-.brands-nav-prev {
-  left: 10px;
-}
-
-.brands-nav-next {
-  right: 10px;
-}
-
-.nav-arrow {
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  line-height: 1;
-}
-
-.brands-nav-button:hover {
-  background: #0052a3;
-  box-shadow: 0 3px 10px rgba(0, 102, 204, 0.35);
-  transform: translateY(-50%) scale(1.08);
-}
-
-.brands-nav-button:disabled {
-  opacity: 0;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
 @media (max-width: 1024px) {
   .brand-card {
     padding: 24px 16px;
     height: 100px;
-  }
-
-  .brands-nav-button {
-    width: 24px;
-    height: 24px;
-  }
-
-  .nav-arrow {
-    font-size: 11px;
+    min-width: 180px;
   }
 }
 
@@ -218,16 +134,11 @@ onMounted(async () => {
   .brand-card {
     padding: 20px 12px;
     height: 80px;
+    min-width: 150px;
   }
-
-
-  .brands-nav-button {
-    width: 22px;
-    height: 22px;
-  }
-
-  .nav-arrow {
-    font-size: 10px;
+  
+  .brands-track {
+    animation-duration: 15s;
   }
 }
 
@@ -235,24 +146,11 @@ onMounted(async () => {
   .brand-card {
     height: 70px;
     padding: 16px 10px;
+    min-width: 120px;
   }
-
-  .brands-nav-button {
-    width: 20px;
-    height: 20px;
-  }
-
-  .nav-arrow {
-    font-size: 9px;
-  }
-
-  .brands-nav-prev {
-    left: 8px;
-  }
-
-  .brands-nav-next {
-    right: 8px;
+  
+  .brands-track {
+    animation-duration: 12s;
   }
 }
 </style>
-

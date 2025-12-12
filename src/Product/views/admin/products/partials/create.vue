@@ -1,20 +1,12 @@
 <template>
     <div class="product-create-page">
-        <div class="page-header">
-            <h1>{{ isEditMode ? trans('admin::resource.edit', { resource: trans('product::products.product') }) : trans('admin::resource.create', { resource: trans('product::products.product') }) }}</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <router-link :to="{ name: 'admin.products.index' }">
-                            {{ trans('product::products.products') }}
-                        </router-link>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        {{ isEditMode ? trans('admin::resource.edit', { resource: trans('product::products.product') }) : trans('admin::resource.create', { resource: trans('product::products.product') }) }}
-                    </li>
-                </ol>
-            </nav>
-        </div>
+        <PageBreadcrumb
+            :title="isEditMode ? `Edit ${trans('product::products.product')}` : `Create ${trans('product::products.product')}`"
+            :breadcrumbs="[
+                { label: 'Products', route: { name: 'admin.products.index' } },
+                { label: isEditMode ? 'Edit Product' : 'Create Product' }
+            ]"
+        />
 
         <form class="product-form" @submit.prevent="handleSubmit">
             <input type="hidden" name="redirect_after_save" v-model="redirectAfterSave">
@@ -82,6 +74,8 @@
 import LeftColumn from '@/Product/views/admin/products/layout/left_column.vue';
 import RightColumn from '@/Product/views/admin/products/layout/right_column.vue';
 import SelectImage from '@/Media/SelectImage.vue';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import products from '@/Product/lang/en/products.json';
 import admin from '@/Admin/lang/en/admin.json';
 
@@ -102,6 +96,7 @@ export default {
         LeftColumn,
         RightColumn,
         SelectImage,
+        PageBreadcrumb,
     },
     data() {
         return {
@@ -468,7 +463,8 @@ export default {
 
             } catch (error) {
                 console.error('Error loading product data:', error);
-                alert('Error loading product data: ' + error.message);
+                const notification = useNotification();
+                notification.error('Error!', 'Failed to load product data: ' + error.message);
             }
         },
 
@@ -627,10 +623,12 @@ export default {
                         });
                         console.log('Validation errors mapped:', this.errors.errors);
                     } else if (errorData.message) {
-                        alert('Error: ' + errorData.message);
+                        const notification = useNotification();
+                        notification.error('Error!', errorData.message);
                     }
                 } else {
-                    alert('Error creating product: ' + error.message);
+                    const notification = useNotification();
+                    notification.error('Error!', 'Failed to create product: ' + error.message);
                 }
             }
         },
@@ -1030,9 +1028,20 @@ export default {
         },
 
         removeGalleryHandler(galleryIndex) {
-            // Remove gallery image at specific index
+            console.log('[Parent] removeGalleryHandler called', { 
+                index: galleryIndex, 
+                currentGallery: this.form.gallery,
+                length: this.form.gallery ? this.form.gallery.length : 0 
+            });
+            // Remove gallery image at specific index - create new array for reactivity
             if (this.form.gallery && this.form.gallery.length > galleryIndex) {
-                this.form.gallery.splice(galleryIndex, 1);
+                const newGallery = [...this.form.gallery];
+                newGallery.splice(galleryIndex, 1);
+                console.log('[Parent] After splice', { newLength: newGallery.length, newGallery });
+                this.form.gallery = newGallery;
+                console.log('[Parent] After assignment', { currentLength: this.form.gallery.length });
+            } else {
+                console.error('[Parent] Invalid index or gallery not initialized!');
             }
             this.syncMediaArray();
         },

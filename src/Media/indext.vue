@@ -1,5 +1,11 @@
 <template>
     <section class="content">
+        <PageBreadcrumb 
+            title="Media"
+            :breadcrumbs="[
+                { label: 'Media' }
+            ]"
+        />
         <div class="box m-b-0">
             <div class="box-body">
                 <div
@@ -173,11 +179,15 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import { uploadFile, searchFiles, deleteFiles } from '@/api/fileApi';
 import { DEFAULT_PAGE_SIZE } from '@/Config/search';
 
 export default {
     name: 'MediaIndex',
+    components: {
+        PageBreadcrumb
+    },
     setup() {
         const fileInput = ref(null);
         const selectedItems = ref([]);
@@ -519,6 +529,7 @@ export default {
 .dt-container {
     width: 100%;
     max-width: 100%;
+    padding:20px
 }
 
 .dt-layout-row {

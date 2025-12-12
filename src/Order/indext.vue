@@ -1,6 +1,7 @@
 <template>
     <DataTable
         title="Orders"
+        :breadcrumbs="[{ label: 'Orders' }]"
         :data="orders"
         :columns="columns"
         :create-route="null"
@@ -38,6 +39,7 @@
 <script>
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { useAdminOrderStore } from '@/Order/stores/adminOrderStore.js';
 import { deleteOrders } from '@/api/orderApi.js';
@@ -49,6 +51,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const orderStore = useAdminOrderStore();
         const orders = computed(() => orderStore.orders);
         const isLoading = computed(() => orderStore.isLoading);
@@ -67,22 +70,27 @@ export default {
                 await orderStore.fetchOrders();
             } catch (error) {
                 console.error('Failed to load orders:', error);
-                alert('Failed to load orders. Please try again.');
+                notification.error('Lỗi!', 'Không thể tải danh sách đơn hàng');
             }
         };
 
         const handleDelete = async (selectedIds) => {
-            if (!confirm(`Are you sure you want to delete ${selectedIds.length} order(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Xác nhận xóa',
+                `Bạn có chắc chắn muốn xóa ${selectedIds.length} đơn hàng?`
+            );
+            
+            if (!confirmed) {
                 return;
             }
 
             try {
                 await deleteOrders(selectedIds);
                 orderStore.removeOrders(selectedIds);
-                alert(`Successfully deleted ${selectedIds.length} order(s)`);
+                notification.success('Thành công!', `Đã xóa ${selectedIds.length} đơn hàng thành công`);
             } catch (error) {
                 console.error('Failed to delete orders:', error);
-                alert('Failed to delete orders. Please try again.');
+                notification.error('Lỗi!', 'Không thể xóa đơn hàng');
             }
         };
 

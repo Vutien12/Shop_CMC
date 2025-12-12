@@ -32,6 +32,8 @@
             :placeholderImage="placeholderImage"
             @open-file-manager="$emit('open-file-manager', $event)"
             @remove-media="$emit('remove-media', $event)"
+            @remove-gallery="$emit('remove-gallery', $event)"
+            @update-gallery="$emit('update-gallery', $event)"
         />
     </div>
 </template>

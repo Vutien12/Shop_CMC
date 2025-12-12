@@ -1,6 +1,7 @@
 <template>
     <DataTable
         title="Reviews"
+        :breadcrumbs="[{ label: 'Reviews' }]"
         :data="reviews"
         :columns="columns"
         :row-clickable="true"

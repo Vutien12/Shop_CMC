@@ -1,5 +1,11 @@
 <template>
     <section class="content">
+        <PageBreadcrumb 
+            title="Categories"
+            :breadcrumbs="[
+                { label: 'Categories' }
+            ]"
+        />
         <div class="category-tree-wrap">
             <div class="col">
                 <div class="box box-default">
@@ -72,11 +78,17 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import $ from 'jquery';
 import 'jstree';
 import 'jstree/dist/themes/default/style.min.css';
+import { useNotification } from '@/Admin/composables/useNotification.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi';
 
 export default {
     name: 'CategoryPage',
+    components: {
+        PageBreadcrumb
+    },
     setup() {
+        const notification = useNotification();
         const categoryTree = ref(null);
         const selectedNode = ref(null);
         const loading = ref(false);
@@ -137,7 +149,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to load categories:', error);
-                alert('Failed to load categories. Please try again.');
+                notification.error('Lỗi!', 'Không thể tải danh sách danh mục');
             } finally {
                 loading.value = false;
             }
@@ -202,7 +214,7 @@ export default {
 
         const handleSubmit = async () => {
             if (!form.value.name.trim()) {
-                alert('Category name is required');
+                notification.warning('Cảnh báo!', 'Tên danh mục không được để trống');
                 return;
             }
 
@@ -225,13 +237,13 @@ export default {
                         $(categoryTree.value).jstree('rename_node', selectedNode.value, form.value.name);
                     }
 
-                    alert('Category updated successfully!');
+                    notification.success('Thành công!', 'Đã cập nhật danh mục thành công');
                 } else {
                     // Create new category
                     const response = await createCategory(categoryData);
 
                     if (response.code === 200 && response.result) {
-                        alert('Category created successfully!');
+                        notification.success('Thành công!', 'Đã tạo danh mục thành công');
 
                         // Reload categories to update tree
                         await loadCategories();
@@ -239,7 +251,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to save category:', error);
-                alert('Failed to save category. Please try again.');
+                notification.error('Lỗi!', 'Không thể lưu danh mục');
             } finally {
                 saving.value = false;
             }
@@ -248,7 +260,12 @@ export default {
         const handleDelete = async () => {
             if (!form.value.id) return;
 
-            if (confirm('Are you sure you want to delete this category?')) {
+            const confirmed = await notification.confirm(
+                'Xác nhận xóa',
+                'Bạn có chắc chắn muốn xóa danh mục này?'
+            );
+            
+            if (confirmed) {
                 try {
                     saving.value = true;
                     await deleteCategory(form.value.id);
@@ -258,11 +275,11 @@ export default {
                         $(categoryTree.value).jstree('delete_node', selectedNode.value);
                     }
 
-                    alert('Category deleted successfully!');
+                    notification.success('Thành công!', 'Đã xóa danh mục thành công');
                     addRootCategory();
                 } catch (error) {
                     console.error('Failed to delete category:', error);
-                    alert('Failed to delete category. Please try again.');
+                    notification.error('Lỗi!', 'Không thể xóa danh mục');
                 } finally {
                     saving.value = false;
                 }

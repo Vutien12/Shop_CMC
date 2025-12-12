@@ -1,23 +1,13 @@
 <template>
-  <section class="content-header clearfix">
-    <h3>{{ isEditMode ? 'Edit Option' : 'Create Option' }}</h3>
+  <div class="option-create-page">
+    <PageBreadcrumb 
+      :title="isEditMode ? 'Edit Option' : 'Create Option'"
+      :breadcrumbs="[
+        { label: 'Options', route: { name: 'admin.options.index' } },
+        { label: isEditMode ? 'Edit' : 'Create' }
+      ]"
+    />
 
-    <ol class="breadcrumb">
-      <li>
-        <a href="#" class="breadcrumb-home-icon" @click.prevent="$router.push({ name: 'admin.dashboard' })">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 18V15" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M10.07 2.81997L3.13999 8.36997C2.35999 8.98997 1.85999 10.3 2.02999 11.28L3.35999 19.24C3.59999 20.66 4.95999 21.81 6.39999 21.81H17.6C19.03 21.81 20.4 20.65 20.64 19.24L21.97 11.28C22.13 10.3 21.63 8.98997 20.86 8.36997L13.93 2.82997C12.86 1.96997 11.13 1.96997 10.07 2.81997Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </a>
-      </li>
-
-      <li><a href="#" @click.prevent="$router.push({ name: 'admin.options.index' })">Options</a></li>
-      <li class="active">{{ isEditMode ? 'Edit Option' : 'Create Option' }}</li>
-    </ol>
-  </section>
-
-  <section class="content">
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
       <p>Loading option...</p>
@@ -318,14 +308,19 @@
         </div>
       </div>
     </form>
-  </section>
+  </div>
 </template>
 
 <script>
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import { getOptionById, createOption, updateOption } from '@/api/optionApi.js';
 
 export default {
   name: 'OptionCreate',
+  components: {
+    PageBreadcrumb
+  },
   data() {
     return {
       loading: false,
@@ -387,12 +382,14 @@ export default {
             priceType: v.priceType || 'FIXED'
           }));
         } else {
-          alert('Failed to load option');
+          const notification = useNotification();
+          notification.error('Lỗi!', 'Không thể tải dữ liệu tùy chọn');
           this.$router.push({ name: 'admin.options.index' });
         }
       } catch (error) {
         console.error('Error loading option:', error);
-        alert('Error loading option. Redirecting to list...');
+        const notification = useNotification();
+        notification.error('Lỗi!', 'Không thể tải tùy chọn');
         this.$router.push({ name: 'admin.options.index' });
       } finally {
         this.loading = false;
@@ -461,25 +458,26 @@ export default {
       this.form.optionValues.splice(index, 1);
     },
     async saveForm() {
+      const notification = useNotification();
       // Validate form
       if (!this.form.name.trim()) {
-        alert('Please enter option name');
+        notification.warning('Cảnh báo!', 'Vui lòng nhập tên tùy chọn');
         return;
       }
 
       if (!this.form.type) {
-        alert('Please select option type');
+        notification.warning('Cảnh báo!', 'Vui lòng chọn loại tùy chọn');
         return;
       }
 
       if (this.form.optionValues.length === 0) {
-        alert('Please add at least one value');
+        notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị');
         return;
       }
 
       // Validate select type has labels
       if (this.isSelectType && !this.form.optionValues.some(v => v.label.trim())) {
-        alert('Please add at least one value with a label');
+        notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị có nhãn');
         return;
       }
 
@@ -508,14 +506,14 @@ export default {
           : await createOption(optionData);
 
         if (response.code === 200) {
-          alert(`Option ${this.isEditMode ? 'updated' : 'created'} successfully!`);
+          notification.success('Thành công!', `Đã ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn thành công`);
           this.$router.push({ name: 'admin.options.index' });
         } else {
-          alert(`Failed to ${this.isEditMode ? 'update' : 'create'} option: ` + (response.message || 'Unknown error'));
+          notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn: ` + (response.message || 'Lỗi không xác định'));
         }
       } catch (error) {
         console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} option:`, error);
-        alert(`Error ${this.isEditMode ? 'updating' : 'creating'} option. Please try again.`);
+        notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn`);
       }
     }
   },
@@ -526,27 +524,8 @@ export default {
 </script>
 
 <style scoped>
-.content-header {
-  padding: 15px;
-  background: #fff;
-  border-bottom: none;
-  margin-bottom: 20px;
-}
-
-.content-header h3 {
-  margin: 0 0 10px 0;
-  font-size: 24px;
-  font-weight: 500;
-}
-
-.breadcrumb {
-  background: transparent;
-  padding: 0;
-  margin: 0;
-}
-
-.breadcrumb-home-icon svg {
-  vertical-align: middle;
+.option-create-page {
+  padding: 20px;
 }
 
 .accordion-content {

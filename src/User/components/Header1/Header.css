@@ -314,13 +314,13 @@ a {
   top: 0;
   z-index: 998;
   transition: all 0.3s ease;
+  padding: 0 15px;
+  box-sizing: border-box;
 }
 
 .navigation-bar .container {
   justify-content: flex-start;
   padding: 0;
-  border: 1px solid #e8e7eb;
-  border-radius: 10px;
   margin: 0 auto;
   max-width: 1400px;
 }
