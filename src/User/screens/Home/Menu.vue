@@ -149,67 +149,109 @@
           <p>Loading products...</p>
         </div>
 
-        <!-- Products Container -->
-        <div v-else-if="filteredProducts.length > 0" class="products-container">
-          <div
-            class="menu-product-card"
-            v-for="product in filteredProducts"
-            :key="product.id"
+        <!-- Products Container Wrapper with Navigation -->
+        <div v-else-if="filteredProducts.length > 0" class="products-wrapper">
+          <!-- Left Navigation Button -->
+          <button
+            v-if="canScrollLeft"
+            class="scroll-nav-btn scroll-left"
+            @click="scrollProducts('left')"
+            aria-label="Scroll left"
           >
-            <!-- Product Badges -->
-            <div class="product-badges">
-              <span v-if="!product.inStock" class="badge out-of-stock">Out of Stock</span>
-              <span v-else-if="product.discount" class="badge discount">{{ product.discount }}</span>
-              <span v-else-if="product.isNew" class="badge new">New</span>
-            </div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
 
-            <!-- Product Image -->
-            <div class="product-image-wrapper" @click="navigateToProductDetail(product.id)">
-              <img
-                v-if="product.thumbnail"
-                :src="product.thumbnail"
-                :alt="product.name"
-                @error="handleImageError"
-                class="product-img"
-              />
-              <div v-else class="no-image">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
+          <!-- Products Container -->
+          <div
+            ref="productsContainer"
+            class="products-container"
+            @scroll="handleProductsScroll"
+          >
+            <div
+              class="menu-product-card"
+              v-for="product in filteredProducts"
+              :key="product.id"
+            >
+              <!-- Product Badges -->
+              <div class="product-badges">
+                <span v-if="!product.inStock" class="badge out-of-stock">Out of Stock</span>
+                <span v-else-if="product.discount" class="badge discount">{{ product.discount }}</span>
+                <span v-else-if="product.isNew" class="badge new">New</span>
               </div>
-            </div>
 
-            <!-- Product Info -->
-            <div class="product-info-wrapper">
-              <!-- Brand -->
-              <div v-if="product.brand" class="product-brand">{{ product.brand }}</div>
-
-              <!-- Product Name -->
-              <h5 class="product-title" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>
-
-              <!-- Price Section -->
-              <div class="product-pricing">
-                <div class="price-group">
-                  <template v-if="product.minPrice === product.maxPrice">
-                    <span class="price-current">{{ formatPrice(product.minPrice) }}</span>
-                  </template>
-                  <template v-else>
-                    <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
-                  </template>
+              <!-- Product Image -->
+              <div class="product-image-wrapper" @click="navigateToProductDetail(product.id)">
+                <img
+                  v-if="product.thumbnail"
+                  :src="product.thumbnail"
+                  :alt="product.name"
+                  @error="handleImageError"
+                  class="product-img"
+                />
+                <div v-else class="no-image">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
                 </div>
               </div>
 
-              <!-- Quick View Button -->
-              <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M14.3623 7.3635C14.565 7.6477 14.6663 7.78983 14.6663 8.00016C14.6663 8.2105 14.565 8.35263 14.3623 8.63683C13.4516 9.9139 11.1258 12.6668 7.99967 12.6668C4.87353 12.6668 2.54774 9.9139 1.63703 8.63683C1.43435 8.35263 1.33301 8.2105 1.33301 8.00016C1.33301 7.78983 1.43435 7.6477 1.63703 7.3635C2.54774 6.08646 4.87353 3.3335 7.99967 3.3335C11.1258 3.3335 13.4516 6.08646 14.3623 7.3635Z" stroke="currentColor" stroke-width="1.2"/>
-                  <path d="M10 8C10 6.8954 9.1046 6 8 6C6.8954 6 6 6.8954 6 8C6 9.1046 6.8954 10 8 10C9.1046 10 10 9.1046 10 8Z" stroke="currentColor" stroke-width="1.2"/>
-                </svg>
-                View Details
-              </button>
+              <!-- Product Info -->
+              <div class="product-info-wrapper">
+                <!-- Brand -->
+                <div v-if="product.brand" class="product-brand">{{ product.brand }}</div>
+
+                <!-- Product Name -->
+                <h5 class="product-title" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>
+
+                <!-- Price Section -->
+                <div class="product-pricing">
+                  <div class="price-group">
+                    <template v-if="product.minPrice === product.maxPrice">
+                      <span class="price-current">{{ formatPrice(product.minPrice) }}</span>
+                    </template>
+                    <template v-else>
+                      <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Quick View Button -->
+                <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M14.3623 7.3635C14.565 7.6477 14.6663 7.78983 14.6663 8.00016C14.6663 8.2105 14.565 8.35263 14.3623 8.63683C13.4516 9.9139 11.1258 12.6668 7.99967 12.6668C4.87353 12.6668 2.54774 9.9139 1.63703 8.63683C1.43435 8.35263 1.33301 8.2105 1.33301 8.00016C1.33301 7.78983 1.43435 7.6477 1.63703 7.3635C2.54774 6.08646 4.87353 3.3335 7.99967 3.3335C11.1258 3.3335 13.4516 6.08646 14.3623 7.3635Z" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M10 8C10 6.8954 9.1046 6 8 6C6.8954 6 6 6.8954 6 8C6 9.1046 6.8954 10 8 10C9.1046 10 10 9.1046 10 8Z" stroke="currentColor" stroke-width="1.2"/>
+                  </svg>
+                  View Details
+                </button>
+              </div>
             </div>
+          </div>
+
+          <!-- Right Navigation Button -->
+          <button
+            v-if="canScrollRight"
+            class="scroll-nav-btn scroll-right"
+            @click="scrollProducts('right')"
+            aria-label="Scroll right"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          <!-- Scroll Indicators (Dots) -->
+          <div class="scroll-indicators">
+            <span
+              v-for="index in scrollDots"
+              :key="index"
+              class="dot"
+              :class="{ active: index - 1 === currentDotIndex }"
+              @click="scrollToPage(index - 1)"
+            ></span>
           </div>
         </div>
 
@@ -247,6 +289,10 @@ export default {
       hoveredCategory: null,
       hideMenuTimeout: null,
       megaMenuStyle: {}, // <-- added: inline style for positioning mega menu
+      canScrollLeft: false,
+      canScrollRight: false,
+      currentDotIndex: 0,
+      scrollDots: 0,
     }
   },
   computed: {
@@ -497,6 +543,7 @@ export default {
         this.products = []
       } finally {
         this.loadingProducts = false
+        this.updateScrollDots()
       }
     },
 
@@ -530,6 +577,65 @@ export default {
     // Handle image error
     handleImageError(event) {
       event.target.src = '/placeholder.png'
+    },
+
+    // Scroll products left or right
+    scrollProducts(direction) {
+      const container = this.$refs.productsContainer
+      if (!container) return
+
+      const scrollAmount = container.clientWidth * 0.8 // Scroll 80% of visible width
+      const targetScroll = direction === 'left'
+        ? container.scrollLeft - scrollAmount
+        : container.scrollLeft + scrollAmount
+
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      })
+    },
+
+    // Handle scroll event to update buttons and indicators
+    handleProductsScroll() {
+      const container = this.$refs.productsContainer
+      if (!container) return
+
+      // Update scroll button visibility
+      this.canScrollLeft = container.scrollLeft > 10
+      this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 10)
+
+      // Update current dot index
+      const scrollPercentage = container.scrollLeft / (container.scrollWidth - container.clientWidth)
+      this.currentDotIndex = Math.round(scrollPercentage * (this.scrollDots - 1))
+    },
+
+    // Scroll to specific page
+    scrollToPage(index) {
+      const container = this.$refs.productsContainer
+      if (!container) return
+
+      const scrollPerPage = (container.scrollWidth - container.clientWidth) / (this.scrollDots - 1)
+      container.scrollTo({
+        left: scrollPerPage * index,
+        behavior: 'smooth'
+      })
+    },
+
+    // Update scroll dots count
+    updateScrollDots() {
+      this.$nextTick(() => {
+        const container = this.$refs.productsContainer
+        if (!container) return
+
+        const visibleWidth = container.clientWidth
+        const totalWidth = container.scrollWidth
+
+        // Calculate number of pages (dots)
+        this.scrollDots = Math.max(1, Math.ceil(totalWidth / visibleWidth))
+
+        // Update initial scroll state
+        this.handleProductsScroll()
+      })
     },
   },
   async mounted() {
@@ -581,6 +687,11 @@ export default {
   background: #fff;
 }
 
+/* Products Wrapper with Navigation */
+.products-wrapper {
+  position: relative;
+  width: 100%;
+}
 
 .products-container {
   display: flex;
@@ -590,25 +701,86 @@ export default {
   padding: 20px 0;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .products-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Navigation Buttons */
+.scroll-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-nav-btn:hover {
+  background: #fff;
+  border-color: #0068e1;
+  box-shadow: 0 4px 16px rgba(0, 104, 225, 0.2);
+}
+
+.scroll-nav-btn svg {
+  color: #4b5563;
+  transition: color 0.3s ease;
+}
+
+.scroll-nav-btn:hover svg {
+  color: #0068e1;
+}
+
+.scroll-left {
+  left: -24px;
+}
+
+.scroll-right {
+  right: -24px;
+}
+
+/* Scroll Indicators (Dots) */
+.scroll-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-bottom: 10px;
+}
+
+.scroll-indicators .dot {
+  width: 8px;
   height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.products-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+.scroll-indicators .dot:hover {
+  background: #9ca3af;
+  transform: scale(1.2);
 }
 
-.products-container::-webkit-scrollbar-thumb {
+.scroll-indicators .dot.active {
   background: #0068e1;
+  width: 24px;
   border-radius: 4px;
 }
 
-.products-container::-webkit-scrollbar-thumb:hover {
-  background: #0052b4;
-}
 
 /* Product Card - Modern Design */
 .menu-product-card {
@@ -1145,8 +1317,8 @@ export default {
 /* Responsive */
 @media (max-width: 768px) {
   .menu-product-card {
-    min-width: 220px;
-    max-width: 220px;
+    min-width: 200px;
+    max-width: 200px;
   }
 
   .product-image-wrapper {
@@ -1160,6 +1332,32 @@ export default {
   .view-all-btn {
     padding: 6px 12px;
     font-size: 12px;
+  }
+
+  .scroll-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .scroll-left {
+    left: -20px;
+  }
+
+  .scroll-right {
+    right: -20px;
+  }
+
+  .scroll-indicators {
+    margin-top: 12px;
+  }
+
+  .scroll-indicators .dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scroll-indicators .dot.active {
+    width: 18px;
   }
 }
 </style>
