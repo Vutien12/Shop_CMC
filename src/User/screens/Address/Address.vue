@@ -73,8 +73,8 @@
               <!-- Empty State -->
               <div v-else-if="!addresses.length" class="empty-state">
                 <i class="fa-regular fa-address-book" style="font-size: 48px; color: #ccc;"></i>
-                <p>Chưa có địa chỉ nào</p>
-                <button class="btn-primary" @click="goToNewAddress">Thêm địa chỉ đầu tiên</button>
+                <p>No addresses yet</p>
+                <button class="btn-primary" @click="goToNewAddress">Add your first address</button>
               </div>
 
               <!-- Address Grid -->
@@ -88,7 +88,7 @@
                   <div class="address-content">
                     <h4>
                       {{ addr.firstName }} {{ addr.lastName }}
-                      <span v-if="addr.isDefault" class="default-badge">Mặc định</span>
+                      <span v-if="addr.isDefault" class="default-badge">Default</span>
                     </h4>
                     <p class="address-text">
                       {{ addr.addressLine }}<br />
@@ -97,10 +97,10 @@
                       {{ addr.country }}
                     </p>
                     <div class="address-actions">
-                      <button class="action-btn edit-btn" @click="editAddress(addr.id)" title="Sửa">
+                      <button class="action-btn edit-btn" @click="editAddress(addr.id)" title="Edit">
                         <i class="fa-solid fa-pen-to-square"></i>
                       </button>
-                      <button class="action-btn delete-btn" @click="handleDelete(addr.id)" title="Xóa">
+                      <button class="action-btn delete-btn" @click="handleDelete(addr.id)" title="Delete">
                         <i class="fa-solid fa-trash"></i>
                       </button>
                     </div>
@@ -169,7 +169,7 @@ const { isVisible: addressVisible } = useLazyLoad(async () => {
     totalPages.value = data.totalPages;
     currentPage.value = 0;
   } catch {
-    toast('Không thể tải địa chỉ.', 'error');
+    toast('Unable to load addresses.', 'error');
   } finally {
     addressLoading.value = false;
   }
@@ -186,7 +186,7 @@ const changePage = async (page) => {
     currentPage.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch {
-    toast('Không thể tải trang.', 'error');
+    toast('Unable to load page.', 'error');
   } finally {
     addressLoading.value = false;
   }
@@ -197,15 +197,15 @@ const goToNewAddress = () => router.push('/new-address');
 const editAddress = (id) => router.push(`/edit-address/${id}`);
 
 const handleDelete = async (id) => {
-  if (!confirm('Bạn có chắc chắn muốn xóa địa chỉ này?')) return;
+  if (!confirm('Are you sure you want to delete this address?')) return;
   try {
     await deleteAddress(id);
-    toast('Xóa địa chỉ thành công!', 'success');
+    toast('Address deleted successfully!', 'success');
     await addressStore.fetchAddresses(currentPage.value, 6, true);
     addresses.value = addressStore.addresses;
     totalPages.value = addressStore.totalPages;
   } catch {
-    toast('Không thể xóa địa chỉ.', 'error');
+    toast('Unable to delete address.', 'error');
   }
 };
 
@@ -229,7 +229,7 @@ onMounted(async () => {
     }
   } catch (error) {
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error');
+      toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {

@@ -231,7 +231,7 @@ const { isVisible: profileVisible } = useLazyLoad(async () => {
     const data = await profileStore.fetchProfile();
     infoForm.value = { ...data };
   } catch {
-    toast('Không thể tải thông tin cá nhân.', 'error');
+    toast('Unable to load profile information.', 'error');
   } finally {
     profileLoading.value = false;
   }
@@ -264,11 +264,11 @@ const updateProfileHandler = async () => {
   isSavingInfo.value = true;
   try {
     await updateProfile(infoForm.value);
-    toast('Cập nhật thành công!', 'success');
+    toast('Update successful!', 'success');
     await profileStore.fetchProfile(true); // refresh cache
   } catch (err) {
     if (!handleValidationError(err, 'info')) {
-      toast(err.response?.data?.message || 'Cập nhật thất bại.', 'error');
+      toast(err.response?.data?.message || 'Update failed.', 'error');
     }
   } finally {
     isSavingInfo.value = false;
@@ -319,7 +319,7 @@ onMounted(async () => {
     }
   } catch (error) {
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error');
+      toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {

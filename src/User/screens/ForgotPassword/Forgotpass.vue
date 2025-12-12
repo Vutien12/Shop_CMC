@@ -79,7 +79,7 @@ const handleResetPassword = async () => {
   generalError.value = '';
 
   if (!email.value) {
-    generalError.value = 'Vui lòng nhập email.';
+    generalError.value = 'Please enter your email.';
     return;
   }
 
@@ -89,25 +89,25 @@ const handleResetPassword = async () => {
     // adapt to API response shape
     if (res.data?.code === 200) {
       // show toast with result message (backend returns message in result)
-      addToast(res.data?.result || 'OTP đã được gửi tới email của bạn.', 'success');
+      addToast(res.data?.result || 'OTP has been sent to your email.', 'success');
       // navigate to reset page and pass email as query so user doesn't need to retype
       await router.push({ path: '/reset-password', query: { email: email.value } });
     } else {
-      const errMsg = res.data?.message || 'Gửi yêu cầu thất bại.';
+      const errMsg = res.data?.message || 'Request failed.';
       addToast(errMsg, 'error');
       generalError.value = errMsg;
     }
   } catch (err) {
     console.error('Forgot password error:', err);
     const response = err.response?.data;
-    const errMsg = response?.message || 'Lỗi mạng. Vui lòng thử lại.';
+    const errMsg = response?.message || 'Network error. Please try again.';
     addToast(errMsg, 'error');
     if (response?.code === 400 && response.result) {
-      generalError.value = response.result.email || response.message || 'Yêu cầu không hợp lệ.';
+      generalError.value = response.result.email || response.message || 'Invalid request.';
     } else if (response?.code === 500) {
-      generalError.value = response.message || 'Lỗi máy chủ. Vui lòng thử lại sau.';
+      generalError.value = response.message || 'Server error. Please try again later.';
     } else {
-      generalError.value = 'Lỗi mạng. Vui lòng thử lại.';
+      generalError.value = 'Network error. Please try again.';
     }
   } finally {
     isSubmitting.value = false;

@@ -137,8 +137,8 @@
                             {{ getStatusLabel(item.status) }}
                           </span>
                         <span v-if="item.status === 'OUT_OF_STOCK'" class="status-hint">Hết hàng tạm thời</span>
-                        <span v-if="item.status === 'INACTIVE'" class="status-hint">Tạm ẩn</span>
-                        <span v-if="item.status === 'DELETED'" class="status-hint">Đã xóa</span>
+                        <span v-if="item.status === 'INACTIVE'" class="status-hint">Hidden</span>
+                        <span v-if="item.status === 'DELETED'" class="status-hint">Deleted</span>
                       </div>
                     </td>
 
@@ -154,14 +154,14 @@
                     <td class="action-col">
                       <div class="action-buttons">
                         <button
-                          class="action-btn cart-btn"
+                        <button class="action-btn cart-btn"
                           @click="addToCart(item)"
                           :disabled="isCartDisabled(item.status)"
                           :title="getCartTooltip(item.status)"
                         >
                           <i class="fa-solid fa-cart-shopping"></i>
                         </button>
-                        <button class="action-btn remove-btn" @click="removeItem(item.id)" title="Xóa">
+                        <button class="action-btn remove-btn" @click="removeItem(item.id)" title="Remove">
                           <i class="fa-solid fa-trash"></i>
                         </button>
                       </div>
@@ -176,7 +176,7 @@
                     <i class="fa-solid fa-chevron-left"></i>
                   </button>
                   <span class="page-info">
-                    Trang {{ currentPage + 1 }} / {{ totalPages }}
+                    Page {{ currentPage + 1 }} / {{ totalPages }}
                   </span>
                   <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages - 1" class="page-btn next">
                     <i class="fa-solid fa-chevron-right"></i>
@@ -232,7 +232,7 @@ const { isVisible: wishlistVisible } = useLazyLoad(async () => {
     totalPages.value = data.totalPages;
     currentPage.value = 0;
   } catch {
-    toast('Không thể tải wishlist.', 'error');
+    toast('Unable to load wishlist.', 'error');
   } finally {
     wishlistLoading.value = false;
   }
@@ -249,7 +249,7 @@ const changePage = async (page) => {
     currentPage.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch {
-    toast('Không thể tải trang.', 'error');
+    toast('Unable to load page.', 'error');
   } finally {
     wishlistLoading.value = false;
   }
@@ -261,10 +261,10 @@ const removeItem = async (wishlistId) => {
     await removeFromWishlist(wishlistId);
     wishlistStore.removeItemLocally(wishlistId);
     wishlistItems.value = wishlistStore.items;
-    toast('Đã xóa khỏi wishlist', 'success');
+    toast('Removed from wishlist', 'success');
     window.dispatchEvent(new Event('wishlistChanged'));
   } catch {
-    toast('Xóa thất bại', 'error');
+    toast('Remove failed', 'error');
   }
 };
 
@@ -294,9 +294,9 @@ const updateItem = async (wishlistId) => {
 
     wishlistStore.updateItemLocally(wishlistId, formatted);
     wishlistItems.value = wishlistStore.items;
-    toast('Đã cập nhật thông tin sản phẩm!', 'success');
+    toast('Product information updated!', 'success');
   } catch {
-    toast('Cập nhật thất bại', 'error');
+    toast('Update failed', 'error');
   }
 };
 
@@ -312,7 +312,7 @@ const addToCart = async (item) => {
     // Use wishlistStore method to add to cart
     await wishlistStore.addToCart(item);
 
-    toast(`Đã thêm "${item.productName}" vào giỏ hàng!`, 'success');
+    toast(`"${item.productName}" added to cart!`, 'success');
 
     // Optionally remove from wishlist after adding to cart
     // Uncomment the line below if you want to auto-remove from wishlist
@@ -321,17 +321,17 @@ const addToCart = async (item) => {
     console.error('❌ Failed to add to cart:', error);
 
     if (error.response?.status === 401) {
-      toast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'error');
+      toast('Please login to add to cart', 'error');
     } else if (error.response?.status === 400) {
-      toast('Không thể thêm sản phẩm này vào giỏ hàng', 'error');
+      toast('Cannot add this product to cart', 'error');
     } else if (error.message?.includes('OUT_OF_STOCK')) {
-      toast('Sản phẩm hiện đã hết hàng', 'error');
+      toast('Product is currently out of stock', 'error');
     } else if (error.message?.includes('INACTIVE')) {
-      toast('Sản phẩm tạm thời không bán', 'error');
+      toast('Product is temporarily unavailable', 'error');
     } else if (error.message?.includes('DELETED')) {
-      toast('Sản phẩm đã ngừng kinh doanh', 'error');
+      toast('Product is discontinued', 'error');
     } else {
-      toast('Thêm vào giỏ hàng thất bại. Vui lòng thử lại.', 'error');
+      toast('Failed to add to cart. Please try again.', 'error');
     }
   }
 };
@@ -374,10 +374,10 @@ const isCartDisabled = (status) => {
 };
 
 const getCartTooltip = (status) => {
-  if (status === 'OUT_OF_STOCK') return 'Sản phẩm hiện đã hết hàng';
-  if (status === 'INACTIVE') return 'Sản phẩm tạm thời không bán';
-  if (status === 'DELETED') return 'Sản phẩm đã ngừng kinh doanh';
-  return 'Thêm vào giỏ hàng';
+  if (status === 'OUT_OF_STOCK') return 'Product is currently out of stock';
+  if (status === 'INACTIVE') return 'Product is temporarily unavailable';
+  if (status === 'DELETED') return 'Product is discontinued';
+  return 'Add to cart';
 };
 
 // Initial load
@@ -395,7 +395,7 @@ onMounted(async () => {
     }
   } catch (error) {
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error');
+      toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {

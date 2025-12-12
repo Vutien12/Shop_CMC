@@ -69,8 +69,8 @@
               <!-- Empty State -->
               <div v-else-if="!recentOrders.length" class="empty-state">
                 <i class="fa-regular fa-clipboard" style="font-size: 48px; color: #ccc;"></i>
-                <p>Chưa có đơn hàng nào gần đây</p>
-                <router-link to="/products" class="btn-primary">Mua sắm ngay</router-link>
+                <p>No recent orders</p>
+                <router-link to="/products" class="btn-primary">Shop Now</router-link>
               </div>
 
               <!-- Table -->
@@ -196,7 +196,7 @@ const { isVisible: ordersVisible } = useLazyLoad(async () => {
       recentOrders.value = data.recentOrders;
     }
   } catch {
-    toast('Không thể tải đơn hàng. Vui lòng thử lại.', 'error');
+    toast('Unable to load orders. Please try again.', 'error');
   } finally {
     ordersLoading.value = false;
   }
@@ -212,7 +212,7 @@ const { isVisible: infoVisible } = useLazyLoad(async () => {
       userInfo.value = data.userInfo;
     }
   } catch {
-    toast('Không thể tải thông tin tài khoản.', 'error');
+    toast('Unable to load account information.', 'error');
   } finally {
     infoLoading.value = false;
   }
@@ -233,7 +233,7 @@ onMounted(async () => {
     userInfo.value = data.userInfo;
   } catch (error) {
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error');
+      toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {

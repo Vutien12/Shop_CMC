@@ -59,13 +59,13 @@ export const useAccountStore = defineStore('account', () => {
       const addr = user.defaultAddress || {};
 
       const userData = {
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Chưa cập nhật',
-        email: user.email || 'Chưa có email',
-        phone: user.phone || 'Chưa cập nhật',
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Not updated',
+        email: user.email || 'No email',
+        phone: user.phone || 'Not updated',
         address: addr.addressLine
           ? `${addr.addressLine}${addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}, ${addr.country || ''}`
             .replace(/^,\s*/, '').trim()
-          : 'Chưa có địa chỉ mặc định',
+          : 'No default address',
         defaultAddress: user.defaultAddress || null
       };
 

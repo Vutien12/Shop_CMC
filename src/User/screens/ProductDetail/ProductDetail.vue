@@ -805,7 +805,7 @@ export default {
         // Use cartStore instead of calling API directly
         await this.cartStore.addItem(cartPayload)
         console.log('Added to cart successfully')
-        alert('Đã thêm vào giỏ hàng!')
+        alert('Added to cart!')
       } catch (error) {
         console.error('Failed to add to cart', error)
         this.submitError = error.response?.data?.message || 'Failed to add to cart'

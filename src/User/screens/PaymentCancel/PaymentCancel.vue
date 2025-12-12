@@ -12,17 +12,17 @@
           </svg>
         </div>
 
-        <h1>Thanh toán bị hủy</h1>
-        <p class="message">Giao dịch thanh toán của bạn đã bị hủy.</p>
+        <h1>Payment Cancelled</h1>
+        <p class="message">Your payment transaction has been cancelled.</p>
 
         <div class="info-box">
-          <p><strong>Lý do:</strong> Bạn đã từ chối hoặc đã thoát khỏi trang thanh toán</p>
-          <p><strong>Phiên giao dịch:</strong> Sẽ hết hạn 24 giờ</p>
+          <p><strong>Reason:</strong> You declined or exited the payment page</p>
+          <p><strong>Session:</strong> Will expire in 24 hours</p>
         </div>
 
         <div class="actions">
-          <router-link to="/checkout" class="btn-primary">Quay lại thanh toán</router-link>
-          <router-link to="/cart" class="btn-secondary">Quay lại giỏ hàng</router-link>
+          <router-link to="/checkout" class="btn-primary">Return to Payment</router-link>
+          <router-link to="/cart" class="btn-secondary">Return to Cart</router-link>
         </div>
       </div>
     </div>

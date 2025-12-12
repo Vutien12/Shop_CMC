@@ -41,7 +41,7 @@
           v-model="inputMessage"
           @keyup.enter="sendMessage"
           type="text"
-          placeholder="Nhập tin nhắn..."
+          placeholder="Type a message..."
         />
         <button @click="sendMessage" class="send-button">
           <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -73,7 +73,7 @@ const reconnectTimer = ref(null)
 const statusLabel = computed(() => {
   switch (connectionStatus.value) {
     case 'connecting':
-      return 'Đang kết nối...'
+      return 'Connecting...'
     case 'online':
       return 'Online'
     default:
@@ -160,7 +160,7 @@ const connect = () => {
   if (!token) {
     // Only show login message once - check if messages array is empty
     if (messages.value.length === 0) {
-      appendMessage('bot', 'Bạn cần đăng nhập để sử dụng chatbot.')
+      appendMessage('bot', 'You need to login to use the chatbot.')
     }
     return
   }
@@ -184,7 +184,7 @@ const connect = () => {
 
     // Show welcome message only after successful connection
     if (messages.value.length === 0) {
-      appendMessage('bot', 'Xin chào! Tôi là trợ lý ảo của Shop CMC. Bạn cần tư vấn về sản phẩm nào?')
+      appendMessage('bot', 'Hello! I am Shop CMC virtual assistant. What product would you like to know about?')
     }
   }
 
@@ -202,7 +202,7 @@ const connect = () => {
 
     if (data.startsWith('[ERROR]')) {
       console.error('%c[Chatbot] ERROR', 'background: #F44336; color: white; font-weight: bold; padding: 2px 6px', data)
-      appendMessage('bot', data.replace('[ERROR]', 'Lỗi: '))
+      appendMessage('bot', data.replace('[ERROR]', 'Error: '))
       return
     }
 
@@ -225,7 +225,7 @@ const connect = () => {
     console.error('  1. Backend not running on localhost:8080')
     console.error('  2. CORS not configured for', window.location.origin)
     console.error('  3. Token expired or invalid')
-    appendMessage('bot', 'Có lỗi xảy ra với kết nối chatbot. Đang thử kết nối lại...')
+    appendMessage('bot', 'An error occurred with the chatbot connection. Trying to reconnect...')
     wsRef.value?.close()
   }
 }
@@ -248,7 +248,7 @@ const sendMessage = () => {
 
   // Native WebSocket readyState: WebSocket.OPEN = 1
   if (!wsRef.value || wsRef.value.readyState !== WebSocket.OPEN) {
-    appendMessage('bot', 'Kết nối chưa sẵn sàng, đang thử kết nối lại...')
+    appendMessage('bot', 'Connection not ready, trying to reconnect...')
     connect()
     return
   }
