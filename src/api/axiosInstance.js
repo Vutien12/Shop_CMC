@@ -16,6 +16,7 @@ const PUBLIC_ENDPOINT_RULES = [
   { path: '/ws/**', methods: ['ALL'] },
   { path: '/uploads/**', methods: ['ALL'] },
   { path: '/contact', methods: ['GET', 'POST'] },
+  { path: '/flash-sales/active', methods: ['GET'] },
 ]
 
 const OPTIONAL_JWT_ENDPOINTS = [
