@@ -393,7 +393,7 @@ import { ref, onMounted, computed } from 'vue'
 import { searchProducts, getNewArrivals, getSpecialProducts, getFeaturedProducts } from '@/api/productApi'
 import { getCategories } from '@/api/categoryApi'
 import { getBrands } from '@/api/brandApi'
-import { getAllFlashSales } from '@/api/flashsaleApi'
+import { getActiveFlashSales } from '@/api/flashsaleApi'
 
 import Menu from './Menu.vue'
 import BestDealsSection from './sections/BestDealsSection.vue'
@@ -684,7 +684,7 @@ const endDragCategory = () => {
 // Fetch Flash Sales
 const fetchFlashSales = async () => {
   try {
-    const response = await getAllFlashSales()
+    const response = await getActiveFlashSales()
     if (response.code === 200) {
       // Filter only ONGOING flash sales
       flashSales.value = response.result.filter(sale => sale.status === 'ONGOING')
