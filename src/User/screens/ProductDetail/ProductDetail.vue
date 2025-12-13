@@ -651,7 +651,7 @@ export default {
           const el = this.$el.querySelector('.option-section .error-message')
           if (el) el.closest('.option-section').scrollIntoView({ behavior: 'smooth', block: 'center' })
         })
-        return this.toast('Vui lòng hoàn tất các tuỳ chọn bắt buộc.', 'warning')
+        return this.toast('Please complete the required options.', 'warning')
       }
 
       const payload = this.buildCartPayload()
@@ -669,7 +669,7 @@ export default {
     async toggleWishlist() {
       const variant = this.selectedVariant || this.product.variants[0]
       const variantId = variant?.id
-      if (!variantId) return this.toast('Không tìm thấy variant', 'error')
+      if (!variantId) return this.toast('No variants found', 'error')
 
       const api = await import('@/api/accountApi.js')
       try {
@@ -1007,7 +1007,6 @@ export default {
 
 <!-- new localized style to make the liked heart red -->
 <style scoped>
-/* filepath: D:\PVVU\Test\Shop_CMC\Shop_CMC\src\User\screens\ProductDetail\ProductDetail.vue */
 .btn-wishlist {
   /* keep base button color as-is (inherited) */
   display: inline-flex;
