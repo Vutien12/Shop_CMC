@@ -730,7 +730,7 @@ export default {
 
 .scroll-nav-btn:hover {
   background: #fff;
-  border-color: #0068e1;
+  border-color: #ff6b35;
   box-shadow: 0 4px 16px rgba(0, 104, 225, 0.2);
 }
 
@@ -740,7 +740,7 @@ export default {
 }
 
 .scroll-nav-btn:hover svg {
-  color: #0068e1;
+  color: #ff6b35;
 }
 
 .scroll-left {
@@ -776,7 +776,7 @@ export default {
 }
 
 .scroll-indicators .dot.active {
-  background: #0068e1;
+  background: #ff6b35;
   width: 24px;
   border-radius: 4px;
 }
@@ -972,7 +972,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top-color: #0068e1;
+  border-top-color: #ff6b35;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -1040,7 +1040,7 @@ export default {
   top: 0;
   bottom: 0;
   width: 0; /* default hidden */
-  background: #0068e1;
+  background: #ff6b35;
   border-radius: 0; /* straight edge */
   transition: width 0.18s ease;
 }
@@ -1067,7 +1067,7 @@ export default {
 
 /* Only change the category text color on hover, keep icons subtle */
 .category-item:hover .category-content span {
-  color: #0068e1;
+  color: #ff6b35;
 }
 
 /* Remove bullet before subcategory items to keep menu minimal (only single left bar) */
