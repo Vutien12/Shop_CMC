@@ -75,8 +75,8 @@
               <!-- Empty State -->
               <div v-else-if="!orders.length" class="empty-state">
                 <i class="fa-solid fa-cart-shopping" style="font-size: 48px; color: #ccc;"></i>
-                <p>Bạn chưa có đơn hàng nào</p>
-                <router-link to="/products" class="btn-primary">Mua sắm ngay</router-link>
+                <p>You have no orders yet</p>
+                <router-link to="/products" class="btn-primary">Shop Now</router-link>
               </div>
 
               <!-- Orders Table -->
@@ -171,7 +171,7 @@ const { isVisible: ordersVisible } = useLazyLoad(async () => {
     totalPages.value = data.totalPages;
     currentPage.value = 0;
   } catch {
-    toast('Không thể tải đơn hàng.', 'error');
+    toast('Unable to load orders.', 'error');
   } finally {
     ordersLoading.value = false;
   }
@@ -188,7 +188,7 @@ const changePage = async (page) => {
     currentPage.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch {
-    toast('Không thể tải trang.', 'error');
+    toast('Unable to load page.', 'error');
   } finally {
     ordersLoading.value = false;
   }
@@ -216,7 +216,7 @@ onMounted(async () => {
     }
   } catch (error) {
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error');
+      toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {

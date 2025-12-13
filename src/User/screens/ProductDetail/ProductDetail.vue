@@ -1,9 +1,9 @@
 <template>
   <div class="product-detail-container">
-    <UserHeader />
+    <Header />
     <Loading v-if="isLoading" text="Loading product..." />
 
-    <div v-if="!isLoading && product" class="product-container">
+    <div v-else-if="product" class="product-container">
       <div class="product-content">
         <!-- Images -->
         <div class="product-images">
@@ -361,8 +361,8 @@
 </template>
 
 <script>
-import UserHeader from '@/User/components/Header1/Header.vue'
-import UserFooter from '@/User/components/Footer/Footer.vue'
+import Header from '@/User/components/Header1/Header.vue'
+import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
@@ -373,7 +373,7 @@ import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 export default {
   name: 'ProductDetail',
-  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot, ProductCard },
+  components: { Header, Footer, Loading, ReviewList, Chatbot, ProductCard },
   setup() {
     const reviewStore = useReviewStore()
     const cartStore = useCartStore()
@@ -440,13 +440,11 @@ export default {
         this.isLoading = true
         const id = parseInt(this.$route.params.id)
         if (!id || isNaN(id)) {
-          this.toast('ID sản phẩm không hợp lệ!', 'error')
+          this.toast('Invalid product ID!', 'error')
           return this.$router.push('/product')
         }
 
-        console.log('GỌI API /products/', id)
         const res = await getProductById(id)
-        console.log('NHẬN KẾT QUẢ:', res)
 
         this.processProductData(res.result)
 
@@ -456,10 +454,7 @@ export default {
           this.fetchRelatedProducts(id)
         ])
       } catch (err) {
-        console.error('LỖI GỌI API:', err)
-        console.error('Response:', err.response?.data)
-        console.error('Status:', err.response?.status)
-        this.toast('Không tải được sản phẩm!', 'error')
+        this.toast('Unable to load the product.!', 'error')
         this.$router.push('/product')
       } finally {
         this.isLoading = false
@@ -640,11 +635,11 @@ export default {
       if (!this.selectedVariant) return
 
       if (!this.selectedVariant.isActive) {
-        this.toast('Sản phẩm này hiện đã ngừng kinh doanh!', 'warning')
+        this.toast('This product has now been discontinued!', 'warning')
         return
       }
       if (!this.selectedVariant.inStock) {
-        this.toast('Biến thể này đã hết hàng!', 'warning')
+        this.toast('This variant is out of stock!', 'warning')
         return
       }
       if (this.isSubmitting) return
@@ -663,9 +658,9 @@ export default {
       this.isSubmitting = true
       try {
         await this.cartStore.addItem(payload)
-        this.toast('Đã thêm vào giỏ hàng!', 'success')
+        this.toast('Added to cart!', 'success')
       } catch (err) {
-        this.toast(err.response?.data?.message || 'Thêm vào giỏ thất bại', 'error')
+        this.toast(err.response?.data?.message || 'Add to cart - failure', 'error')
       } finally {
         this.isSubmitting = false
       }
@@ -721,12 +716,12 @@ export default {
             this.product.isWishlisted = true
           }
 
-          this.toast('Đã thêm vào wishlist', 'success')
+          this.toast('Added to wishlist', 'success')
         }
 
         window.dispatchEvent(new Event('wishlistChanged'))
       } catch (err) {
-        this.toast(err.response?.status === 401 ? 'Vui lòng đăng nhập' : 'Lỗi wishlist', 'error')
+        this.toast(err.response?.status === 401 ? 'Please log in' : 'Error wishlist', 'error')
       }
     },
 

@@ -258,7 +258,7 @@ const handleSubmit = async () => {
   try {
     // Basic frontend validation for productId
     if (!productIdValue.value) {
-      errors.value.productId = 'Vui lòng chọn sản phẩm.'
+      errors.value.productId = 'Please select a product.'
       return
     }
 

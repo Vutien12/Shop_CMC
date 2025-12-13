@@ -79,14 +79,14 @@
           <!-- Cart -->
           <router-link to="/cart" class="action-icon action-btn">
             <i class="fa-solid fa-cart-shopping"></i>
-            <span class="action-text">Giỏ hàng</span>
+            <span class="action-text">Cart</span>
             <span class="badge" v-if="cartCount > 0">{{ cartCount }}</span>
           </router-link>
 
           <!-- User Account -->
           <div class="action-icon action-btn user-menu" @click="toggleUserMenu">
             <i class="fa-regular fa-user"></i>
-            <span class="action-text">Đăng nhập</span>
+            <span class="action-text">Login</span>
             <span class="badge" v-if="isLoggedIn">1</span>
 
             <!-- Dropdown Menu -->

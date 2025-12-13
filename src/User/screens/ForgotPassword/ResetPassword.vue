@@ -87,7 +87,7 @@ const handleSubmit = async () => {
 
   // Basic client-side validation
   if (!form.value.email || !form.value.otp || !form.value.newPassword) {
-    generalError.value = 'Vui lòng điền đầy đủ thông tin.';
+    generalError.value = 'Please fill in all fields.';
     return;
   }
 
@@ -101,25 +101,25 @@ const handleSubmit = async () => {
     };
     const res = await resetPassword(payload);
     if (res.data?.code === 200) {
-      addToast(res.data?.result || 'Mật khẩu cập nhật thành công.', 'success');
+      addToast(res.data?.result || 'Password updated successfully.', 'success');
       // redirect to login after short delay
       setTimeout(() => router.push('/login'), 1200);
     } else {
-      const errMsg = res.data?.message || 'Cập nhật mật khẩu thất bại.';
+      const errMsg = res.data?.message || 'Password update failed.';
       addToast(errMsg, 'error');
       generalError.value = errMsg;
     }
   } catch (err) {
     console.error('Reset password error:', err);
     const response = err.response?.data;
-    const errMsg = response?.message || 'Lỗi mạng. Vui lòng thử lại.';
+    const errMsg = response?.message || 'Network error. Please try again.';
     addToast(errMsg, 'error');
     if (response?.code === 400 && response.result) {
-      generalError.value = response.message || 'Dữ liệu không hợp lệ.';
+      generalError.value = response.message || 'Invalid data.';
     } else if (response?.code === 500) {
-      generalError.value = response.message || 'Lỗi máy chủ.';
+      generalError.value = response.message || 'Server error.';
     } else {
-      generalError.value = 'Lỗi mạng. Vui lòng thử lại.';
+      generalError.value = 'Network error. Please try again.';
     }
   } finally {
     isSubmitting.value = false;

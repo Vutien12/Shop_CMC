@@ -157,7 +157,7 @@ const handleSubmit = async () => {
     try {
       const response = await sendContactSupport(formData.value);
 
-      toast(response.message || 'Yêu cầu hỗ trợ của bạn đã được gửi thành công!', 'success');
+      toast(response.message || 'Your support request has been sent successfully!', 'success');
 
       // Reset form
       formData.value = {
@@ -167,7 +167,7 @@ const handleSubmit = async () => {
       };
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      const errorMessage = error.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại sau!';
+      const errorMessage = error.response?.data?.message || 'Unable to send request. Please try again later!';
       toast(errorMessage, 'error');
     } finally {
       isSubmitting.value = false;

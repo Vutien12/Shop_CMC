@@ -6,7 +6,7 @@
       <!-- Loading State -->
       <div v-if="!order" class="loading-state">
         <div class="spinner"></div>
-        <p>Đang tải chi tiết đơn hàng...</p>
+        <p>Loading order details...</p>
       </div>
 
       <!-- Success Message -->
@@ -18,21 +18,21 @@
           </svg>
         </div>
 
-        <h1>Đặt hàng thành công!</h1>
-        <p class="order-number">Mã đơn hàng: <strong>#{{ order.id }}</strong></p>
-        <p class="order-message">Cảm ơn bạn đã mua hàng. Chúng tôi sẽ liên hệ với bạn sớm nhất.</p>
+        <h1>Order Successful!</h1>
+        <p class="order-number">Order ID: <strong>#{{ order.id }}</strong></p>
+        <p class="order-message">Thank you for your purchase. We will contact you soon.</p>
       </div>
 
       <!-- Order Summary -->
       <div v-if="order" class="order-summary">
-        <h2>Tóm tắt đơn hàng</h2>
+        <h2>Order Summary</h2>
 
         <div class="summary-grid">
           <!-- Customer Info -->
           <div class="summary-card">
-            <h3>Thông tin khách hàng</h3>
+            <h3>Customer Information</h3>
             <div class="info-item">
-              <span class="label">Tên:</span>
+              <span class="label">Name:</span>
               <span class="value">{{ order.customerFirstName }} {{ order.customerLastName }}</span>
             </div>
             <div class="info-item">
@@ -40,14 +40,14 @@
               <span class="value">{{ order.customerEmail }}</span>
             </div>
             <div class="info-item">
-              <span class="label">Điện thoại:</span>
+              <span class="label">Phone:</span>
               <span class="value">{{ order.customerPhone }}</span>
             </div>
           </div>
 
           <!-- Shipping Address -->
           <div class="summary-card">
-            <h3>Địa chỉ giao hàng</h3>
+            <h3>Shipping Address</h3>
             <div class="info-item">
               <span class="value">
                 {{ order.shippingFirstName }} {{ order.shippingLastName }}<br>
@@ -61,17 +61,17 @@
 
           <!-- Payment Info -->
           <div class="summary-card">
-            <h3>Thông tin thanh toán</h3>
+            <h3>Payment Information</h3>
             <div class="info-item">
-              <span class="label">Phương thức:</span>
+              <span class="label">Method:</span>
               <span class="value badge" :class="paymentMethodClass">{{ paymentMethodText }}</span>
             </div>
             <div class="info-item">
-              <span class="label">Vận chuyển:</span>
+              <span class="label">Shipping:</span>
               <span class="value">{{ order.shippingMethod }}</span>
             </div>
             <div class="info-item">
-              <span class="label">Trạng thái:</span>
+              <span class="label">Status:</span>
               <span class="value badge" :class="statusClass">{{ statusText }}</span>
             </div>
           </div>
@@ -79,14 +79,14 @@
 
         <!-- Order Items -->
         <div class="order-items">
-          <h3>Sản phẩm đã đặt</h3>
+          <h3>Ordered Products</h3>
           <div class="items-table">
             <div class="table-header">
-              <div class="col-product">Sản phẩm</div>
+              <div class="col-product">Product</div>
               <div class="col-sku">SKU</div>
-              <div class="col-qty">Số lượng</div>
-              <div class="col-price">Đơn giá</div>
-              <div class="col-total">Thành tiền</div>
+              <div class="col-qty">Quantity</div>
+              <div class="col-price">Unit Price</div>
+              <div class="col-total">Total</div>
             </div>
 
             <div v-for="item in order.orderProducts" :key="item.id" class="table-row">
@@ -115,19 +115,19 @@
         <!-- Order Total -->
         <div class="order-total">
           <div class="total-row">
-            <span>Tạm tính:</span>
+            <span>Subtotal:</span>
             <span>{{ formatPrice(order.subTotal) }}</span>
           </div>
           <div v-if="order.discount > 0" class="total-row discount">
-            <span>Giảm giá:</span>
+            <span>Discount:</span>
             <span>-{{ formatPrice(order.discount) }}</span>
           </div>
           <div class="total-row">
-            <span>Vận chuyển:</span>
+            <span>Shipping:</span>
             <span>{{ formatPrice(order.shippingCost) }}</span>
           </div>
           <div class="total-row grand-total">
-            <span>Tổng cộng:</span>
+            <span>Total:</span>
             <span>{{ formatPrice(order.total) }}</span>
           </div>
         </div>
@@ -136,16 +136,16 @@
       <!-- Actions -->
       <div v-if="order" class="action-buttons">
         <router-link to="/orders" class="btn btn-primary">
-          Xem đơn hàng của tôi
+          View My Orders
         </router-link>
         <router-link to="/" class="btn btn-secondary">
-          Tiếp tục mua sắm
+          Continue Shopping
         </router-link>
       </div>
 
       <!-- Note -->
       <div v-if="order && order.note" class="order-note">
-        <h3>Ghi chú đơn hàng</h3>
+        <h3>Order Note</h3>
         <p>{{ order.note }}</p>
       </div>
     </div>
@@ -174,8 +174,8 @@ const formatPrice = (price) => {
 
 const paymentMethodText = computed(() => {
   const map = {
-    'COD': 'Thanh toán khi nhận hàng',
-    'DEBIT_CARD': 'Thẻ ghi nợ',
+    'COD': 'Cash on Delivery',
+    'DEBIT_CARD': 'Debit Card',
     'PAYOS_QR': 'PayOS QR',
     'VIETQR': 'VietQR'
   }
@@ -194,12 +194,12 @@ const paymentMethodClass = computed(() => {
 
 const statusText = computed(() => {
   const map = {
-    'PENDING': 'Chờ xác nhận',
-    'CONFIRMED': 'Đã xác nhận',
-    'PROCESSING': 'Đang xử lý',
-    'SHIPPED': 'Đã gửi',
-    'COMPLETED': 'Hoàn tất',
-    'CANCELLED': 'Đã hủy'
+    'PENDING': 'Pending',
+    'CONFIRMED': 'Confirmed',
+    'PROCESSING': 'Processing',
+    'SHIPPED': 'Shipped',
+    'COMPLETED': 'Completed',
+    'CANCELLED': 'Cancelled'
   }
   return map[order.value?.status] || order.value?.status
 })
