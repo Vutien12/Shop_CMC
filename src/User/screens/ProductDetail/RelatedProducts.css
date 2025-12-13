@@ -1,0 +1,84 @@
+/* Related Products Section - Isolated Styles */
+.pd-related-products {
+  margin-top: 3rem;
+  padding: 2.5rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pd-related-products__title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 24px 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+.pd-related-products__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* Make ProductCard clickable in related products */
+.pd-related-products__grid .product-card {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pd-related-products__grid .product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive grid - Large screens (6 columns) */
+@media (min-width: 1400px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Responsive grid - Desktop (4 columns) */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Responsive grid - Tablet (3 columns) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Responsive grid - Mobile (2 columns) */
+@media (max-width: 767px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .pd-related-products {
+    padding: 2rem 0;
+    margin-top: 2rem;
+  }
+
+  .pd-related-products__title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Extra small mobile (1 column if needed) */
+@media (max-width: 480px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .pd-related-products__title {
+    font-size: 18px;
+  }
+}
+

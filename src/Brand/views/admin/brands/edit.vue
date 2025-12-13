@@ -1,6 +1,6 @@
 <template>
     <section class="content">
-        <PageBreadcrumb 
+        <PageBreadcrumb
             title="Edit Brand"
             :breadcrumbs="[
                 { label: 'Brands', route: { name: 'admin.brands.index' } },
@@ -139,7 +139,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import SelectImage from '@/Media/SelectImage.vue';
-import { getBrandById, updateBrand, attachFileToBrand, getBrandFiles, deleteEntityFile } from '@/api/brandApi';
+import { getBrandById, updateBrand, attachFileToBrand } from '@/api/brandApi';
 
 const router = useRouter();
 const route = useRoute();
@@ -149,7 +149,6 @@ const loading = ref(false);
 const logoPreview = ref(null);
 const isFileManagerOpen = ref(false);
 const selectedLogoFileId = ref(null);
-const existingLogoEntityFileId = ref(null);
 const shouldRemoveLogo = ref(false);
 
 const form = reactive({
@@ -212,30 +211,18 @@ const loadBrand = async () => {
             form.name = brand.name;
             form.is_active = brand.isActive;
 
-            // Reset removal flag
-            shouldRemoveLogo.value = false;
-
-            // Reset selected file ID (only set when user selects NEW image)
-            selectedLogoFileId.value = null;
-
-            // Load logo if exists in brand
+            // Load logo if exists
             if (brand.fileLogo) {
-                logoPreview.value = brand.fileLogo; // fileLogo is already a string URL
-                form.logo = brand.fileLogo;
+                logoPreview.value = brand.fileLogo;
+                form.logo = brand.fileLogo; // Lưu URL ảnh hiện tại
+            } else {
+                logoPreview.value = null;
+                form.logo = null;
             }
 
-            // Load entity files (logo)
-            try {
-                const logoFiles = await getBrandFiles(brandId, 'BRAND', 'LOGO');
-                if (logoFiles.code === 200 && logoFiles.result?.length > 0) {
-                    const logoFile = logoFiles.result[0];
-                    existingLogoEntityFileId.value = logoFile.id;
-                    logoPreview.value = logoFile.path || logoPreview.value;
-                    // Don't set selectedLogoFileId - only for NEW selections
-                }
-            } catch (error) {
-                console.error('Failed to load entity files:', error);
-            }
+            // Reset flags
+            selectedLogoFileId.value = null; // Chỉ set khi user chọn ảnh mới
+            shouldRemoveLogo.value = false;
         }
     } catch (error) {
         console.error('Failed to load brand:', error);
@@ -276,63 +263,53 @@ const update = async () => {
     try {
         const brandId = route.params.id;
 
-        // Debug: Log all state before update
-        console.log('BrandEdit: Update starting with state:', {
-            brandId,
+        // Xác định giá trị fileLogo (giống logic Variation)
+        let fileLogoValue;
+
+        console.log('BrandEdit: Determining fileLogo value...', {
+            shouldRemoveLogo: shouldRemoveLogo.value,
             selectedLogoFileId: selectedLogoFileId.value,
-            existingLogoEntityFileId: existingLogoEntityFileId.value,
-            shouldRemoveLogo: shouldRemoveLogo.value
+            formLogo: form.logo
         });
+
+        if (shouldRemoveLogo.value) {
+            fileLogoValue = null;
+            console.log('BrandEdit: Logo removed, sending null');
+        } else if (selectedLogoFileId.value) {
+            fileLogoValue = 'logo_placeholder';
+            console.log('BrandEdit: New logo selected, sending placeholder');
+        } else {
+            fileLogoValue = form.logo;
+            console.log('BrandEdit: Logo unchanged, sending current URL:', fileLogoValue);
+        }
 
         // Update brand data
         const brandData = {
             name: form.name,
             isActive: form.is_active,
-            fileLogo: null
+            fileLogo: fileLogoValue
         };
 
+        console.log('BrandEdit: Updating with data:', brandData);
         await updateBrand(brandId, brandData);
 
-        // Handle LOGO changes
-        if (shouldRemoveLogo.value && existingLogoEntityFileId.value) {
-            // User wants to remove logo
-            try {
-                await deleteEntityFile(existingLogoEntityFileId.value);
-                console.log('Logo removed successfully');
-            } catch (error) {
-                console.error('Failed to delete logo:', error);
-                // Continue even if delete fails (might already be deleted)
-            }
-        } else if (selectedLogoFileId.value) {
-            // User selected a new logo
-            // Delete old logo entity file if exists
-            if (existingLogoEntityFileId.value) {
-                try {
-                    await deleteEntityFile(existingLogoEntityFileId.value);
-                    console.log('Old logo deleted');
-                } catch (error) {
-                    console.error('Failed to delete old logo:', error);
-                    // Continue even if delete fails
-                }
-            }
-
-            // Attach new logo
+        // Nếu có ảnh mới, gọi entity-files API để attach
+        if (selectedLogoFileId.value) {
             const logoData = {
                 fileId: selectedLogoFileId.value,
                 entityId: brandId,
                 entityType: 'BRAND',
                 zone: 'LOGO'
             };
-            console.log('BrandEdit: Attaching logo with data:', logoData);
+            console.log('BrandEdit: Attaching new logo:', logoData);
             await attachFileToBrand(logoData);
-            console.log('New logo attached');
         }
 
 
         notification.success('Thành công!', 'Đã cập nhật thương hiệu thành công');
 
         // Navigate to brands list
-        router.push({ name: 'admin.brands.index' });
+        await router.push({ name: 'admin.brands.index' });
     } catch (error) {
         console.error('Error updating brand:', error);
         if (error.response?.status === 400) {

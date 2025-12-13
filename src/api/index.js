@@ -10,7 +10,9 @@ export {
   getProductForEdit,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  deleteEntityFile,
+  getRelatedProducts
 } from './productApi.js';
 
 // Brand APIs
@@ -83,4 +85,3 @@ export * from './flashsaleApi.js';
 
 // Shipping APIs
 export * from './shippingApi.js';
-

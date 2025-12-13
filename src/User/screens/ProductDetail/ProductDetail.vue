@@ -342,17 +342,15 @@
       </div>
 
       <!-- Related Products -->
-      <div class="related-products">
-        <h3>You might also like</h3>
-        <div class="related-grid">
-          <div v-for="item in relatedProducts" :key="item.name" class="related-item">
-            <img :src="item.image" :alt="item.name" />
-            <h4>{{ item.name }}</h4>
-            <div class="item-rating">
-              <span v-for="star in getStars(item.rating)" :key="star" class="star">★</span>
-            </div>
-            <div class="item-price">${{ item.price }}</div>
-          </div>
+      <div v-if="relatedProducts.length > 0" class="pd-related-products">
+        <h3 class="pd-related-products__title">You might also like</h3>
+        <div class="pd-related-products__grid">
+          <ProductCard
+            v-for="item in relatedProducts"
+            :key="item.id"
+            :product="transformRelatedProduct(item)"
+            @click="navigateToProduct(item.id)"
+          />
         </div>
       </div>
     </div>
@@ -368,13 +366,14 @@ import UserFooter from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
-import { getProductById } from '@/api/productApi.js'
+import ProductCard from '@/User/screens/Home/ProductCard.vue'
+import { getProductById, getRelatedProducts } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 export default {
   name: 'ProductDetail',
-  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot },
+  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot, ProductCard },
   setup() {
     const reviewStore = useReviewStore()
     const cartStore = useCartStore()
@@ -410,22 +409,30 @@ export default {
       // Lookup
       variantLookup: {},
 
-      // Dummy related
-      relatedProducts: [
-        { name: 'DUDUALISS Men Long Sleeve Shirt...', price: 17.3, image: 'assets/images/related1.jpg', rating: 5 },
-        { name: 'S-5XL Plus Size Brand Clothing...', price: 7.47, image: 'assets/images/related2.jpg', rating: 4 },
-        { name: '2019 brand casual spring luxury...', price: 5.24, image: 'assets/images/related3.jpg', rating: 4 },
-        { name: 'Long-sleeved Camisa Masculina...', price: 9.69, image: 'assets/images/related4.jpg', rating: 5 },
-        { name: 'Europe size Summer Short Sleeve...', price: 8.35, image: 'assets/images/related5.jpg', rating: 4 },
-      ],
+      // Related products (sẽ load từ API)
+      relatedProducts: [],
     }
   },
   async mounted() {
     await this.fetchProductDetail()
   },
+  watch: {
+    // Watch route params để reload product khi navigate từ related products
+    '$route.params.id': {
+      handler(newId, oldId) {
+        if (newId && newId !== oldId) {
+          // Reset state và fetch lại
+          this.selectedImage = 0;
+          this.quantity = 1;
+          this.activeTab = 'description';
+          this.showFullDescription = false;
+          this.fetchProductDetail();
+        }
+      }
+    }
+  },
   methods: {
     async fetchProductDetail() {
-      console.log('BẮT ĐẦU GỌI API CHI TIẾT SẢN PHẨM')
       console.log('Route params:', this.$route.params)
       console.log('Product ID:', this.$route.params.id)
 
@@ -443,7 +450,11 @@ export default {
 
         this.processProductData(res.result)
 
-        this.reviewStore.fetchProductReviews(id, 0, 1).catch(() => {})
+        // Load reviews và related products song song
+        await Promise.all([
+          this.reviewStore.fetchProductReviews(id, 0, 1).catch(() => {}),
+          this.fetchRelatedProducts(id)
+        ])
       } catch (err) {
         console.error('LỖI GỌI API:', err)
         console.error('Response:', err.response?.data)
@@ -452,6 +463,19 @@ export default {
         this.$router.push('/product')
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async fetchRelatedProducts(productId) {
+      try {
+        const response = await getRelatedProducts(productId, 10);
+        if (response.code === 200 && response.result) {
+          this.relatedProducts = response.result;
+          console.log('Related products loaded:', this.relatedProducts.length);
+        }
+      } catch (error) {
+        console.error('Error loading related products:', error);
+        this.relatedProducts = [];
       }
     },
 
@@ -477,8 +501,13 @@ export default {
       this.colorVariation = this.variations.find(v => v.type === 'COLOR' || /color/i.test(v.name))
       this.otherVariations = this.variations.filter(v => v !== this.colorVariation)
 
-      // Images
-      const pool = [data.thumbnail, ...(data.gallery || [])].filter(Boolean)
+      const galleryUrls = (data.gallery || []).map(item => {
+        if (typeof item === 'object' && item.url) {
+          return item.url;
+        }
+        return typeof item === 'string' ? item : null;
+      }).filter(Boolean);
+      const pool = [data.thumbnail, ...galleryUrls].filter(Boolean)
       this.mediaImages = pool.length ? [...new Set(pool)] : [this.placeholderImage]
 
       // Product base info
@@ -860,37 +889,96 @@ export default {
     setActiveTab(tab) { this.activeTab = tab },
     toggleDescription() { this.showFullDescription = !this.showFullDescription },
     shareProduct() { },
-    getStars(r) { return Array(5).fill('').map((_, i) => (i < r ? 'star' : 'star_border')) },
-
-    formatPrice(p) {
-      if (p == null) return '—'
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p)
+    getStars(rating) {
+      return Array.from({ length: rating }, (_, i) => i + 1);
     },
 
-    optionLabelWithPrice(v) {
-      return v.price > 0 ? `${v.label} (+${this.formatPrice(v.price)})` : v.label
+    navigateToProduct(productId) {
+      // Navigate to product detail page
+      this.$router.push({ name: 'product.show', params: { id: productId } });
     },
-    getSelectedOptionLabel(o) {
-      const type = o.type
-      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) return this.selectedOptions[o.id] || '—'
-      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
-        const arr = this.selectedOptions[o.id] || []
-        if (!Array.isArray(arr) || arr.length === 0) return '—'
-        const labels = o.optionValues.filter(ov => arr.includes(ov.id)).map(ov => ov.label)
-        return labels.length ? labels.join(', ') : '—'
+
+    transformRelatedProduct(apiProduct) {
+      // Transform API product to match ProductCard format
+      const firstVariant = apiProduct.variants && apiProduct.variants.length > 0 ? apiProduct.variants[0] : null;
+
+      // Calculate discount
+      let discount = null;
+      let originalPrice = null;
+      if (firstVariant && firstVariant.specialPrice) {
+        originalPrice = firstVariant.price;
+        const discountPercent = ((firstVariant.price - firstVariant.specialPrice) / firstVariant.price) * 100;
+        discount = `-${Math.round(discountPercent)}%`;
       }
-      return (o.optionValues.find(ov => String(ov.id) === String(this.selectedOptions[o.id])) || {}).label || '—'
+
+      return {
+        id: apiProduct.id,
+        name: apiProduct.name,
+        image: apiProduct.thumbnail || this.placeholderImage,
+        price: apiProduct.minPrice || 0,
+        originalPrice: originalPrice,
+        discount: discount,
+        isNew: !!(apiProduct.newFrom || apiProduct.newTo),
+        isOutOfStock: !apiProduct.inStock,
+      };
     },
-    getSelectedOptionPrice(o) {
-      const type = o.type
-      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) return this.selectedOptions[o.id] ? (o.optionValues[0]?.price || 0) : 0
-      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
-        const arr = this.selectedOptions[o.id] || []
-        if (!Array.isArray(arr) || arr.length === 0) return 0
-        return o.optionValues.filter(ov => arr.includes(ov.id)).reduce((s, v) => s + (v.price || 0), 0)
+
+    formatPrice(price) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
+    },
+
+    getSelectedOptionPrice(option) {
+      const type = option.type;
+      const val = this.selectedOptions[option.id];
+
+      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) {
+        const base = option.optionValues[0];
+        return base?.price || 0;
       }
-      return (o.optionValues.find(ov => String(ov.id) === String(this.selectedOptions[o.id])) || {}).price || 0
-    }
+
+      if (['SELECT', 'RADIO', 'RADIO_CUSTOM'].includes(type)) {
+        const sel = option.optionValues.find(ov => String(ov.id) === String(val));
+        return sel?.price || 0;
+      }
+
+      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+        const selArr = val || [];
+        if (!Array.isArray(selArr)) return 0;
+        const vals = option.optionValues.filter(ov => selArr.includes(ov.id));
+        return vals.reduce((sum, v) => sum + (v.price || 0), 0);
+      }
+
+      return 0;
+    },
+
+    getSelectedOptionLabel(option) {
+      const type = option.type;
+      const val = this.selectedOptions[option.id];
+
+      if (['TEXT', 'TEXTAREA', 'DATE', 'TIME', 'DATETIME'].includes(type)) {
+        return val || '';
+      }
+
+      if (['SELECT', 'RADIO', 'RADIO_CUSTOM'].includes(type)) {
+        const sel = option.optionValues.find(ov => String(ov.id) === String(val));
+        return sel?.label || '';
+      }
+
+      if (['MULTIPLE_SELECT', 'CHECKBOX', 'CHECKBOX_CUSTOM'].includes(type)) {
+        const selArr = val || [];
+        if (!Array.isArray(selArr)) return '';
+        const vals = option.optionValues.filter(ov => selArr.includes(ov.id));
+        return vals.map(v => v.label).join(', ');
+      }
+
+      return '';
+    },
+
+    optionLabelWithPrice(optValue) {
+      if (!optValue.price || optValue.price === 0) return optValue.label;
+      const sign = optValue.priceType === 'PERCENT' ? '%' : '';
+      return `${optValue.label} (+${this.formatPrice(optValue.price)}${sign})`;
+    },
   },
 
   computed: {
@@ -920,6 +1008,7 @@ export default {
 </script>
 
 <style src="./ProductDetail.css"></style>
+<style src="./RelatedProducts.css"></style>
 
 <!-- new localized style to make the liked heart red -->
 <style scoped>

@@ -107,6 +107,29 @@ export const getFeaturedProducts = async (limit = 10) => {
   return response.data;
 };
 
+/**
+ * Delete entity file (for gallery images)
+ * @param {number} entityFileId - Entity file ID
+ * @returns {Promise}
+ */
+export const deleteEntityFile = async (entityFileId) => {
+  const response = await api.delete(`/entity-files/${entityFileId}`);
+  return response.data;
+};
+
+/**
+ * Get related products for a product
+ * @param {number} productId - Product ID
+ * @param {number} limit - Number of related products to fetch
+ * @returns {Promise}
+ */
+export const getRelatedProducts = async (productId, limit = 10) => {
+  const response = await api.get(`/products/${productId}/related`, {
+    params: { limit }
+  });
+  return response.data;
+};
+
 export default {
   searchProducts,
   getProductById,
@@ -117,5 +140,7 @@ export default {
   getNewArrivals,
   getSpecialProducts,
   getFeaturedProducts,
+  deleteEntityFile,
+  getRelatedProducts,
 };
 

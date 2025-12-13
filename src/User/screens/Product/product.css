@@ -561,7 +561,7 @@
 }
 
 .badge {
-   position: absolute;
+  position: absolute;
   top: 12px;
   left: 12px;
   padding: 4px 8px;
@@ -791,7 +791,7 @@
   height: 20px;
 }
 
- /* Pagination */
+/* Pagination */
 .pagination {
   margin-top: 24px;
   display: flex;

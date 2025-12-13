@@ -219,6 +219,7 @@ const form = reactive({
       image: null,
       imagePreview: null, // URL for preview
       imageFileId: null, // File ID for API attachment
+      hasNewImage: false, // Flag để track ảnh mới được chọn
     },
   ],
 });
@@ -262,6 +263,7 @@ const addRow = () => {
     image: null,
     imagePreview: null,
     imageFileId: null,
+    hasNewImage: false,
   });
 };
 
@@ -290,15 +292,25 @@ const handleImageSelect = (media) => {
     const index = currentImageIndex.value;
     form.values[index].imagePreview = media.path;
     form.values[index].imageFileId = media.id;
-    form.values[index].image = media.path; // Store path as value
+    form.values[index].image = media.path;
+    form.values[index].hasNewImage = true;
   }
   closeFileManager();
 };
 
 const removeImage = (index) => {
+  const wasExistingValue = isEditMode.value && form.values[index].id && typeof form.values[index].id === 'number';
+  const hadPreviousImage = form.values[index].imagePreview !== null;
+
   form.values[index].imagePreview = null;
   form.values[index].imageFileId = null;
   form.values[index].image = null;
+
+  if (wasExistingValue && hadPreviousImage) {
+    form.values[index].hasNewImage = true;
+  } else {
+    form.values[index].hasNewImage = false;
+  }
 };
 
 // Load variation data nếu đang edit
@@ -318,19 +330,19 @@ const loadVariation = async () => {
     if (response.code === 200 && response.result) {
       const data = response.result;
 
-      // Populate form với data từ API
       form.name = data.name;
       form.type = data.type.toLowerCase();
 
       // Map variationValues
-      form.values = data.variationValues.map((v, index) => {
+      form.values = data.variationValues.map((v) => {
         const value = {
-          id: v.id || Date.now() + index,
+          id: v.id,
           label: v.label,
           color: (data.type.toLowerCase() === 'color') ? v.value : '',
           image: null,
           imagePreview: null,
           imageFileId: null,
+          hasNewImage: false,
         };
 
         // If type is image, set preview
@@ -358,17 +370,17 @@ const loadVariation = async () => {
 const saveForm = async () => {
   // Validate form
   if (!form.name.trim()) {
-    notification.warning('Cảnh báo!', 'Vui lòng nhập tên biến thể');
+    notification.warning('Warning!', 'Please enter the variant name.');
     return;
   }
 
   if (!form.type) {
-    notification.warning('Cảnh báo!', 'Vui lòng chọn loại biến thể');
+    notification.warning('Warning!', 'Please select the variant type.');
     return;
   }
 
   if (form.values.length === 0 || !form.values.some(v => v.label.trim())) {
-    notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị có nhãn');
+    notification.warning('Warning!', 'Please add at least one labeled value.');
     return;
   }
 
@@ -384,19 +396,39 @@ const saveForm = async () => {
       .map(v => {
         console.log('Processing value:', v); // Debug log
 
-        // Nếu type là Color, value là mã màu
-        if (form.type === 'color') {
-          return {
-            label: v.label,
-            value: v.color || '#000000' // value là mã màu hex
-          };
+        const valueObj = {};
+
+        // Nếu đang edit và value có ID (là value cũ), gửi kèm ID
+        if (isEditMode.value && v.id && typeof v.id === 'number') {
+          valueObj.id = v.id;
         }
 
-        // Nếu type là Text hoặc Image, value là slug từ label
-        return {
-          label: v.label,
-          value: v.label.toLowerCase().replace(/\s+/g, '_')
-        };
+        valueObj.label = v.label;
+
+        // Xử lý field value dựa trên type và mode
+        if (form.type === 'color') {
+          // Type Color: value là mã màu
+          valueObj.value = v.color || '#000000';
+        } else if (form.type === 'image') {
+          // Giống Product: gửi lại URL ảnh nếu không đổi, null nếu xóa, placeholder nếu mới
+          if (v.hasNewImage) {
+            // Có thay đổi
+            if (v.imageFileId) {
+              // Có ảnh mới được chọn → gửi placeholder (sẽ được update bởi entity-files)
+              valueObj.value = v.label.toLowerCase().replace(/\s+/g, '_');
+            } else {
+              // Ảnh bị xóa → gửi null hoặc empty string
+              valueObj.value = null;
+            }
+          } else {
+            // Không có thay đổi → gửi lại URL ảnh hiện tại (giống Product)
+            valueObj.value = v.image || v.imagePreview || v.label.toLowerCase().replace(/\s+/g, '_');
+          }
+        } else {
+          // Text type
+          valueObj.value = v.label.toLowerCase().replace(/\s+/g, '_');
+        }
+        return valueObj;
       });
 
     const variationData = {
@@ -418,16 +450,26 @@ const saveForm = async () => {
       if (form.type === 'image' && response.result?.variationValues) {
         const variationValues = response.result.variationValues;
 
-        // Attach images for each value that has imageFileId
+        // CHỈ attach images cho values có ảnh MỚI (hasNewImage = true VÀ có imageFileId)
         const attachPromises = form.values
-          .filter(v => v.imageFileId && v.label.trim())
+          .filter(v => v.hasNewImage && v.imageFileId && v.label.trim())
           .map((v) => {
-            // Find corresponding variation value ID from response
-            const matchingValue = variationValues.find(vv => vv.label === v.label);
-            if (matchingValue && matchingValue.id) {
+            // Nếu đang edit và có ID cũ, dùng ID cũ
+            // Nếu không có ID cũ (value mới), tìm theo label
+            let targetId;
+
+            if (isEditMode.value && v.id && typeof v.id === 'number') {
+              targetId = v.id;
+            } else {
+              const matchingValue = variationValues.find(vv => vv.label === v.label);
+              targetId = matchingValue?.id;
+            }
+
+            if (targetId) {
+              console.log(`Attaching NEW file ${v.imageFileId} to variation value ${targetId}`);
               return attachFileToVariationValue({
                 fileId: v.imageFileId,
-                entityId: matchingValue.id,
+                entityId: targetId,
                 entityType: 'VARIATION_VALUE',
                 zone: 'VARIATION'
               });
@@ -436,7 +478,10 @@ const saveForm = async () => {
           });
 
         // Wait for all attachments to complete
-        await Promise.all(attachPromises);
+        if (attachPromises.length > 0) {
+          await Promise.all(attachPromises);
+          console.log(`Attached ${attachPromises.length} new image(s)`);
+        }
       }
 
       notification.success('Thành công!', `Đã ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể thành công`);

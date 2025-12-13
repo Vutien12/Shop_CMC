@@ -87,7 +87,8 @@ import {
   getCategories,
   getGlobalVariations,
   getGlobalOptions,
-  attachFileToEntity
+  attachFileToEntity,
+  deleteEntityFile
 } from '@/api';
 
 export default {
@@ -96,6 +97,7 @@ export default {
     LeftColumn,
     RightColumn,
     SelectImage,
+    PageBreadcrumb
   },
   data() {
     return {
@@ -375,9 +377,10 @@ export default {
         }
 
         if (product.gallery && product.gallery.length > 0) {
-          this.form.gallery = product.gallery.map(imagePath => ({
-            path: imagePath,
-            filename: imagePath.split('/').pop()
+          this.form.gallery = product.gallery.map(galleryItem => ({
+            id: galleryItem.id,
+            path: galleryItem.url,     // URL ảnh
+            filename: galleryItem.url.split('/').pop()
           }));
         }
 
@@ -1042,14 +1045,30 @@ export default {
       this.syncMediaArray();
     },
 
-        removeGalleryHandler(galleryIndex) {
+        async removeGalleryHandler(galleryIndex) {
             console.log('[Parent] removeGalleryHandler called', {
                 index: galleryIndex,
                 currentGallery: this.form.gallery,
                 length: this.form.gallery ? this.form.gallery.length : 0
             });
-            // Remove gallery image at specific index - create new array for reactivity
+            // Remove gallery image at specific index
             if (this.form.gallery && this.form.gallery.length > galleryIndex) {
+                const galleryItem = this.form.gallery[galleryIndex];
+
+                if (galleryItem.id) {
+                    try {
+                        console.log('[Parent] Deleting entity file:', galleryItem.id);
+                        await deleteEntityFile(galleryItem.id);
+                        console.log('[Parent] Entity file deleted successfully');
+                    } catch (error) {
+                        console.error('[Parent] Error deleting entity file:', error);
+                        const notification = useNotification();
+                        notification.error('Error!', 'Failed to delete image from server');
+                        return;
+                    }
+                }
+
+                // Create new array for reactivity
                 const newGallery = [...this.form.gallery];
                 newGallery.splice(galleryIndex, 1);
                 console.log('[Parent] After splice', { newLength: newGallery.length, newGallery });
