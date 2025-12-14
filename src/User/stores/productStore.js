@@ -90,7 +90,7 @@ export const useProductStore = defineStore('product', () => {
           originalPrice: null,
           badge: !p.inStock ? 'Out of Stock' : (isNew ? 'New' : null),
           badgeColor: !p.inStock ? 'red' : (isNew ? 'green' : null),
-          image: p.thumbnail || '/placeholder.png',
+          image: p.thumbnail?.url || p.thumbnail || '/placeholder.png',
           // Use API flag if provided, otherwise fallback to localStorage-based check
           isWishlisted: (p.isWishlisted !== undefined) ? p.isWishlisted : isInWishlist(p.id)
         };

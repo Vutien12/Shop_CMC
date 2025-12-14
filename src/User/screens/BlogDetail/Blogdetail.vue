@@ -119,7 +119,11 @@ export default {
         const response = await axiosInstance.get(`/blogs/${blogId}`)
 
         if (response.data.code === 200 && response.data.result) {
-          this.blogPost = response.data.result
+          const result = response.data.result
+          this.blogPost = {
+            ...result,
+            thumbnail: result.thumbnail?.url || result.thumbnail
+          }
         } else {
           throw new Error(response.data.message || 'Không thể tải bài viết')
         }

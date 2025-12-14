@@ -56,7 +56,7 @@ const transformProduct = (apiProduct) => {
   return {
     id: apiProduct.id,
     name: apiProduct.name,
-    image: apiProduct.thumbnail,
+    image: apiProduct.thumbnail?.url || apiProduct.thumbnail,
     price: apiProduct.minPrice,
     originalPrice: originalPrice,
     discount: discount,

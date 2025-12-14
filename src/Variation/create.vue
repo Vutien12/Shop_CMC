@@ -192,6 +192,7 @@ import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import { createVariation, getVariationById, updateVariation, attachFileToVariationValue } from '@/api/variationApi';
+import { deleteEntityFile } from '@/api';
 import SelectImage from '@/Media/SelectImage.vue';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 
@@ -303,18 +304,35 @@ const handleImageSelect = (media) => {
   closeFileManager();
 };
 
-const removeImage = (index) => {
-  const wasExistingValue = isEditMode.value && form.values[index].id && typeof form.values[index].id === 'number';
-  const hadPreviousImage = form.values[index].imagePreview !== null;
+const removeImage = async (index) => {
+  const valueItem = form.values[index];
 
-  form.values[index].imagePreview = null;
-  form.values[index].imageFileId = null;
-  form.values[index].image = null;
+  // Delete via API if image has entity file ID
+  if (valueItem.currentImageEntityId) {
+    try {
+      console.log('[Variation] Deleting image entity file:', valueItem.currentImageEntityId);
+      await deleteEntityFile(valueItem.currentImageEntityId);
+      console.log('[Variation] Image deleted successfully');
+      notification.success('Success!', 'Image removed successfully');
+    } catch (error) {
+      console.error('[Variation] Error deleting image:', error);
+      notification.error('Error!', 'Failed to delete image from server');
+      return;
+    }
+  }
+
+  const wasExistingValue = isEditMode.value && valueItem.id && typeof valueItem.id === 'number';
+  const hadPreviousImage = valueItem.imagePreview !== null;
+
+  valueItem.imagePreview = null;
+  valueItem.imageFileId = null;
+  valueItem.image = null;
+  valueItem.currentImageEntityId = null;
 
   if (wasExistingValue && hadPreviousImage) {
-    form.values[index].hasNewImage = true;
+    valueItem.hasNewImage = true;
   } else {
-    form.values[index].hasNewImage = false;
+    valueItem.hasNewImage = false;
   }
 };
 
@@ -349,13 +367,15 @@ const loadVariation = async () => {
           image: null,
           imagePreview: null,
           imageFileId: null,
+          currentImageEntityId: null, // Track entity file ID for deletion
           hasNewImage: false,
         };
 
-        // If type is image, set preview
-        if (data.type.toLowerCase() === 'image' && v.value) {
-          value.image = v.value;
-          value.imagePreview = v.value;
+        // If type is image, handle new object structure with id and url
+        if (data.type.toLowerCase() === 'image' && v.image) {
+          value.currentImageEntityId = v.image.id;
+          value.image = v.image.url;
+          value.imagePreview = v.image.url;
         }
 
         return value;

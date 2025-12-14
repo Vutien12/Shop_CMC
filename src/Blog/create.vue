@@ -1,6 +1,6 @@
 <template>
     <div class="blog-create-page">
-        <PageBreadcrumb 
+        <PageBreadcrumb
             :title="isEditMode ? 'Edit Blog Post' : 'Create Blog Post'"
             :breadcrumbs="[
                 { label: 'Blogs', route: { name: 'admin.blogs.index' } },
@@ -151,6 +151,7 @@ import TinyMCEEditor from '@/Admin/components/TinyMCEEditor.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import { createBlog, updateBlog, getBlogById } from '@/api/blogApi.js';
 import { attachFileToEntity } from '@/api/fileApi.js';
+import { deleteEntityFile } from '@/api';
 
 class Errors {
     constructor() {
@@ -195,6 +196,7 @@ export default {
         const featuredImageInput = ref(null);
         const isFileManagerOpen = ref(false);
         const selectedThumbnailFileId = ref(null);
+        const currentThumbnailId = ref(null); // Track current thumbnail entity file ID
 
         const isEditMode = computed(() => !!route.params.id);
 
@@ -238,7 +240,21 @@ export default {
             reader.readAsDataURL(file);
         };
 
-        const removeFeaturedImage = () => {
+        const removeFeaturedImage = async () => {
+            // Delete via API if thumbnail has id
+            if (currentThumbnailId.value) {
+                try {
+                    console.log('[Blog] Deleting thumbnail entity file:', currentThumbnailId.value);
+                    await deleteEntityFile(currentThumbnailId.value);
+                    console.log('[Blog] Thumbnail deleted successfully');
+                } catch (error) {
+                    console.error('[Blog] Error deleting thumbnail:', error);
+                    alert('Failed to delete thumbnail from server');
+                    return;
+                }
+            }
+
+            currentThumbnailId.value = null;
             form.thumbnailFile = null;
             form.thumbnailPreview = null;
             form.thumbnail = '';
@@ -284,9 +300,20 @@ export default {
                 // Populate form
                 form.title = blog.value.title || '';
                 form.content = blog.value.content || '';
-                form.thumbnail = blog.value.thumbnail || '';
-                form.thumbnailPreview = blog.value.thumbnail || null;
+
+                // Handle thumbnail as object with id and url
+                if (blog.value.thumbnail) {
+                    currentThumbnailId.value = blog.value.thumbnail.id;
+                    form.thumbnail = blog.value.thumbnail.url;
+                    form.thumbnailPreview = blog.value.thumbnail.url;
+                } else {
+                    currentThumbnailId.value = null;
+                    form.thumbnail = '';
+                    form.thumbnailPreview = null;
+                }
+
                 form.isPublished = blog.value.isPublished ?? true;
+                selectedThumbnailFileId.value = null; // Only set when user selects new image
             } catch (error) {
                 console.error('Error loading blog:', error);
                 alert('Error loading blog: ' + (error.response?.data?.message || error.message));

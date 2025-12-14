@@ -523,7 +523,7 @@ export default {
           this.products = response.result.content.map(item => ({
             id: item.id,
             name: item.name,
-            thumbnail: item.thumbnail || '/placeholder.png',
+            thumbnail: item.thumbnail?.url || item.thumbnail || '/placeholder.png',
             minPrice: item.minPrice,
             maxPrice: item.maxPrice,
             inStock: item.inStock,

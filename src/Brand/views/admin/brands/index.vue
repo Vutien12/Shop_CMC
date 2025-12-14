@@ -70,7 +70,7 @@ export default {
                     brands.value = response.result.map(brand => ({
                         id: brand.id,
                         name: brand.name,
-                        logo: brand.fileLogo || null,
+                        logo: brand.fileLogo?.url || null,
                         updated_at: brand.createdAt,
                         isActive: brand.isActive
                     }));
@@ -92,7 +92,7 @@ export default {
                 'Confirm Delete',
                 `Are you sure you want to delete ${selectedIds.length} brand(s)?`
             );
-            
+
             if (confirmed) {
                 try {
                     loading.value = true;

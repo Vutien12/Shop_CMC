@@ -56,7 +56,7 @@ export default {
             default: null
         }
     },
-    emits: ['update:modelValue', 'update:fileId'],
+    emits: ['update:modelValue', 'update:fileId', 'remove'],
     setup(props, { emit }) {
         const isFileManagerOpen = ref(false);
 
@@ -74,8 +74,7 @@ export default {
         };
 
         const removeImage = () => {
-            emit('update:modelValue', null);
-            emit('update:fileId', null);
+            emit('remove');
         };
 
         return {
