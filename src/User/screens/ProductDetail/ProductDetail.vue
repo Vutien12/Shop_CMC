@@ -345,12 +345,14 @@
       <div v-if="relatedProducts.length > 0" class="pd-related-products">
         <h3 class="pd-related-products__title">You might also like</h3>
         <div class="pd-related-products__grid">
-          <ProductCard
+          <div
             v-for="item in relatedProducts"
             :key="item.id"
-            :product="transformRelatedProduct(item)"
             @click="navigateToProduct(item.id)"
-          />
+            style="cursor: pointer;"
+          >
+            <ProductCard :product="transformRelatedProduct(item)" />
+          </div>
         </div>
       </div>
     </div>
@@ -895,7 +897,7 @@ export default {
 
     navigateToProduct(productId) {
       // Navigate to product detail page
-      this.$router.push({ name: 'product.show', params: { id: productId } });
+      this.$router.push({ name: 'ProductDetail', params: { id: productId } });
     },
 
     transformRelatedProduct(apiProduct) {

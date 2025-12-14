@@ -55,6 +55,7 @@ import FlashSaleIndex from "../Flashsale/indext.vue";
 import FlashSaleCreate from "../Flashsale/create.vue";
 import RefundIndex from "@/Refund/indext.vue";
 import RefundDetail from "@/Refund/detail.vue";
+import ReportIndex from "../Report/indext.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -261,6 +262,11 @@ const routes = [
                 name: 'admin.cancellations.detail',
                 component: RefundDetail,
                 path: 'refund/:id',
+            },
+            {
+                name: 'admin.reports.index',
+                component: ReportIndex,
+                path: 'reports',
             },
         ]
     },

@@ -146,6 +146,7 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import TinyMCEEditor from '@/Admin/components/TinyMCEEditor.vue';
 import SelectImage from '@/Media/SelectImage.vue';
@@ -192,6 +193,7 @@ export default {
     setup() {
         const route = useRoute();
         const router = useRouter();
+        const notification = useNotification();
         const loading = ref(false);
         const featuredImageInput = ref(null);
         const isFileManagerOpen = ref(false);
@@ -249,7 +251,7 @@ export default {
                     console.log('[Blog] Thumbnail deleted successfully');
                 } catch (error) {
                     console.error('[Blog] Error deleting thumbnail:', error);
-                    alert('Failed to delete thumbnail from server');
+                    notification.error('Error', 'Failed to delete thumbnail from server');
                     return;
                 }
             }
@@ -316,7 +318,7 @@ export default {
                 selectedThumbnailFileId.value = null; // Only set when user selects new image
             } catch (error) {
                 console.error('Error loading blog:', error);
-                alert('Error loading blog: ' + (error.response?.data?.message || error.message));
+                notification.error('Error', 'Failed to load blog: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
@@ -362,7 +364,7 @@ export default {
                         });
                     }
 
-                    alert('Blog updated successfully!');
+                    notification.success('Success', 'Blog updated successfully');
                 } else {
                     const response = await createBlog(blogData);
                     blogId = response.data.result.id;
@@ -377,7 +379,7 @@ export default {
                         });
                     }
 
-                    alert('Blog created successfully!');
+                    notification.success('Success', 'Blog created successfully');
                     // Update to edit mode with new blog ID
                     router.replace({ name: 'admin.blogs.edit', params: { id: blogId } });
                 }
@@ -386,7 +388,7 @@ export default {
                     errors.set(error.response.data.errors);
                 }
                 console.error('Error saving blog:', error);
-                alert('Error saving blog: ' + (error.response?.data?.message || error.message));
+                notification.error('Error', 'Failed to save blog: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
@@ -436,13 +438,14 @@ export default {
                     });
                 }
 
+                notification.success('Success', isEditMode.value ? 'Blog updated successfully' : 'Blog created successfully');
                 router.push({ name: 'admin.blogs.index' });
             } catch (error) {
                 if (error.response?.data?.errors) {
                     errors.set(error.response.data.errors);
                 }
                 console.error('Error saving blog:', error);
-                alert('Error saving blog: ' + (error.response?.data?.message || error.message));
+                notification.error('Error', 'Failed to save blog: ' + (error.response?.data?.message || error.message));
                 loading.value = false;
             }
         };
