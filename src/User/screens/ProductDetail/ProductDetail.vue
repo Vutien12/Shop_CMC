@@ -3,7 +3,7 @@
     <Header />
     <Loading v-if="isLoading" text="Loading product..." />
 
-    <div v-if="!isLoading && product" class="product-container">
+    <div v-else-if="product" class="product-container">
       <div class="product-content">
         <!-- Images -->
         <div class="product-images">
@@ -373,6 +373,7 @@ import { getProductById, getRelatedProducts } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
+
 export default {
   name: 'ProductDetail',
   components: { Header, Footer, Loading, ReviewList, Chatbot, ProductCard, BottomNavBar },
