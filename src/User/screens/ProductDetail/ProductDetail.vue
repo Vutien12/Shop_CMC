@@ -355,7 +355,7 @@
       </div>
     </div>
 
-    <UserFooter v-if="product" />
+    <Footer v-if="product" />
     <Chatbot />
     <BottomNavBar />
   </div>
