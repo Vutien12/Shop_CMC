@@ -195,6 +195,7 @@
 
     <Footer />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -211,6 +212,7 @@ import { useLazyLoad } from '@/User/components/LazyLoad/useLazyLoad.js';
 import { usePrefetch } from '@/User/stores/usePrefetch.js';
 import { removeFromWishlist, updateWishlistItem } from '@/api/accountApi.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 const router = useRouter();
 const { handleLogout: authLogout } = useAuth();

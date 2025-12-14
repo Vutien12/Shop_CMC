@@ -113,6 +113,9 @@
         </div>
       </div>
     </template>
+
+    <!-- Bottom Navigation Bar -->
+    <BottomNavBar />
   </div>
 </template>
 
@@ -123,6 +126,7 @@ import Loading from '@/User/components/Loading/Loading.vue';
 import jwt_decode from "jwt-decode";
 import { OAuthProviders } from '@/Config/oauth.js'
 import { login } from '@/api/authApi.js'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 defineOptions({
   name: 'LoginPage'

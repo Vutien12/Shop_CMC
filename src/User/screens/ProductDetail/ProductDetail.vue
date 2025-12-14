@@ -359,6 +359,7 @@
 
     <UserFooter v-if="product" />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -368,13 +369,14 @@ import UserFooter from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 import { getProductById } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
 export default {
   name: 'ProductDetail',
-  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot },
+  components: { UserHeader, UserFooter, Loading, ReviewList, Chatbot, BottomNavBar },
   setup() {
     const reviewStore = useReviewStore()
     const cartStore = useCartStore()

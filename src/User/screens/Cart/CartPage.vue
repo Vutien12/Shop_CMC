@@ -160,6 +160,7 @@
 
     <Footer />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -172,6 +173,7 @@ import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 const router = useRouter();
 const cartStore = useCartStore();

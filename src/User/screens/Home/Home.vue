@@ -4,6 +4,7 @@
     <Main />
     <Footer />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -14,6 +15,7 @@ import Header from '@/User/components/Header1/Header.vue'
 import homeCss from "@/User/screens/Home/Home.css?url"
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import Main from './Main.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 let styleElement = null
 

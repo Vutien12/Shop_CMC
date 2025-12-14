@@ -197,7 +197,8 @@ export default {
                             name: cat.name,
                             is_searchable: cat.isSearchable || false,
                             is_active: cat.isActive,
-                            logo: cat.logo || ''
+                            logo: cat.logo || '',
+                            parentId: cat.parentId || null
                         };
                         activeTab.value = 'general';
                     }

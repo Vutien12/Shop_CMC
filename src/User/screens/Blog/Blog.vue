@@ -43,6 +43,7 @@
 
     <Footer />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -53,6 +54,7 @@ import Footer from '../../components/Footer/Footer.vue';
 import Loading from '../../components/Loading/Loading.vue';
 import { searchBlogs } from '@/api/blogApi.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
