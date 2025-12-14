@@ -51,7 +51,9 @@
 
         <!-- Mobile Menu Toggle Button -->
         <button class="mobile-menu-toggle" @click="menuOpen = !menuOpen">
-          <i class="fa-solid fa-bars" v-if="!menuOpen"></i>
+          <svg v-if="!menuOpen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="24" height="24">
+            <path d="M 3 9 A 1.0001 1.0001 0 1 0 3 11 L 47 11 A 1.0001 1.0001 0 1 0 47 9 L 3 9 z M 3 24 A 1.0001 1.0001 0 1 0 3 26 L 47 26 A 1.0001 1.0001 0 1 0 47 24 L 3 24 z M 3 39 A 1.0001 1.0001 0 1 0 3 41 L 47 41 A 1.0001 1.0001 0 1 0 47 39 L 3 39 z"></path>
+          </svg>
           <i class="fa-solid fa-xmark" v-else></i>
         </button>
 
@@ -167,22 +169,19 @@
         <!-- Categories Content (Mobile Only) -->
         <div class="categories-content" v-show="menuOpen && activeTab === 'categories'">
           <div class="category-list">
-            <a href="#" class="category-item" @click="closeMenu">
-              <i class="fa-solid fa-laptop"></i>
-              <span>Electronics</span>
-            </a>
-            <a href="#" class="category-item" @click="closeMenu">
-              <i class="fa-solid fa-shirt"></i>
-              <span>Fashion</span>
-            </a>
-            <a href="#" class="category-item" @click="closeMenu">
-              <i class="fa-solid fa-house"></i>
-              <span>Home & Garden</span>
-            </a>
-            <a href="#" class="category-item" @click="closeMenu">
-              <i class="fa-solid fa-dumbbell"></i>
-              <span>Sports</span>
-            </a>
+            <router-link 
+              v-for="category in categories" 
+              :key="category.id"
+              :to="`/products?category=${category.id}`" 
+              class="category-item" 
+              @click="closeMenu"
+            >
+              <i class="fa-solid fa-folder"></i>
+              <span>{{ category.name }}</span>
+            </router-link>
+            <div v-if="categories.length === 0" class="no-categories">
+              <p>No categories available</p>
+            </div>
           </div>
         </div>
       </div>
@@ -198,6 +197,7 @@ import Cart from '../Cart/Cart.vue';
 import { useCartStore } from '@/User/stores/cartStore.js';
 import { useWishlistStore } from '@/User/stores/wishlistStore.js';
 import { useAuth } from '@/User/components/useAuth.js';
+import { getCategories } from '@/api/categoryApi.js';
 
 export default {
   name: 'HeaderMain',
@@ -216,7 +216,8 @@ export default {
       isLoggedIn: false,
       wishlistCount: 0,
       searchQuery: '',
-      activeTab: 'menu'
+      activeTab: 'menu',
+      categories: []
     };
   },
   computed: {
@@ -243,6 +244,7 @@ export default {
       this.wishlistCount = 0;
     }
     this.updateCartCount(true);
+    this.fetchCategories();
     window.addEventListener('storage', this.checkLoginStatus);
     window.addEventListener('loginStatusChanged', this.checkLoginStatus);
     window.addEventListener('wishlistChanged', this.refreshWishlistCount);
@@ -292,6 +294,15 @@ export default {
     closeMenu() {
       this.menuOpen = false;
     },
+    async fetchCategories() {
+      try {
+        const response = await getCategories();
+        this.categories = response.data || [];
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        this.categories = [];
+      }
+    },
     async refreshWishlistCount(force = false) {
       if (!this.isLoggedIn) {
         this.wishlistCount = 0;
@@ -324,3 +335,22 @@ export default {
 </script>
 
 <style src="./Header.css"></style>
+<style scoped>
+.close-menu-btn {
+  position: fixed; /* Ensure it is positioned relative to the viewport */
+  top: 10px; /* Adjust to a visible location */
+  right: 10px; /* Adjust to a visible location */
+  z-index: 1100 !important; /* Higher than navigation-bar */
+  background: #fff; /* Ensure it contrasts with the background */
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.navigation-bar {
+  width: 85%; /* Existing width */
+  z-index: 1000; /* Ensure it's below close-menu-btn */
+}
+</style>

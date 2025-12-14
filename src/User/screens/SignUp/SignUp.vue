@@ -176,6 +176,8 @@
       </div>
     </div>
     </template>
+
+    <BottomNavBar />
   </div>
 </template>
 
@@ -183,6 +185,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Loading from '@/User/components/Loading/Loading.vue';
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 import { OAuthProviders } from '@/Config/oauth.js';
 import { signup } from '@/api/authApi.js';
 

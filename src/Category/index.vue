@@ -201,7 +201,8 @@ export default {
                             name: cat.name,
                             is_searchable: cat.isSearchable || false,
                             is_active: cat.isActive,
-                            thumbnail: cat.thumbnail || ''
+                            thumbnail: cat.thumbnail || '',
+                            parentId: cat.parentId || null
                         };
                         selectedThumbnailFileId.value = null;
                         activeTab.value = 'general';
@@ -299,7 +300,7 @@ export default {
                                 fileId: selectedThumbnailFileId.value,
                                 entityId: categoryId,
                                 entityType: 'CATEGORY',
-                                zone: 'THUMBNAIL'
+                                zone: 'CATEGORY'
                             });
                         }
 

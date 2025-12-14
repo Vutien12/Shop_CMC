@@ -1940,7 +1940,7 @@ html, body {
   }
 
   .sidebar {
-    order: 2;
+    display: none;
   }
 
   .hero-section {
@@ -1948,7 +1948,7 @@ html, body {
   }
 
   .product-cards {
-    order: 3;
+    order: 2;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 15px;
