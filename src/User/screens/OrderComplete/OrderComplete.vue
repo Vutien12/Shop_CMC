@@ -151,6 +151,7 @@
     </div>
 
     <Footer />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -160,6 +161,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getOrderById } from '@/api/orderApi.js'
 import Header from '@/User/components/Header1/Header.vue'
 import Footer from '@/User/components/Footer/Footer.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -53,6 +53,7 @@
     </div>
 
     <Footer />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -62,13 +63,15 @@ import Footer from '../../components/Footer/Footer.vue'
 import Loading from '../../components/Loading/Loading.vue'
 import axiosInstance from '@/api/axiosInstance'
 import DOMPurify from 'dompurify'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 export default {
   name: 'BlogDetail',
   components: {
     Header,
     Footer,
-    Loading
+    Loading,
+    BottomNavBar
   },
   data() {
     return {

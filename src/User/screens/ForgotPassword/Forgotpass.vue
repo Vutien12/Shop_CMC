@@ -50,6 +50,8 @@
       </div>
     </div>
     </template>
+
+    <BottomNavBar />
   </div>
 </template>
 
@@ -59,6 +61,7 @@ import { useRouter } from 'vue-router';
 import Loading from '@/User/components/Loading/Loading.vue';
 import { forgotPassword } from '@/api/authApi.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 defineOptions({ name: 'ForgotPass' });
 

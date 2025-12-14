@@ -80,7 +80,7 @@
                     <tbody>
                       <tr
                         v-for="(option, index) in form.values"
-                        :key="option.id"
+                        :key="option.isExisting ? option.id : option.__uid"
                         class="option-row"
                       >
                         <td class="text-center">
@@ -208,12 +208,15 @@ const currentImageIndex = ref(null); // Track which value row is selecting image
 // Kiểm tra có phải edit mode không
 const isEditMode = computed(() => !!route.params.id);
 
+const nextUid = ref(1);
 const form = reactive({
   name: "",
   type: "",
   values: [
     {
-      id: Date.now(),
+      __uid: nextUid.value++,
+      id: null,
+      isExisting: false,
       label: "",
       color: "", // Ban đầu để rỗng để hiển thị checkerboard
       image: null,
@@ -257,7 +260,9 @@ const openColorPicker = (index) => {
 // Thêm dòng mới
 const addRow = () => {
   form.values.push({
-    id: Date.now() + Math.random(),
+    __uid: nextUid.value++,
+    id: null,
+    isExisting: false,
     label: "",
     color: "", // Ban đầu để rỗng để hiển thị checkerboard
     image: null,
@@ -336,7 +341,9 @@ const loadVariation = async () => {
       // Map variationValues
       form.values = data.variationValues.map((v) => {
         const value = {
+          __uid: v.id || nextUid.value++,
           id: v.id,
+          isExisting: !!v.id,
           label: v.label,
           color: (data.type.toLowerCase() === 'color') ? v.value : '',
           image: null,
@@ -399,7 +406,7 @@ const saveForm = async () => {
         const valueObj = {};
 
         // Nếu đang edit và value có ID (là value cũ), gửi kèm ID
-        if (isEditMode.value && v.id && typeof v.id === 'number') {
+        if (isEditMode.value && Number.isInteger(v.id)) {
           valueObj.id = v.id;
         }
 

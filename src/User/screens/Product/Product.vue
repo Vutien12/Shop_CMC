@@ -291,6 +291,7 @@
     </div>
     -->
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -303,6 +304,7 @@ import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import { useProductStore } from '@/User/stores/productStore.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 const router = useRouter();
 const route = useRoute();

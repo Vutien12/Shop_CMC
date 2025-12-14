@@ -529,6 +529,7 @@
     </div>
 
     <Footer />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -549,6 +550,7 @@ import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import vSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 // Provide an explicit multi-word component name to satisfy eslint
 defineOptions({ name: 'CheckoutPage' })

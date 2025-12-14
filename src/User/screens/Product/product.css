@@ -277,6 +277,13 @@
 }
 
 
+/* Hide sidebar-toggle-btn on mobile, iPad, and iPad mini */
+@media (max-width: 991px) {
+  .sidebar-toggle-btn {
+    display: none !important;
+  }
+}
+
 /* Filters Section */
 .filters-section {
   margin-top: 32px;

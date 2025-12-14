@@ -355,8 +355,9 @@
       </div>
     </div>
 
-    <UserFooter v-if="product" />
+    <Footer v-if="product" />
     <Chatbot />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -366,14 +367,16 @@ import Footer from '@/User/components/Footer/Footer.vue'
 import Loading from '@/User/components/Loading/Loading.vue'
 import ReviewList from '@/User/components/ReviewList/ReviewList.vue'
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 import ProductCard from '@/User/screens/Home/ProductCard.vue'
 import { getProductById, getRelatedProducts } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
+
 export default {
   name: 'ProductDetail',
-  components: { Header, Footer, Loading, ReviewList, Chatbot, ProductCard },
+  components: { Header, Footer, Loading, ReviewList, Chatbot, ProductCard, BottomNavBar },
   setup() {
     const reviewStore = useReviewStore()
     const cartStore = useCartStore()
@@ -409,7 +412,7 @@ export default {
       // Lookup
       variantLookup: {},
 
-      // Related products (sẽ load từ API)
+      // Related products
       relatedProducts: [],
     }
   },
@@ -448,7 +451,6 @@ export default {
 
         this.processProductData(res.result)
 
-        // Load reviews và related products song song
         await Promise.all([
           this.reviewStore.fetchProductReviews(id, 0, 1).catch(() => {}),
           this.fetchRelatedProducts(id)

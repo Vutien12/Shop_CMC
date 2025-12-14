@@ -90,6 +90,7 @@
     </div>
 
     <Footer />
+    <BottomNavBar />
   </div>
 </template>
 
@@ -97,6 +98,7 @@
 import { ref, computed, onMounted } from 'vue';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 import { useToast } from '@/User/components/Toast/useToast.js';
 import { sendContactSupport, getContactInfo } from '@/api/contactApi.js';
 

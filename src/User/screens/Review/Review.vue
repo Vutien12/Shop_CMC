@@ -68,12 +68,15 @@
       </form>
     </div>
   </div>
+
+  <BottomNavBar />
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { createReview, updateReview } from '@/api/reviewApi.js'
 import { getMyInfo } from '@/api/accountApi.js'
+import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 // Name the component to satisfy eslint multi-word rule
 defineOptions({ name: 'ReviewModal' })
