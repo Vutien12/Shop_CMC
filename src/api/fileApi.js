@@ -28,15 +28,22 @@ export const uploadFile = async (file, request) => {
  * @returns {Promise}
  */
 export const searchFiles = async (params = {}) => {
-  const { page = 0, size = 10, sort = 'createdAt,desc', search = '' } = params
+  const {
+    page = 0,
+    size = 10,
+    sortBy = 'createdAt',
+    direction = 'DESC',
+    filename = ''
+  } = params
 
   const response = await api.get('/files/search', {
     params: {
       page,
       size,
-      sort,
-      ...(search && { search }),
-    },
+      sortBy,
+      direction,
+      ...(filename && { filename })
+    }
   })
   return response.data
 }
@@ -80,4 +87,3 @@ export const attachFileToEntity = async (entityFileData) => {
   const response = await api.post('/entity-files', normalizedData)
   return response.data
 }
-

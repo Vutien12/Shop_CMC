@@ -504,7 +504,10 @@ export default {
         }
         return typeof item === 'string' ? item : null;
       }).filter(Boolean);
-      const pool = [data.thumbnail, ...galleryUrls].filter(Boolean)
+
+      // Handle thumbnail as object or string
+      const thumbnailUrl = data.thumbnail?.url || data.thumbnail || null;
+      const pool = [thumbnailUrl, ...galleryUrls].filter(Boolean)
       this.mediaImages = pool.length ? [...new Set(pool)] : [this.placeholderImage]
 
       // Product base info
@@ -911,7 +914,7 @@ export default {
       return {
         id: apiProduct.id,
         name: apiProduct.name,
-        image: apiProduct.thumbnail || this.placeholderImage,
+        image: apiProduct.thumbnail?.url || apiProduct.thumbnail || this.placeholderImage,
         price: apiProduct.minPrice || 0,
         originalPrice: originalPrice,
         discount: discount,

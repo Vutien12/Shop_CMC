@@ -107,8 +107,7 @@ export default {
                 products.value = productList.map(product => ({
                     id: product.id,
                     name: product.name,
-                    thumbnail: product.thumbnail || (product.gallery && product.gallery.length > 0 ? product.gallery[0] : null),
-                    // Nếu có nhiều giá (variants), hiển thị khoảng giá
+                    thumbnail: product.thumbnail?.url || (product.gallery && product.gallery.length > 0 ? product.gallery[0].url : null),
                     price: product.minPrice || 0,
                     maxPrice: product.maxPrice || 0, // Thêm maxPrice để hiển thị khoảng
                     old_price: null, // Không dùng old_price nữa
@@ -133,7 +132,7 @@ export default {
                 'Confirm Delete',
                 `Are you sure you want to delete ${selectedIds.length} product(s)?`
             );
-            
+
             if (!confirmed) {
                 return;
             }

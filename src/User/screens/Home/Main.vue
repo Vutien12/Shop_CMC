@@ -466,7 +466,7 @@ const transformProduct = (apiProduct) => {
   return {
     id: apiProduct.id,
     name: apiProduct.name,
-    image: apiProduct.thumbnail,
+    image: apiProduct.thumbnail?.url || apiProduct.thumbnail,
     price: apiProduct.minPrice,
     originalPrice: originalPrice,
     discount: discount,
@@ -724,7 +724,10 @@ const fetchNewArrivals = async () => {
   try {
     const response = await getNewArrivals(12)
     if (response.code === 200) {
-      newArrivals.value = response.result
+      newArrivals.value = response.result.map(product => ({
+        ...product,
+        thumbnail: product.thumbnail?.url || product.thumbnail
+      }))
     }
   } catch (error) {
     console.error('Error fetching new arrivals:', error)
@@ -736,7 +739,10 @@ const fetchSpecialProducts = async () => {
   try {
     const response = await getSpecialProducts(12)
     if (response.code === 200) {
-      specialProducts.value = response.result
+      specialProducts.value = response.result.map(product => ({
+        ...product,
+        thumbnail: product.thumbnail?.url || product.thumbnail
+      }))
     }
   } catch (error) {
     console.error('Error fetching special products:', error)
@@ -748,7 +754,10 @@ const fetchFeaturedProducts = async () => {
   try {
     const response = await getFeaturedProducts(12)
     if (response.code === 200) {
-      featuredProducts.value = response.result
+      featuredProducts.value = response.result.map(product => ({
+        ...product,
+        thumbnail: product.thumbnail?.url || product.thumbnail
+      }))
     }
   } catch (error) {
     console.error('Error fetching featured products:', error)
@@ -777,7 +786,10 @@ const fetchProductsByCategoryName = async (categoryName, limit = 12) => {
     })
 
     if (response.code === 200) {
-      return response.result.content
+      return response.result.content.map(product => ({
+        ...product,
+        thumbnail: product.thumbnail?.url || product.thumbnail
+      }))
     }
     return []
   } catch (error) {
@@ -821,7 +833,10 @@ const fetchLatestProducts = async () => {
       sort: 'updatedAt,desc'
     })
     if (response.code === 200) {
-      latestProducts.value = response.result.content
+      latestProducts.value = response.result.content.map(product => ({
+        ...product,
+        thumbnail: product.thumbnail?.url || product.thumbnail
+      }))
     }
   } catch (error) {
     console.error('Error fetching latest products:', error)
@@ -847,7 +862,12 @@ const fetchProductsByCategories = async () => {
 
         return {
           category: category,
-          products: response.code === 200 ? response.result.content : []
+          products: response.code === 200
+            ? response.result.content.map(product => ({
+                ...product,
+                thumbnail: product.thumbnail?.url || product.thumbnail
+              }))
+            : []
         }
       } catch (error) {
         console.error(`Error fetching products for category ${category.name}:`, error)

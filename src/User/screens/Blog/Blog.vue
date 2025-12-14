@@ -75,7 +75,11 @@ const fetchBlogs = async () => {
     };
     const res = await searchBlogs(params);
     if (res.data.code === 200 && res.data.result) {
-      blogPosts.value = res.data.result.content;
+      // Map to ensure thumbnail is extracted from object structure
+      blogPosts.value = res.data.result.content.map(post => ({
+        ...post,
+        thumbnail: post.thumbnail?.url || post.thumbnail
+      }));
       totalPages.value = res.data.result.totalPages;
     }
   } catch (error) {

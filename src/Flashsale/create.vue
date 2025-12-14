@@ -258,10 +258,27 @@
                                                     <strong>Product:</strong> {{ item.productName }}
                                                 </div>
                                                 <div class="col-sm-4">
-                                                    <strong>Flash Price:</strong> {{ formatPrice(item.flashPrice) }}
+                                                    <div class="form-group m-b-0">
+                                                        <label class="small-label">Flash Price<span class="text-red">*</span></label>
+                                                        <input
+                                                            v-model.number="item.flashPrice"
+                                                            type="number"
+                                                            class="form-control form-control-sm"
+                                                            min="0"
+                                                            step="0.01"
+                                                        >
+                                                    </div>
                                                 </div>
                                                 <div class="col-sm-4">
-                                                    <strong>Quantity:</strong> {{ item.flashQty }}
+                                                    <div class="form-group m-b-0">
+                                                        <label class="small-label">Quantity<span class="text-red">*</span></label>
+                                                        <input
+                                                            v-model.number="item.flashQty"
+                                                            type="number"
+                                                            class="form-control form-control-sm"
+                                                            min="1"
+                                                        >
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div v-if="item.id" class="row m-t-10">
@@ -311,6 +328,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import {
     getFlashSale,
     createFlashSale,
@@ -325,6 +343,7 @@ export default {
     setup() {
         const router = useRouter();
         const route = useRoute();
+        const notification = useNotification();
         const activeTab = ref('general');
         const loading = ref(false);
         const flashSaleId = ref(null);
@@ -448,7 +467,7 @@ export default {
         // Add item to list
         const addItemToList = () => {
             if (!selectedVariant.value || !newItem.value.flashPrice || !newItem.value.flashQty) {
-                alert('Please fill in all fields');
+                notification.warning('Missing Information', 'Please fill in all fields');
                 return;
             }
 
@@ -480,17 +499,22 @@ export default {
             const item = items.value[index];
 
             if (item.id && flashSaleId.value) {
-                if (!confirm('Are you sure you want to remove this product from the flash sale?')) {
+                const confirmed = await notification.confirm(
+                    'Confirm Delete',
+                    'Are you sure you want to remove this product from the flash sale?'
+                );
+
+                if (!confirmed) {
                     return;
                 }
 
                 try {
                     await removeProductFromFlashSale(item.id);
                     items.value.splice(index, 1);
-                    alert('Product removed successfully!');
+                    notification.success('Success!', 'Product removed successfully!');
                 } catch (error) {
                     console.error('Error removing product:', error);
-                    alert('Error removing product. Please try again.');
+                    notification.error('Error!', 'Error removing product. Please try again.');
                 }
             } else {
                 items.value.splice(index, 1);
@@ -500,19 +524,19 @@ export default {
         // Validate form
         const validateForm = () => {
             if (!formData.value.name) {
-                alert('Please enter flash sale name');
+                notification.warning('Missing Information', 'Please enter flash sale name');
                 activeTab.value = 'general';
                 return false;
             }
 
             if (!formData.value.startTime) {
-                alert('Please select start time');
+                notification.warning('Missing Information', 'Please select start time');
                 activeTab.value = 'general';
                 return false;
             }
 
             if (!formData.value.endTime) {
-                alert('Please select end time');
+                notification.warning('Missing Information', 'Please select end time');
                 activeTab.value = 'general';
                 return false;
             }
@@ -521,7 +545,7 @@ export default {
             const endTime = new Date(formData.value.endTime);
 
             if (endTime <= startTime) {
-                alert('End time must be after start time');
+                notification.warning('Invalid Data', 'End time must be after start time');
                 activeTab.value = 'general';
                 return false;
             }
@@ -567,12 +591,12 @@ export default {
                     await addProductToFlashSale(savedFlashSaleId, itemData);
                 }
 
-                alert(`Flash Sale ${isEditMode.value ? 'updated' : 'created'} successfully!`);
-                router.push({ name: 'admin.flashsales.index' });
+                notification.success('Success!', `Flash Sale ${isEditMode.value ? 'updated' : 'created'} successfully!`);
+                await router.push({ name: 'admin.flashsales.index' });
             } catch (error) {
                 console.error('Error saving flash sale:', error);
                 const errorMessage = error.response?.data?.message || 'An error occurred. Please try again.';
-                alert(`Failed to save flash sale: ${errorMessage}`);
+                notification.error('Error!', `Failed to save flash sale: ${errorMessage}`);
             } finally {
                 loading.value = false;
             }
@@ -935,6 +959,24 @@ export default {
 
 .form-control[readonly] {
     background-color: #f3f4f6;
+}
+
+.form-control-sm {
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.small-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.m-b-0 {
+    margin-bottom: 0 !important;
 }
 
 .checkbox-inline {

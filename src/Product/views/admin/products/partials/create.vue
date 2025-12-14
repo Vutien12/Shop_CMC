@@ -371,8 +371,9 @@ export default {
         // Set thumbnail and gallery separately
         if (product.thumbnail) {
           this.form.thumbnail = {
-            path: product.thumbnail,
-            filename: product.thumbnail.split('/').pop()
+            id: product.thumbnail.id,
+            path: product.thumbnail.url,
+            filename: product.thumbnail.url.split('/').pop()
           };
         }
 
@@ -1039,8 +1040,21 @@ export default {
       this.closeFileManager();
     },
 
-    removeThumbnailHandler() {
-      // Remove thumbnail only
+    async removeThumbnailHandler() {
+      // Remove thumbnail and delete from server if it has an id
+      if (this.form.thumbnail && this.form.thumbnail.id) {
+        try {
+          console.log('[Parent] Deleting thumbnail entity file:', this.form.thumbnail.id);
+          await deleteEntityFile(this.form.thumbnail.id);
+          console.log('[Parent] Thumbnail entity file deleted successfully');
+        } catch (error) {
+          console.error('[Parent] Error deleting thumbnail entity file:', error);
+          const notification = useNotification();
+          notification.error('Error!', 'Failed to delete thumbnail from server');
+          return;
+        }
+      }
+
       this.form.thumbnail = null;
       this.syncMediaArray();
     },
