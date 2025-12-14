@@ -83,7 +83,7 @@ export default {
                 const result = response.data.result;
                 blogs.value = (result.content || result).map(blog => ({
                     id: blog.id,
-                    thumbnail: blog.thumbnail,
+                    thumbnail: blog.thumbnail?.url || null,
                     title: blog.title,
                     author: blog.authorName || 'Unknown',
                     isPublished: blog.isPublished,

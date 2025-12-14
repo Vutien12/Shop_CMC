@@ -166,7 +166,10 @@ const fetchBlogs = async () => {
     }
     const res = await searchBlogs(params)
     if (res.data.code === 200 && res.data.result) {
-      blogPosts.value = res.data.result.content
+      blogPosts.value = res.data.result.content.map(post => ({
+        ...post,
+        thumbnail: post.thumbnail?.url || post.thumbnail
+      }))
     }
   } catch (error) {
     console.error('Failed to load blogs:', error)

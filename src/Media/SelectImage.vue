@@ -48,9 +48,9 @@
                                         <input
                                             type="search"
                                             v-model="searchQuery"
-                                            @input="handleSearch"
+                                            @keyup.enter="handleSearch"
                                             class="form-control input-sm search-input"
-                                            placeholder="Search here..."
+                                            placeholder="Search by filename... (Press Enter)"
                                         >
                                     </div>
                                 </div>
@@ -59,7 +59,14 @@
                             <!-- Table -->
                             <div class="row dt-layout-row dt-layout-table">
                                 <div class="dt-layout-cell col-12">
-                                    <table class="table table-hover">
+                                    <!-- Loading State -->
+                                    <div v-if="loading" class="loading-container">
+                                        <div class="spinner"></div>
+                                        <p>Loading images...</p>
+                                    </div>
+
+                                    <!-- Table -->
+                                    <table v-else class="table table-hover">
                                         <thead>
                                             <tr>
                                                 <th style="width: 60px;">
@@ -81,6 +88,14 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            <tr v-if="filteredMedia.length === 0">
+                                                <td colspan="6" class="text-center">
+                                                    <div class="no-results">
+                                                        <i class="fa fa-search fa-3x"></i>
+                                                        <p>No images found</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                             <tr v-for="media in filteredMedia" :key="media.id">
                                                 <td>
                                                     <div class="checkbox">
@@ -201,12 +216,19 @@ export default {
         const loadFiles = async () => {
             try {
                 loading.value = true;
-                const response = await searchFiles({
+                const params = {
                     page: currentPage.value,
                     size: perPage.value,
-                    sort: `${sortField.value},${sortOrder.value}`,
-                    search: searchQuery.value
-                });
+                    sortBy: sortField.value,
+                    direction: sortOrder.value.toUpperCase()
+                };
+
+                // Add filename parameter if searching
+                if (searchQuery.value && searchQuery.value.trim()) {
+                    params.filename = searchQuery.value.trim();
+                }
+
+                const response = await searchFiles(params);
 
                 if (response.code === 200 && response.result) {
                     mediaFiles.value = response.result.content;
@@ -317,16 +339,10 @@ export default {
             }
         };
 
-        // Watch for search query changes
-        const searchTimeout = ref(null);
+        // Handle search on Enter key
         const handleSearch = () => {
-            if (searchTimeout.value) {
-                clearTimeout(searchTimeout.value);
-            }
-            searchTimeout.value = setTimeout(() => {
-                currentPage.value = 0;
-                loadFiles();
-            }, 300);
+            currentPage.value = 0;
+            loadFiles();
         };
 
         // Load files on mount
@@ -615,6 +631,54 @@ export default {
     width: 70px;
     height: 70px;
     margin: 0 auto;
+}
+
+/* Loading state */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 300px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0087F7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+    color: #6c757d;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* No results */
+.no-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.no-results i {
+    color: #adb5bd;
+    margin-bottom: 16px;
+}
+
+.no-results p {
+    font-size: 14px;
+    margin: 8px 0 0 0;
 }
 
 /* Insert button */

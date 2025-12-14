@@ -68,6 +68,7 @@
                                                     title="Category Thumbnail"
                                                     v-model="form.thumbnail"
                                                     @update:fileId="selectedThumbnailFileId = $event"
+                                                    @remove="handleRemoveThumbnail"
                                                 />
                                             </div>
                                         </div>
@@ -104,6 +105,7 @@ import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import ImageUploader from '@/Category/components/ImageUploader.vue';
 import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory, attachFileToCategory } from '@/api/categoryApi';
+import { deleteEntityFile } from '@/api';
 
 export default {
     name: 'CategoryPage',
@@ -129,6 +131,7 @@ export default {
         });
 
         const selectedThumbnailFileId = ref(null);
+        const currentThumbnailId = ref(null); // Track current thumbnail entity file ID
 
         const isNewCategory = computed(() => !form.value.id);
 
@@ -201,9 +204,10 @@ export default {
                             name: cat.name,
                             is_searchable: cat.isSearchable || false,
                             is_active: cat.isActive,
-                            thumbnail: cat.thumbnail || '',
+                            thumbnail: cat.thumbnail?.url || '',
                             parentId: cat.parentId || null
                         };
+                        currentThumbnailId.value = cat.thumbnail?.id || null;
                         selectedThumbnailFileId.value = null;
                         activeTab.value = 'general';
                     }
@@ -347,6 +351,26 @@ export default {
             }
         };
 
+        const handleRemoveThumbnail = async () => {
+            // Delete via API if thumbnail has entity file ID
+            if (currentThumbnailId.value) {
+                try {
+                    console.log('[Category] Deleting thumbnail entity file:', currentThumbnailId.value);
+                    await deleteEntityFile(currentThumbnailId.value);
+                    console.log('[Category] Thumbnail deleted successfully');
+                    notification.success('Success!', 'Thumbnail removed successfully');
+                } catch (error) {
+                    console.error('[Category] Error deleting thumbnail:', error);
+                    notification.error('Error!', 'Failed to delete thumbnail from server');
+                    return;
+                }
+            }
+
+            currentThumbnailId.value = null;
+            form.value.thumbnail = null;
+            selectedThumbnailFileId.value = null;
+        };
+
         onMounted(() => {
             loadCategories();
         });
@@ -370,7 +394,8 @@ export default {
             collapseAll,
             expandAll,
             handleSubmit,
-            handleDelete
+            handleDelete,
+            handleRemoveThumbnail
         };
     }
 };

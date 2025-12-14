@@ -1,6 +1,6 @@
 <template>
     <section class="content">
-        <PageBreadcrumb 
+        <PageBreadcrumb
             title="Media"
             :breadcrumbs="[
                 { label: 'Media' }
@@ -10,11 +10,16 @@
             <div class="box-body">
                 <div
                     class="dropzone dz-clickable"
-                    @click="$refs.fileInput.click()"
+                    :class="{ 'uploading': uploading }"
+                    @click="!uploading && $refs.fileInput.click()"
                     @drop.prevent="handleDrop"
                     @dragover.prevent
                 >
-                    <div class="dz-message needsclick">
+                    <div v-if="uploading" class="dz-uploading">
+                        <div class="spinner"></div>
+                        <div class="upload-progress">Uploading {{ uploadProgress }}%</div>
+                    </div>
+                    <div v-else class="dz-message needsclick">
                         Drop files here or click to upload
                     </div>
                     <input
@@ -65,9 +70,9 @@
                                         <input
                                             type="search"
                                             v-model="searchQuery"
-                                            @input="handleSearch"
+                                            @keyup.enter="handleSearch"
                                             class="form-control input-sm search-input"
-                                            placeholder="Search here..."
+                                            placeholder="Search by filename... (Press Enter)"
                                         >
                                     </div>
                                 </div>
@@ -76,7 +81,14 @@
                             <!-- Table -->
                             <div class="row dt-layout-row dt-layout-table">
                                 <div class="dt-layout-cell col-12">
-                                    <table class="table table-hover">
+                                    <!-- Loading State -->
+                                    <div v-if="loading" class="loading-container">
+                                        <div class="spinner"></div>
+                                        <p>Loading files...</p>
+                                    </div>
+
+                                    <!-- Table -->
+                                    <table v-else class="table table-hover">
                                         <thead>
                                             <tr>
                                                 <th style="width: 60px;">
@@ -180,6 +192,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import { uploadFile, searchFiles, deleteFiles } from '@/api/fileApi';
 import { DEFAULT_PAGE_SIZE } from '@/Config/search';
 
@@ -189,6 +202,7 @@ export default {
         PageBreadcrumb
     },
     setup() {
+        const notification = useNotification();
         const fileInput = ref(null);
         const selectedItems = ref([]);
         const selectAll = ref(false);
@@ -198,6 +212,8 @@ export default {
         const mediaFiles = ref([]);
         const totalElements = ref(0);
         const loading = ref(false);
+        const uploading = ref(false);
+        const uploadProgress = ref(0);
         const sortField = ref('createdAt');
         const sortOrder = ref('desc');
 
@@ -217,12 +233,19 @@ export default {
         const loadFiles = async () => {
             try {
                 loading.value = true;
-                const response = await searchFiles({
+                const params = {
                     page: currentPage.value,
                     size: perPage.value,
-                    sort: `${sortField.value},${sortOrder.value}`,
-                    search: searchQuery.value
-                });
+                    sortBy: sortField.value,
+                    direction: sortOrder.value.toUpperCase()
+                };
+
+                // Add filename parameter if searching
+                if (searchQuery.value && searchQuery.value.trim()) {
+                    params.filename = searchQuery.value.trim();
+                }
+
+                const response = await searchFiles(params);
 
                 if (response.code === 200 && response.result) {
                     mediaFiles.value = response.result.content;
@@ -230,7 +253,7 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to load files:', error);
-                alert('Failed to load files. Please try again.');
+                notification.error('Error!', 'Failed to load files. Please try again.');
             } finally {
                 loading.value = false;
             }
@@ -290,7 +313,14 @@ export default {
         const uploadFilesToServer = async (files) => {
             const userId = localStorage.getItem('userId') || 1;
 
-            for (const file of files) {
+            uploading.value = true;
+            uploadProgress.value = 0;
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
                 try {
                     const fileRequest = {
                         userId: parseInt(userId),
@@ -302,10 +332,26 @@ export default {
                     };
 
                     await uploadFile(file, fileRequest);
+                    successCount++;
+
+                    // Update progress
+                    uploadProgress.value = Math.round(((i + 1) / files.length) * 100);
                 } catch (error) {
                     console.error(`Failed to upload ${file.name}:`, error);
-                    alert(`Failed to upload ${file.name}. Please try again.`);
+                    errorCount++;
                 }
+            }
+
+            uploading.value = false;
+            uploadProgress.value = 0;
+
+            // Show notification
+            if (successCount > 0 && errorCount === 0) {
+                notification.success('Success!', `Uploaded ${successCount} file(s) successfully`);
+            } else if (successCount > 0 && errorCount > 0) {
+                notification.warning('Partial Success', `Uploaded ${successCount} file(s), ${errorCount} failed`);
+            } else {
+                notification.error('Error!', 'Failed to upload files');
             }
 
             // Reload files after upload
@@ -319,22 +365,30 @@ export default {
         const handleDelete = async () => {
             if (!selectedItems.value.length) return;
 
-            if (confirm(`Delete ${selectedItems.value.length} selected item(s)?`)) {
-                try {
-                    const selectedIds = selectedItems.value.map(item => item.id);
-                    await deleteFiles(selectedIds);
+            const confirmed = await notification.confirm(
+                'Confirm Delete',
+                `Delete ${selectedItems.value.length} selected item(s)?`
+            );
 
-                    selectedItems.value = [];
-                    selectAll.value = false;
+            if (!confirmed) return;
 
-                    // Reload files
-                    await loadFiles();
-                } catch (error) {
-                    console.error('Failed to delete files:', error);
-                    alert('Failed to delete files. Please try again.');
-                }
+            try {
+                const selectedIds = selectedItems.value.map(item => item.id);
+                await deleteFiles(selectedIds);
+
+                selectedItems.value = [];
+                selectAll.value = false;
+
+                // Reload files
+                await loadFiles();
+
+                notification.success('Success!', 'Files deleted successfully');
+            } catch (error) {
+                console.error('Failed to delete files:', error);
+                notification.error('Error!', 'Failed to delete files. Please try again.');
             }
         };
+
 
         const formatRelativeDate = (dateString) => {
             const date = new Date(dateString);
@@ -366,16 +420,10 @@ export default {
             });
         };
 
-        // Watch for search query changes
-        const searchTimeout = ref(null);
+        // Handle search on Enter key
         const handleSearch = () => {
-            if (searchTimeout.value) {
-                clearTimeout(searchTimeout.value);
-            }
-            searchTimeout.value = setTimeout(() => {
-                currentPage.value = 0;
-                loadFiles();
-            }, 300);
+            currentPage.value = 0;
+            loadFiles();
         };
 
         // Load files on mount
@@ -397,6 +445,8 @@ export default {
             endIndex,
             visiblePages,
             loading,
+            uploading,
+            uploadProgress,
             totalElements,
             sortBy,
             toggleSelectAll,
@@ -444,9 +494,16 @@ export default {
     cursor: pointer;
     margin-bottom: 20px;
     transition: all 0.3s;
+    position: relative;
 }
 
-.dropzone:hover {
+.dropzone.uploading {
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.dropzone:hover:not(.uploading) {
     background: #e9ecef;
     border-color: #0056b3;
 }
@@ -455,6 +512,50 @@ export default {
     font-size: 16px;
     color: #6c757d;
     margin: 0;
+}
+
+.dz-uploading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.upload-progress {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0087F7;
+}
+
+/* Loading spinner */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0087F7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Loading container for table */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 300px;
+}
+
+.loading-container p {
+    color: #6c757d;
+    font-size: 14px;
+    margin-top: 16px;
 }
 
 .btn-delete {

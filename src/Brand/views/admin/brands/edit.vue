@@ -140,6 +140,7 @@ import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import SelectImage from '@/Media/SelectImage.vue';
 import { getBrandById, updateBrand, attachFileToBrand } from '@/api/brandApi';
+import { deleteEntityFile } from '@/api';
 
 const router = useRouter();
 const route = useRoute();
@@ -149,7 +150,7 @@ const loading = ref(false);
 const logoPreview = ref(null);
 const isFileManagerOpen = ref(false);
 const selectedLogoFileId = ref(null);
-const shouldRemoveLogo = ref(false);
+const currentLogoId = ref(null);
 
 const form = reactive({
     name: '',
@@ -183,12 +184,24 @@ const handleImageSelect = (media) => {
     form.logo = media.path;
     logoPreview.value = media.path;
     selectedLogoFileId.value = media.id;
-    shouldRemoveLogo.value = false; // Reset removal flag
 };
 
-const removeLogo = () => {
-    // Mark for removal on save
-    shouldRemoveLogo.value = true;
+const removeLogo = async () => {
+    // Delete via API if logo has id
+    if (currentLogoId.value) {
+        try {
+            console.log('[Brand] Deleting logo entity file:', currentLogoId.value);
+            await deleteEntityFile(currentLogoId.value);
+            console.log('[Brand] Logo deleted successfully');
+            notification.success('Success!', 'Logo removed successfully');
+        } catch (error) {
+            console.error('[Brand] Error deleting logo:', error);
+            notification.error('Error!', 'Failed to delete logo from server');
+            return;
+        }
+    }
+
+    currentLogoId.value = null;
     form.logo = null;
     logoPreview.value = null;
     selectedLogoFileId.value = null;
@@ -211,18 +224,19 @@ const loadBrand = async () => {
             form.name = brand.name;
             form.is_active = brand.isActive;
 
-            // Load logo if exists
+            // Load logo if exists - handle new object structure
             if (brand.fileLogo) {
-                logoPreview.value = brand.fileLogo;
-                form.logo = brand.fileLogo; // Lưu URL ảnh hiện tại
+                currentLogoId.value = brand.fileLogo.id;
+                logoPreview.value = brand.fileLogo.url;
+                form.logo = brand.fileLogo.url;
             } else {
+                currentLogoId.value = null;
                 logoPreview.value = null;
                 form.logo = null;
             }
 
             // Reset flags
-            selectedLogoFileId.value = null; // Chỉ set khi user chọn ảnh mới
-            shouldRemoveLogo.value = false;
+            selectedLogoFileId.value = null;
         }
     } catch (error) {
         console.error('Failed to load brand:', error);
@@ -263,22 +277,25 @@ const update = async () => {
     try {
         const brandId = route.params.id;
 
-        // Xác định giá trị fileLogo (giống logic Variation)
+        // Determine fileLogo value
         let fileLogoValue;
 
         console.log('BrandEdit: Determining fileLogo value...', {
-            shouldRemoveLogo: shouldRemoveLogo.value,
+            currentLogoId: currentLogoId.value,
             selectedLogoFileId: selectedLogoFileId.value,
             formLogo: form.logo
         });
 
-        if (shouldRemoveLogo.value) {
+        if (!form.logo && !selectedLogoFileId.value) {
+            // Logo removed
             fileLogoValue = null;
             console.log('BrandEdit: Logo removed, sending null');
         } else if (selectedLogoFileId.value) {
+            // New logo selected
             fileLogoValue = 'logo_placeholder';
             console.log('BrandEdit: New logo selected, sending placeholder');
         } else {
+            // Logo unchanged
             fileLogoValue = form.logo;
             console.log('BrandEdit: Logo unchanged, sending current URL:', fileLogoValue);
         }
@@ -293,7 +310,7 @@ const update = async () => {
         console.log('BrandEdit: Updating with data:', brandData);
         await updateBrand(brandId, brandData);
 
-        // Nếu có ảnh mới, gọi entity-files API để attach
+        // If new logo selected, attach via entity-files API
         if (selectedLogoFileId.value) {
             const logoData = {
                 fileId: selectedLogoFileId.value,
