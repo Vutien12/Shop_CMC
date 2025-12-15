@@ -8,6 +8,15 @@
     />
 
     <div class="box" v-for="(section, sectionIndex) in formLeftSections" :data-id="section" :key="sectionIndex">
+        <AttributesSection
+            v-if="section === 'attributes'"
+            :section="section"
+            :form="form"
+            :errors="errors"
+            :attributeSets="attributeSets"
+            :selectizeConfig="selectizeConfig"
+        />
+
         <OptionsSection
             v-if="section === 'options'"
             :section="section"
@@ -48,6 +57,7 @@
 
 <script>
 import GeneralSection from './sections/general.vue';
+import AttributesSection from './sections/attributes.vue';
 import OptionsSection from './sections/options.vue';
 import VariationsSection from './sections/variations.vue';
 import VariantsSection from './sections/variants.vue';
@@ -56,6 +66,7 @@ export default {
     name: 'LeftColumn',
     components: {
         GeneralSection,
+        AttributesSection,
         OptionsSection,
         VariationsSection,
         VariantsSection,
@@ -88,6 +99,14 @@ export default {
         globalVariations: {
             type: Array,
             default: () => [],
+        },
+        attributeSets: {
+            type: Array,
+            default: () => [],
+        },
+        selectizeConfig: {
+            type: Object,
+            default: () => ({}),
         },
         hasAnyVariant: {
             type: Boolean,

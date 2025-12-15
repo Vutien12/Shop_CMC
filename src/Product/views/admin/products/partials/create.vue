@@ -21,6 +21,8 @@
             :brands="brands"
             :globalOptions="globalOptions"
             :globalVariations="globalVariations"
+            :attributeSets="attributeSets"
+            :selectizeConfig="selectizeConfig"
             :hasAnyVariant="hasAnyVariant"
             :hasAccess="hasAccess"
             :defaultVariantUid="defaultVariantUid"
@@ -146,12 +148,18 @@ export default {
           return Object.keys(this.errors).some(key => key.startsWith(prefix));
         },
       },
-      formLeftSections: ['options', 'variations', 'variants'],
+      formLeftSections: ['attributes', 'options', 'variations', 'variants'],
       formRightSections: ['price', 'inventory', 'additional', 'media'],
       rootCategories: [],
       brands: [],
       globalOptions: [],
       globalVariations: [],
+      attributeSets: [],
+      selectizeConfig: {
+        plugins: ['remove_button'],
+        delimiter: ',',
+        persist: false,
+      },
       hasAnyVariant: false,
       hasAccess: true,
       defaultVariantUid: '',
@@ -296,7 +304,7 @@ export default {
     async loadInitialData() {
       this.isLoadingData = true;
       try {
-        // Load brands, categories, global variations và global options từ API
+        // Load brands, categories, global variations, global options từ API
         const [brandsRes, categoriesRes, variationsRes, optionsRes] = await Promise.all([
           getBrands(),
           getCategories(),
@@ -311,12 +319,14 @@ export default {
 
         this.globalVariations = variationsRes.result || [];
         this.globalOptions = optionsRes.result || [];
+        this.attributeSets = []; // Giữ giao diện nhưng không gọi BE
 
         console.log('Loaded initial data:', {
           brands: this.brands.length,
           categories: this.rootCategories.length,
           variations: this.globalVariations.length,
-          options: this.globalOptions.length
+          options: this.globalOptions.length,
+          attributeSets: this.attributeSets.length
         });
 
         // If in edit mode, load product data

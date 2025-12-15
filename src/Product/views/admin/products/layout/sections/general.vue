@@ -595,6 +595,15 @@ export default {
     animation: slideDown 0.2s ease-out;
 }
 
+.categories-select option:checked {
+    background-color: #f0f0f0 !important;
+    color: #333 !important;
+}
+
+.categories-select option {
+    padding: 8px 12px;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
