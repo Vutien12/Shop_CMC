@@ -131,7 +131,7 @@
               @click="selectCategory(category.id)"
             >
               <div class="category-icon">
-                <img v-if="category.icon" :src="category.icon" :alt="category.name" />
+                <img v-if="category.thumbnail" :src="category.thumbnail" :alt="category.name" />
                 <font-awesome-icon v-else :icon="getCategoryIcon(category.name)" />
               </div>
               <span class="category-name">{{ category.name }}</span>
@@ -352,7 +352,12 @@ export default {
       // Create a map for quick lookup
       const categoryMap = {}
       categories.forEach(cat => {
-        categoryMap[cat.id] = { ...cat, children: [], isExpanded: false }
+        categoryMap[cat.id] = {
+          ...cat,
+          thumbnail: cat.thumbnail?.url || cat.thumbnail,
+          children: [],
+          isExpanded: false
+        }
       })
 
       // Build tree structure
@@ -497,11 +502,19 @@ export default {
         const response = await getTrendingCategories()
 
         if (response.code === 200 && response.result) {
-          this.showcaseCategories = response.result.slice(0, 6)
+          // Transform categories to extract thumbnail URL from object
+          this.showcaseCategories = response.result.slice(0, 6).map(cat => ({
+            ...cat,
+            thumbnail: cat.thumbnail?.url || cat.thumbnail
+          }))
         }
       } catch (error) {
         console.error('Error loading trending categories:', error)
-        this.showcaseCategories = this.categories.slice(0, 6)
+        // Transform fallback categories as well
+        this.showcaseCategories = this.categories.slice(0, 6).map(cat => ({
+          ...cat,
+          thumbnail: cat.thumbnail?.url || cat.thumbnail
+        }))
       } finally {
         this.loadingTrending = false
       }
@@ -557,12 +570,34 @@ export default {
     calculateDiscount(product) {
       if (!product.variants || product.variants.length === 0) return null
 
-      // Find variant with special price
-      const variantWithDiscount = product.variants.find(v => v.specialPrice && v.specialPrice < v.price)
-      if (!variantWithDiscount) return null
+      // Find all variants with special prices and calculate their discount percentages
+      const variantsWithDiscount = product.variants
+        .filter(v => v.specialPrice && v.specialPrice < v.price)
+        .map(v => ({
+          variant: v,
+          discountPercent: Math.round(((v.price - v.specialPrice) / v.price) * 100)
+        }))
+        .filter(v => v.discountPercent > 0)
 
-      const discountPercent = Math.round(((variantWithDiscount.price - variantWithDiscount.specialPrice) / variantWithDiscount.price) * 100)
-      return discountPercent > 0 ? `-${discountPercent}%` : null
+      if (variantsWithDiscount.length === 0) return null
+
+      // If there's only one variant with discount, use it
+      if (variantsWithDiscount.length === 1) {
+        return `-${variantsWithDiscount[0].discountPercent}%`
+      }
+
+      // If multiple variants, find the min and max discount percentages
+      const discounts = variantsWithDiscount.map(v => v.discountPercent)
+      const minDiscount = Math.min(...discounts)
+      const maxDiscount = Math.max(...discounts)
+
+      // If all discounts are the same, show single value
+      if (minDiscount === maxDiscount) {
+        return `-${minDiscount}%`
+      }
+
+      // Otherwise show range
+      return `-${minDiscount}% to -${maxDiscount}%`
     },
 
     // Format price for display

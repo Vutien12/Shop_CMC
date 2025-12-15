@@ -82,13 +82,26 @@ export const useProductStore = defineStore('product', () => {
           ? today >= p.newFrom && today <= p.newTo
           : false;
 
+        // Calculate discount from variants with special prices
+        let originalPrice = null;
+        let discount = null;
+        if (p.variants && p.variants.length > 0) {
+          const variantWithDiscount = p.variants.find(v => v.specialPrice && v.specialPrice < v.price);
+          if (variantWithDiscount) {
+            originalPrice = variantWithDiscount.price;
+            const discountPercent = Math.round(((variantWithDiscount.price - variantWithDiscount.specialPrice) / variantWithDiscount.price) * 100);
+            discount = discountPercent > 0 ? `-${discountPercent}%` : null;
+          }
+        }
+
         return {
           id: p.id,
           name: p.name,
           price: p.minPrice,
           maxPrice: p.maxPrice,
-          originalPrice: null,
-          badge: !p.inStock ? 'Out of Stock' : (isNew ? 'New' : null),
+          originalPrice: originalPrice,
+          discount: discount,
+          badge: !p.inStock ? 'Out of Stock' : (discount ? null : (isNew ? 'New' : null)),
           badgeColor: !p.inStock ? 'red' : (isNew ? 'green' : null),
           image: p.thumbnail?.url || p.thumbnail || '/placeholder.png',
           // Use API flag if provided, otherwise fallback to localStorage-based check

@@ -230,7 +230,7 @@
           <div v-for="p in products" :key="p.id" class="product-card">
             <div class="product-card-inner">
               <div class="product-badge-row">
-                <span v-if="p.originalPrice" class="sale-badge">🔥 Sale</span>
+                <span v-if="p.discount" class="sale-badge">{{ p.discount }}</span>
                 <span v-else-if="p.badge" :class="['badge', p.badgeColor]">{{ p.badge }}</span>
                 <!-- wishlist button removed from product list: wishlist is variant-specific and should be managed on the Product Detail page -->
               </div>
