@@ -53,6 +53,18 @@
                 <span>All Products</span>
               </router-link>
             </li>
+            <li :class="activeMenu('attributes')">
+              <router-link :to="{ name: 'admin.attributes.index' }" @click="closeSidebarOnMobile">
+                <i class="fa fa-angle-double-right"></i>
+                <span>Attributes</span>
+              </router-link>
+            </li>
+            <li :class="activeMenu('attribute-sets')">
+              <router-link :to="{ name: 'admin.attribute-sets.index' }" @click="closeSidebarOnMobile">
+                <i class="fa fa-angle-double-right"></i>
+                <span>Attribute sets</span>
+              </router-link>
+            </li>
             <li :class="activeMenu('categories')">
               <router-link :to="{ name: 'admin.categories.index' }" @click="closeSidebarOnMobile">
                 <i class="fa fa-angle-double-right"></i>

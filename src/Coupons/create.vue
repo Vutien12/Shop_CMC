@@ -52,60 +52,66 @@
                             <!-- GENERAL -->
                             <div v-show="activeTab === 'general'" class="tab-pane fade in" id="general">
                                 <h4 class="tab-content-title">General</h4>
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group" :class="{ 'has-error': errors.description }">
-                                            <label for="description" class="col-md-3 control-label text-left">Description<span class="m-l-5 text-red">*</span></label>
-                                            <div class="col-md-9">
-                                                <textarea id="description" v-model.trim="form.description" name="description" class="form-control" rows="3"></textarea>
-                                                <small v-if="errors.description" class="text-danger">{{ errors.description }}</small>
-                                            </div>
-                                        </div>
+                                
+                                <div class="form-group-wrapper" :class="{ 'has-error': errors.description }">
+                                    <label for="description" class="form-label">
+                                        Description
+                                        <span class="text-red">*</span>
+                                    </label>
+                                    <div class="form-input-wrapper">
+                                        <textarea id="description" v-model.trim="form.description" name="description" class="form-control" rows="3"></textarea>
+                                        <small v-if="errors.description" class="text-danger">{{ errors.description }}</small>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group" :class="{ 'has-error': errors.discountValue }">
-                                            <label for="discountType" class="col-md-3 control-label text-left">Discount Type<span class="m-l-5 text-red">*</span></label>
-                                            <div class="col-md-9">
-                                                <select id="discountType" v-model="form.discountType" name="discountType" class="form-control custom-select-black">
-                                                    <option value="PERCENT">Percent</option>
-                                                    <option value="FIXED">Fixed</option>
-                                                </select>
-                                            </div>
-                                        </div>
+                                <div class="form-group-wrapper" :class="{ 'has-error': errors.discountValue }">
+                                    <label for="discountType" class="form-label">
+                                        Discount Type
+                                        <span class="text-red">*</span>
+                                    </label>
+                                    <div class="form-input-wrapper">
+                                        <select id="discountType" v-model="form.discountType" name="discountType" class="form-control custom-select-black">
+                                            <option value="PERCENT">Percent</option>
+                                            <option value="FIXED">Fixed</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group" :class="{ 'has-error': errors.discountValue }">
-                                            <label for="discountValue" class="col-md-3 control-label text-left">Discount Value<span class="m-l-5 text-red">*</span></label>
-                                            <div class="col-md-9">
-                                                <input id="discountValue" v-model.number="form.discountValue" name="discountValue" class="form-control" min="0" type="number" />
-                                                <small v-if="errors.discountValue" class="text-danger">{{ errors.discountValue }}</small>
-                                                <small v-else class="text-muted">{{ form.discountType === 'PERCENT' ? 'Enter percentage (e.g., 10 for 10%)' : 'Enter fixed amount' }}</small>
-                                            </div>
-                                        </div>
+                                <div class="form-group-wrapper" :class="{ 'has-error': errors.discountValue }">
+                                    <label for="discountValue" class="form-label">
+                                        Discount Value
+                                        <span class="text-red">*</span>
+                                    </label>
+                                    <div class="form-input-wrapper">
+                                        <input id="discountValue" v-model.number="form.discountValue" name="discountValue" class="form-control" min="0" type="number" />
+                                        <small v-if="errors.discountValue" class="text-danger">{{ errors.discountValue }}</small>
+                                        <small v-else class="text-muted">{{ form.discountType === 'PERCENT' ? 'Enter percentage (e.g., 10 for 10%)' : 'Enter fixed amount' }}</small>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group">
-                                            <label for="maxDiscount" class="col-md-3 control-label text-left">Max Discount</label>
-                                            <div class="col-md-9">
-                                                <input id="maxDiscount" v-model.number="form.maxDiscount" name="maxDiscount" class="form-control" min="0" type="number" />
-                                                <small class="text-muted">Maximum discount amount (leave empty for no limit)</small>
-                                            </div>
-                                        </div>
+                                <div class="form-group-wrapper">
+                                    <label for="maxDiscount" class="form-label">Max Discount</label>
+                                    <div class="form-input-wrapper">
+                                        <input id="maxDiscount" v-model.number="form.maxDiscount" name="maxDiscount" class="form-control" min="0" type="number" />
+                                        <small class="text-muted">Maximum discount amount (leave empty for no limit)</small>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group">
-                                            <label for="minOrderAmount" class="col-md-3 control-label text-left">Min Order Amount</label>
-                                            <div class="col-md-9">
-                                                <input id="minOrderAmount" v-model.number="form.minOrderAmount" name="minOrderAmount" class="form-control" min="0" type="number" />
-                                                <small class="text-muted">Minimum order amount to use this coupon</small>
-                                            </div>
-                                        </div>
+                                <div class="form-group-wrapper">
+                                    <label for="minOrderAmount" class="form-label">Min Order Amount</label>
+                                    <div class="form-input-wrapper">
+                                        <input id="minOrderAmount" v-model.number="form.minOrderAmount" name="minOrderAmount" class="form-control" min="0" type="number" />
+                                        <small class="text-muted">Minimum order amount to use this coupon</small>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group">
-                                            <label for="is_active" class="col-md-3 control-label text-left">Status</label>
-                                            <div class="col-md-9">
-                                                <div class="checkbox">
-                                                    <input type="hidden" value="0" name="is_active" />
-                                                    <input id="is_active" type="checkbox" v-model="form.isActive" />
-                                                    <label for="is_active">Enable the coupon</label>
-                                                </div>
-                                            </div>
+                                <div class="form-group-wrapper">
+                                    <label for="is_active" class="form-label">Status</label>
+                                    <div class="form-input-wrapper">
+                                        <div class="checkbox">
+                                            <input type="hidden" value="0" name="is_active" />
+                                            <input id="is_active" type="checkbox" v-model="form.isActive" />
+                                            <label for="is_active">Enable the coupon</label>
                                         </div>
                                     </div>
                                 </div>
@@ -114,21 +120,18 @@
                             <!-- USAGE RESTRICTIONS -->
                             <div v-show="activeTab === 'usage_restrictions'" class="tab-pane fade in" id="usage_restrictions">
                                 <h4 class="tab-content-title">Usage Time</h4>
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="start_date" class="col-md-3 control-label text-left">Start Date</label>
-                                            <div class="col-md-9">
-                                                <input id="start_date" v-model="form.startDate" name="start_date" class="form-control" type="datetime-local" />
-                                            </div>
-                                        </div>
+                                
+                                <div class="form-group-wrapper">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <div class="form-input-wrapper">
+                                        <input id="start_date" v-model="form.startDate" name="start_date" class="form-control" type="datetime-local" />
+                                    </div>
+                                </div>
 
-                                        <div class="form-group">
-                                            <label for="end_date" class="col-md-3 control-label text-left">End Date</label>
-                                            <div class="col-md-9">
-                                                <input id="end_date" v-model="form.endDate" name="end_date" class="form-control" type="datetime-local" />
-                                            </div>
-                                        </div>
+                                <div class="form-group-wrapper">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <div class="form-input-wrapper">
+                                        <input id="end_date" v-model="form.endDate" name="end_date" class="form-control" type="datetime-local" />
                                     </div>
                                 </div>
                             </div>
@@ -136,15 +139,12 @@
                             <!-- USAGE LIMITS -->
                             <div v-show="activeTab === 'usage_limits'" class="tab-pane fade in" id="usage_limits">
                                 <h4 class="tab-content-title">Usage Limits</h4>
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="usageLimit" class="col-md-3 control-label text-left">Usage Limit</label>
-                                            <div class="col-md-9">
-                                                <input id="usageLimit" v-model.number="form.usageLimit" name="usageLimit" class="form-control" min="0" type="number" />
-                                                <small class="text-muted">Total number of times this coupon can be used</small>
-                                            </div>
-                                        </div>
+                                
+                                <div class="form-group-wrapper">
+                                    <label for="usageLimit" class="form-label">Usage Limit</label>
+                                    <div class="form-input-wrapper">
+                                        <input id="usageLimit" v-model.number="form.usageLimit" name="usageLimit" class="form-control" min="0" type="number" />
+                                        <small class="text-muted">Total number of times this coupon can be used</small>
                                     </div>
                                 </div>
                             </div>
@@ -550,6 +550,29 @@ async function onSubmit() {
     margin: 0 0 20px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid #f0f0f0;
+}
+
+/* Form group wrapper for horizontal layout */
+.form-group-wrapper {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.form-label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 7px;
+}
+
+.form-input-wrapper {
+    flex: 1;
+    max-width: 500px;
 }
 
 .row {

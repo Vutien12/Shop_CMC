@@ -4,7 +4,7 @@
             title="Create Brand"
             :breadcrumbs="[
                 { label: 'Brands', route: { name: 'admin.brands.index' } },
-                { label: 'Create' }
+                { label: 'Create Brands' }
             ]"
         />
         <form @submit.prevent="save" class="form-horizontal" id="brand-create-form">
@@ -44,39 +44,37 @@
                             <!-- General Tab -->
                             <div class="tab-pane fade" :class="{ 'in active': activeTab === 'general' }" id="general">
                                 <h4 class="tab-content-title">General</h4>
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="form-group" :class="{ 'has-error': errors.name }">
-                                            <label for="name" class="col-md-3 control-label text-left">
-                                                Name<span class="m-l-5 text-red">*</span>
-                                            </label>
-                                            <div class="col-md-9">
-                                                <input
-                                                    name="name"
-                                                    class="form-control"
-                                                    id="name"
-                                                    v-model="form.name"
-                                                    type="text"
-                                                    @input="clearError('name')"
-                                                >
-                                                <span v-if="errors.name" class="help-block text-red">{{ errors.name }}</span>
-                                            </div>
-                                        </div>
+                                
+                                <div class="form-group-wrapper" :class="{ 'has-error': errors.name }">
+                                    <label for="name" class="form-label">
+                                        Name
+                                        <span class="text-red">*</span>
+                                    </label>
+                                    <div class="form-input-wrapper">
+                                        <input
+                                            name="name"
+                                            class="form-control"
+                                            id="name"
+                                            v-model="form.name"
+                                            type="text"
+                                            @input="clearError('name')"
+                                        >
+                                        <span v-if="errors.name" class="help-block text-red">{{ errors.name }}</span>
+                                    </div>
+                                </div>
 
-                                        <div class="form-group">
-                                            <label for="is_active" class="col-md-3 control-label text-left">Status</label>
-                                            <div class="col-md-9">
-                                                <div class="checkbox">
-                                                    <input
-                                                        type="checkbox"
-                                                        name="is_active"
-                                                        id="is_active"
-                                                        v-model="form.is_active"
-                                                        value="1"
-                                                    >
-                                                    <label for="is_active">Enable the brand</label>
-                                                </div>
-                                            </div>
+                                <div class="form-group-wrapper">
+                                    <label for="is_active" class="form-label">Status</label>
+                                    <div class="form-input-wrapper">
+                                        <div class="checkbox">
+                                            <input
+                                                type="checkbox"
+                                                name="is_active"
+                                                id="is_active"
+                                                v-model="form.is_active"
+                                                value="1"
+                                            >
+                                            <label for="is_active">Enable the brand</label>
                                         </div>
                                     </div>
                                 </div>
@@ -371,6 +369,28 @@ const save = async () => {
     margin: 0 0 20px 0;
     padding-bottom: 10px;
     border-bottom: 2px solid #f0f0f0;
+}
+
+/* Form group wrapper for horizontal layout */
+.form-group-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.form-label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.form-input-wrapper {
+    flex: 1;
+    max-width: 500px;
 }
 
 .row {

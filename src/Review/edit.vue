@@ -38,140 +38,125 @@
                 <div class="tab-content clearfix">
                     <div class="tab-pane fade in active" id="review">
                         <h4 class="tab-content-title">General</h4>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <!-- Product Field -->
-                                <div class="form-group">
-                                    <label for="product" class="col-md-3 control-label text-left">
-                                        Product
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            v-model="form.product"
-                                            class="form-control"
-                                            id="product"
-                                            type="text"
-                                            disabled
-                                        />
-                                    </div>
-                                </div>
+                        
+                        <!-- Product Field -->
+                        <div class="form-group-wrapper">
+                            <label for="product" class="form-label">Product</label>
+                            <div class="form-input-wrapper">
+                                <input
+                                    v-model="form.product"
+                                    class="form-control"
+                                    id="product"
+                                    type="text"
+                                    disabled
+                                />
+                            </div>
+                        </div>
 
-                                <!-- Variant Field -->
-                                <div class="form-group">
-                                    <label for="variant" class="col-md-3 control-label text-left">
-                                        Variant
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            v-model="form.variant"
-                                            class="form-control"
-                                            id="variant"
-                                            type="text"
-                                            disabled
-                                        />
-                                    </div>
-                                </div>
+                        <!-- Variant Field -->
+                        <div class="form-group-wrapper">
+                            <label for="variant" class="form-label">Variant</label>
+                            <div class="form-input-wrapper">
+                                <input
+                                    v-model="form.variant"
+                                    class="form-control"
+                                    id="variant"
+                                    type="text"
+                                    disabled
+                                />
+                            </div>
+                        </div>
 
-                                <!-- Reviewer Name Field -->
-                                <div class="form-group">
-                                    <label for="reviewer_name" class="col-md-3 control-label text-left">
-                                        Reviewer Name
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            v-model="form.reviewer_name"
-                                            class="form-control"
-                                            id="reviewer_name"
-                                            type="text"
-                                            disabled
-                                        />
-                                    </div>
-                                </div>
+                        <!-- Reviewer Name Field -->
+                        <div class="form-group-wrapper">
+                            <label for="reviewer_name" class="form-label">Reviewer Name</label>
+                            <div class="form-input-wrapper">
+                                <input
+                                    v-model="form.reviewer_name"
+                                    class="form-control"
+                                    id="reviewer_name"
+                                    type="text"
+                                    disabled
+                                />
+                            </div>
+                        </div>
 
-                                <!-- Rating Field -->
-                                <div class="form-group">
-                                    <label for="rating" class="col-md-3 control-label text-left">
-                                        Rating
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="rating-stars">
-                                            <span v-for="i in 5" :key="i" :class="i <= form.rating ? 'star-filled' : 'star-empty'">
-                                                ★
-                                            </span>
-                                            <span class="rating-number">({{ form.rating }})</span>
-                                        </div>
-                                    </div>
+                        <!-- Rating Field -->
+                        <div class="form-group-wrapper">
+                            <label for="rating" class="form-label">Rating</label>
+                            <div class="form-input-wrapper">
+                                <div class="rating-stars">
+                                    <span v-for="i in 5" :key="i" :class="i <= form.rating ? 'star-filled' : 'star-empty'">
+                                        ★
+                                    </span>
+                                    <span class="rating-number">({{ form.rating }})</span>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Title Field -->
-                                <div class="form-group">
-                                    <label for="title" class="col-md-3 control-label text-left">
-                                        Title
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            v-model="form.title"
-                                            class="form-control"
-                                            id="title"
-                                            type="text"
-                                            disabled
-                                        />
-                                    </div>
-                                </div>
+                        <!-- Title Field -->
+                        <div class="form-group-wrapper">
+                            <label for="title" class="form-label">Title</label>
+                            <div class="form-input-wrapper">
+                                <input
+                                    v-model="form.title"
+                                    class="form-control"
+                                    id="title"
+                                    type="text"
+                                    disabled
+                                />
+                            </div>
+                        </div>
 
-                                <!-- Comment Field -->
-                                <div class="form-group">
-                                    <label for="comment" class="col-md-3 control-label text-left">
-                                        Comment
-                                    </label>
-                                    <div class="col-md-9">
-                                        <textarea
-                                            v-model="form.comment"
-                                            class="form-control"
-                                            id="comment"
-                                            rows="4"
-                                            cols="10"
-                                            disabled
-                                        ></textarea>
-                                    </div>
-                                </div>
+                        <!-- Comment Field -->
+                        <div class="form-group-wrapper">
+                            <label for="comment" class="form-label">Comment</label>
+                            <div class="form-input-wrapper">
+                                <textarea
+                                    v-model="form.comment"
+                                    class="form-control"
+                                    id="comment"
+                                    rows="4"
+                                    cols="10"
+                                    disabled
+                                ></textarea>
+                            </div>
+                        </div>
 
-                                <!-- Status Field -->
-                                <div class="form-group">
-                                    <label for="is_hidden" class="col-md-3 control-label text-left">
-                                        Status
-                                        <span class="m-l-5 text-red">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="checkbox">
-                                            <input
-                                                type="checkbox"
-                                                v-model="form.is_hidden"
-                                                name="is_hidden"
-                                                id="is_hidden"
-                                            />
-                                            <label for="is_hidden">Hide this review</label>
-                                        </div>
-                                    </div>
+                        <!-- Status Field -->
+                        <div class="form-group-wrapper">
+                            <label for="is_hidden" class="form-label">
+                                Status
+                                <span class="text-red">*</span>
+                            </label>
+                            <div class="form-input-wrapper">
+                                <div class="checkbox">
+                                    <input
+                                        type="checkbox"
+                                        v-model="form.is_hidden"
+                                        name="is_hidden"
+                                        id="is_hidden"
+                                    />
+                                    <label for="is_hidden">Hide this review</label>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Hidden Reason Field -->
-                                <div class="form-group" v-if="form.is_hidden">
-                                    <label for="hidden_reason" class="col-md-3 control-label text-left">
-                                        Hidden Reason
-                                        <span class="m-l-5 text-red">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <textarea
-                                            v-model="form.hidden_reason"
-                                            class="form-control"
-                                            id="hidden_reason"
-                                            rows="3"
-                                            cols="10"
-                                            placeholder="Enter reason for hiding this review..."
-                                        ></textarea>
-                                    </div>
-                                </div>
+                        <!-- Hidden Reason Field -->
+                        <div class="form-group-wrapper" v-if="form.is_hidden">
+                            <label for="hidden_reason" class="form-label">
+                                Hidden Reason
+                                <span class="text-red">*</span>
+                            </label>
+                            <div class="form-input-wrapper">
+                                <textarea
+                                    v-model="form.hidden_reason"
+                                    class="form-control"
+                                    id="hidden_reason"
+                                    rows="3"
+                                    cols="10"
+                                    placeholder="Enter reason for hiding this review..."
+                                ></textarea>
                             </div>
                         </div>
                     </div>
@@ -388,6 +373,29 @@ export default {
     color: #111827;
 }
 
+/* Form group wrapper for horizontal layout */
+.form-group-wrapper {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.form-label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 7px;
+}
+
+.form-input-wrapper {
+    flex: 1;
+    max-width: 500px;
+}
+
 .form-group {
     margin-bottom: 15px;
     display: flex !important;
@@ -556,7 +564,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 2px;
-    padding-top: 7px;
+    padding-top: 0;
 }
 
 .star-filled {

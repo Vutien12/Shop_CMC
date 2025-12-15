@@ -48,91 +48,85 @@
               <!-- General Tab -->
               <div class="tab-pane fade" :class="{ 'in active': activeTab === 'general' }" id="general">
                 <h4 class="tab-content-title">General</h4>
-                <div class="row">
-                  <div class="col-md-12">
-                    <div class="form-group">
-                      <label for="name" class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label text-left">
-                        Name<span class="m-l-5 text-red">*</span>
-                      </label>
-                      <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12 input-wrapper">
-                        <input
-                          type="text"
-                          id="name"
-                          v-model="form.name"
-                          class="form-control"
-                          required
-                        />
-                      </div>
+                
+                <div class="form-group-wrapper">
+                  <label for="name" class="form-label">
+                    Name
+                    <span class="text-red">*</span>
+                  </label>
+                  <div class="form-input-wrapper">
+                    <input
+                      type="text"
+                      id="name"
+                      v-model="form.name"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group-wrapper">
+                  <label for="type" class="form-label">
+                    Type
+                    <span class="text-red">*</span>
+                  </label>
+                  <div class="form-input-wrapper">
+                    <select
+                      id="type"
+                      v-model="form.type"
+                      class="form-control custom-select-black"
+                      @change="onTypeChange"
+                      required
+                    >
+                      <option value="">Please Select</option>
+
+                      <optgroup label="Text">
+                        <option value="field">Field</option>
+                        <option value="textarea">Textarea</option>
+                      </optgroup>
+
+                      <optgroup label="Select">
+                        <option value="dropdown">Dropdown</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="checkbox_custom">Custom Checkbox</option>
+                        <option value="radio">Radio Button</option>
+                        <option value="radio_custom">Custom Radio Button</option>
+                        <option value="multiple_select">Multiple Select</option>
+                      </optgroup>
+
+                      <optgroup label="Date">
+                        <option value="date">Date</option>
+                        <option value="date_time">Date &amp; Time</option>
+                        <option value="time">Time</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group-wrapper">
+                  <label for="is_global" class="form-label">Global</label>
+                  <div class="form-input-wrapper">
+                    <div class="checkbox">
+                      <input
+                        type="checkbox"
+                        id="is_global"
+                        v-model="form.isGlobal"
+                      />
+                      <label for="is_global">This option is global</label>
                     </div>
+                  </div>
+                </div>
 
-                    <div class="form-group required">
-                      <label for="type" class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label text-left" style="color:black">
-                        Type<span class="m-l-5 text-red">*</span>
-                      </label>
-
-                      <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12 input-wrapper">
-                        <select
-                          id="type"
-                          v-model="form.type"
-                          class="form-control custom-select-black"
-                          @change="onTypeChange"
-                          required
-                        >
-                          <option value="">Please Select</option>
-
-                          <optgroup label="Text">
-                            <option value="field">Field</option>
-                            <option value="textarea">Textarea</option>
-                          </optgroup>
-
-                          <optgroup label="Select">
-                            <option value="dropdown">Dropdown</option>
-                            <option value="checkbox">Checkbox</option>
-                            <option value="checkbox_custom">Custom Checkbox</option>
-                            <option value="radio">Radio Button</option>
-                            <option value="radio_custom">Custom Radio Button</option>
-                            <option value="multiple_select">Multiple Select</option>
-                          </optgroup>
-
-                          <optgroup label="Date">
-                            <option value="date">Date</option>
-                            <option value="date_time">Date &amp; Time</option>
-                            <option value="time">Time</option>
-                          </optgroup>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label for="is_global" class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label text-left">
-                        Global
-                      </label>
-                      <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-                        <div class="checkbox">
-                          <input
-                            type="checkbox"
-                            id="is_global"
-                            v-model="form.isGlobal"
-                          />
-                          <label for="is_global">This option is global</label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label for="is_required" class="col-lg-3 col-md-3 col-sm-3 col-xs-12 control-label text-left">
-                        Required
-                      </label>
-                      <div class="col-lg-9 col-md-9 col-sm-9 col-xs-12">
-                        <div class="checkbox">
-                          <input
-                            type="checkbox"
-                            id="is_required"
-                            v-model="form.isRequired"
-                          />
-                          <label for="is_required">This option is required</label>
-                        </div>
-                      </div>
+                <div class="form-group-wrapper">
+                  <label for="is_required" class="form-label">Required</label>
+                  <div class="form-input-wrapper">
+                    <div class="checkbox">
+                      <input
+                        type="checkbox"
+                        id="is_required"
+                        v-model="form.isRequired"
+                      />
+                      <label for="is_required">This option is required</label>
                     </div>
                   </div>
                 </div>
@@ -628,7 +622,29 @@ export default {
   margin-top: 0;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: none;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Form group wrapper for horizontal layout */
+.form-group-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.form-label {
+  min-width: 120px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.form-input-wrapper {
+  flex: 1;
+  max-width: 500px;
 }
 
 /* Form input width control for desktop */

@@ -56,6 +56,10 @@ import FlashSaleCreate from "../Flashsale/create.vue";
 import RefundIndex from "@/Refund/indext.vue";
 import RefundDetail from "@/Refund/detail.vue";
 import ReportIndex from "../Report/indext.vue";
+import AttributeIndex from "../Attribute/Attributes/index.vue";
+import AttributeCreate from "../Attribute/Attributes/create.vue";
+import AttributeSetIndex from "../Attribute/AttributesSets/indext.vue";
+import AttributeSetCreate from "../Attribute/AttributesSets/create.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -172,6 +176,36 @@ const routes = [
                 name: 'admin.brands.edit',
                 component: BrandEdit,
                 path: 'brands/:id/edit',
+            },
+            {
+                name: 'admin.attributes.index',
+                component: AttributeIndex,
+                path: 'attributes',
+            },
+            {
+                name: 'admin.attributes.create',
+                component: AttributeCreate,
+                path: 'attributes/create',
+            },
+            {
+                name: 'admin.attributes.edit',
+                component: AttributeCreate,
+                path: 'attributes/:id/edit',
+            },
+            {
+                name: 'admin.attribute-sets.index',
+                component: AttributeSetIndex,
+                path: 'attribute-sets',
+            },
+            {
+                name: 'admin.attribute-sets.create',
+                component: AttributeSetCreate,
+                path: 'attribute-sets/create',
+            },
+            {
+                name: 'admin.attribute-sets.edit',
+                component: AttributeSetCreate,
+                path: 'attribute-sets/:id/edit',
             },
             {
                 name: 'admin.coupons.index',
