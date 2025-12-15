@@ -217,7 +217,7 @@
                       <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                     </template>
                   </div>
-                  
+
                   <!-- Quick View Button -->
                   <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -305,7 +305,7 @@ export default {
     navigateToProducts(categoryId) {
       this.$router.push({
         name: 'Product',
-        query: { categoryId }
+        query: { category: categoryId }
       })
     },
 
