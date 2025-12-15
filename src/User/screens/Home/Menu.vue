@@ -272,6 +272,7 @@
 <script>
 import { getCategories, getTrendingCategories } from '@/api/categoryApi'
 import { getProductsByCategory } from '@/api/productApi'
+import { calculateProductDiscount } from '@/Utils/discountUtils'
 
 export default {
   name: 'CategoryMenu',
@@ -386,7 +387,12 @@ export default {
         console.log('Categories response:', response)
 
         if (response.code === 200 && response.result) {
-          const activeCategories = response.result.filter(cat => cat.isActive)
+          const activeCategories = response.result
+            .filter(cat => cat.isActive)
+            .map(cat => ({
+              ...cat,
+              thumbnail: cat.thumbnail?.url || cat.thumbnail
+            }))
           this.categories = activeCategories
 
           // Build tree structure for sidebar menu
@@ -566,38 +572,9 @@ export default {
       return today >= newFrom && today <= newTo
     },
 
-    // Calculate discount percentage
+    // Calculate discount percentage (using utility function that matches backend)
     calculateDiscount(product) {
-      if (!product.variants || product.variants.length === 0) return null
-
-      // Find all variants with special prices and calculate their discount percentages
-      const variantsWithDiscount = product.variants
-        .filter(v => v.specialPrice && v.specialPrice < v.price)
-        .map(v => ({
-          variant: v,
-          discountPercent: Math.round(((v.price - v.specialPrice) / v.price) * 100)
-        }))
-        .filter(v => v.discountPercent > 0)
-
-      if (variantsWithDiscount.length === 0) return null
-
-      // If there's only one variant with discount, use it
-      if (variantsWithDiscount.length === 1) {
-        return `-${variantsWithDiscount[0].discountPercent}%`
-      }
-
-      // If multiple variants, find the min and max discount percentages
-      const discounts = variantsWithDiscount.map(v => v.discountPercent)
-      const minDiscount = Math.min(...discounts)
-      const maxDiscount = Math.max(...discounts)
-
-      // If all discounts are the same, show single value
-      if (minDiscount === maxDiscount) {
-        return `-${minDiscount}%`
-      }
-
-      // Otherwise show range
-      return `-${minDiscount}% to -${maxDiscount}%`
+      return calculateProductDiscount(product)
     },
 
     // Format price for display

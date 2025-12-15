@@ -1,10 +1,20 @@
 // src/User/stores/productStore.js
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { searchProducts } from '@/api/productApi.js';
-import { getCategories } from '@/api/categoryApi.js';
+import { searchProducts } from '@/api/productApi';
+import { getCategories } from '@/api/categoryApi';
+import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils';
 
-export const useProductStore = defineStore('product', () => {
+const isInWishlist = (productId) => {
+  try {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    return wishlist.some(item => item.productId === productId);
+  } catch {
+    return false;
+  }
+};
+
+export const useProductStore = defineStore('productStore', () => {
   // === STATE ===
   const products = ref([]);
   const latestProducts = ref([]);
@@ -82,22 +92,17 @@ export const useProductStore = defineStore('product', () => {
           ? today >= p.newFrom && today <= p.newTo
           : false;
 
-        // Calculate discount from variants with special prices
-        let originalPrice = null;
-        let discount = null;
-        if (p.variants && p.variants.length > 0) {
-          const variantWithDiscount = p.variants.find(v => v.specialPrice && v.specialPrice < v.price);
-          if (variantWithDiscount) {
-            originalPrice = variantWithDiscount.price;
-            const discountPercent = Math.round(((variantWithDiscount.price - variantWithDiscount.specialPrice) / variantWithDiscount.price) * 100);
-            discount = discountPercent > 0 ? `-${discountPercent}%` : null;
-          }
-        }
+        // Calculate discount using utility function that matches backend
+        const discount = calculateProductDiscount(p);
+
+        // Get best selling price if available
+        const bestSellingPrice = getBestSellingPrice(p);
+        const originalPrice = bestSellingPrice ? p.minPrice : null;
 
         return {
           id: p.id,
           name: p.name,
-          price: p.minPrice,
+          price: bestSellingPrice || p.minPrice,
           maxPrice: p.maxPrice,
           originalPrice: originalPrice,
           discount: discount,
