@@ -47,6 +47,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchBlogs, deleteManyBlogs } from '@/api/blogApi.js';
 
@@ -57,6 +58,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const blogs = ref([]);
         const loading = ref(false);
 
@@ -91,7 +93,7 @@ export default {
                 }));
             } catch (error) {
                 console.error('Error loading blogs:', error);
-                alert('Error loading blogs: ' + (error.response?.data?.message || error.message));
+                notification.error('Error', 'Failed to load blogs: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
@@ -102,19 +104,24 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (!confirm(`Are you sure you want to delete ${selectedIds.length} blog(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Confirm Delete',
+                `Are you sure you want to delete ${selectedIds.length} blog(s)?`
+            );
+
+            if (!confirmed) {
                 return;
             }
 
             loading.value = true;
             try {
                 await deleteManyBlogs(selectedIds);
-                alert('Blogs deleted successfully!');
+                notification.success('Success', 'Blogs deleted successfully');
                 // Reload the list
                 await loadBlogs();
             } catch (error) {
                 console.error('Error deleting blogs:', error);
-                alert('Error deleting blogs: ' + (error.response?.data?.message || error.message));
+                notification.error('Error', 'Failed to delete blogs: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }

@@ -7,52 +7,199 @@
 
 .pd-related-products__title {
   font-size: 24px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 400;
+  color: #6e6e6e;
   margin: 0 0 24px 0;
   font-family: 'Poppins', sans-serif;
 }
 
 .pd-related-products__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
   width: 100%;
 }
 
-/* Make ProductCard clickable in related products */
+/* Make ProductCard match Product.vue style */
 .pd-related-products__grid .product-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: box-shadow 0.3s;
+  padding: 16px !important;
+  min-width: 220px;
+  max-width: 220px;
 }
 
 .pd-related-products__grid .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: none !important;
 }
 
-/* Responsive grid - Large screens (6 columns) */
+/* Fix image size to stay within card */
+.pd-related-products__grid .product-image1 {
+  width: 100% !important;
+  height: 192px !important;
+  aspect-ratio: unset !important;
+  background-color: white !important;
+  border-radius: 4px !important;
+  margin-bottom: 16px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.pd-related-products__grid .product-image1 img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+.pd-related-products__grid .product-card:hover .product-image1 img {
+  transform: none !important;
+}
+
+/* Match Product.vue text styling */
+.pd-related-products__grid .product-name {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #1f2937 !important;
+  height: 40px !important;
+  margin-bottom: 8px !important;
+  line-height: 1.4 !important;
+  overflow: hidden !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+.pd-related-products__grid .product-info {
+  padding: 0 !important;
+  margin-top: 0 !important;
+}
+
+.pd-related-products__grid .product-footer {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin-top: auto !important;
+  padding-top: 8px !important;
+}
+
+.pd-related-products__grid .price-section {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+  flex: 1 !important;
+}
+
+.pd-related-products__grid .current-price {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+}
+
+.pd-related-products__grid .current-price.sale-price {
+  color: #ef4444 !important;
+}
+
+.pd-related-products__grid .original-price {
+  font-size: 14px !important;
+  color: #9ca3af !important;
+  text-decoration: line-through !important;
+}
+
+.pd-related-products__grid .action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.pd-related-products__grid .action-btn:hover {
+  background: #f3f4f6 !important;
+  border-color: #0068e1 !important;
+}
+
+.pd-related-products__grid .action-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Responsive - Match Product.vue */
+/* Desktop Large (1400px+) */
 @media (min-width: 1400px) {
   .pd-related-products__grid {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
-/* Responsive grid - Desktop (4 columns) */
-@media (min-width: 1024px) and (max-width: 1399px) {
+/* Desktop (1200px - 1399px) */
+@media (min-width: 1200px) and (max-width: 1399px) {
   .pd-related-products__grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
-/* Responsive grid - Tablet (3 columns) */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Laptop/Tablet Landscape (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
   .pd-related-products__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .pd-related-products__grid .product-card {
+    min-width: 200px;
+    max-width: 200px;
+  }
+  
+  .pd-related-products__grid .product-image1 {
+    height: 180px !important;
   }
 }
 
-/* Responsive grid - Mobile (2 columns) */
+/* Tablet Portrait (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .pd-related-products__grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .pd-related-products {
+    padding: 2rem 0;
+    margin-top: 2rem;
+  }
+
+  .pd-related-products__title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .pd-related-products__grid .product-card {
+    padding: 12px !important;
+    min-width: 200px;
+    max-width: 200px;
+  }
+  
+  .pd-related-products__grid .product-image1 {
+    height: 180px !important;
+  }
+}
+
+/* Mobile (max-width: 767px) */
 @media (max-width: 767px) {
   .pd-related-products__grid {
     grid-template-columns: repeat(2, 1fr);
@@ -65,20 +212,39 @@
   }
 
   .pd-related-products__title {
-    font-size: 20px;
+    font-size: 18px;
     margin-bottom: 16px;
   }
-}
-
-/* Extra small mobile (1 column if needed) */
-@media (max-width: 480px) {
-  .pd-related-products__grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  
+  .pd-related-products__grid .product-card {
+    padding: 10px !important;
+    min-width: unset;
+    max-width: unset;
   }
-
-  .pd-related-products__title {
-    font-size: 18px;
+  
+  .pd-related-products__grid .product-image1 {
+    height: 160px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .pd-related-products__grid .product-name {
+    font-size: 13px !important;
+    height: 36px !important;
+  }
+  
+  .pd-related-products__grid .current-price {
+    font-size: 16px !important;
+  }
+  
+  .pd-related-products__grid .action-btn {
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 6px !important;
+  }
+  
+  .pd-related-products__grid .action-btn svg {
+    width: 18px !important;
+    height: 18px !important;
   }
 }
 

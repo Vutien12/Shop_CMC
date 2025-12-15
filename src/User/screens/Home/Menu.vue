@@ -217,16 +217,16 @@
                       <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                     </template>
                   </div>
+                  
+                  <!-- Quick View Button -->
+                  <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14.3623 7.3635C14.565 7.6477 14.6663 7.78983 14.6663 8.00016C14.6663 8.2105 14.565 8.35263 14.3623 8.63683C13.4516 9.9139 11.1258 12.6668 7.99967 12.6668C4.87353 12.6668 2.54774 9.9139 1.63703 8.63683C1.43435 8.35263 1.33301 8.2105 1.33301 8.00016C1.33301 7.78983 1.43435 7.6477 1.63703 7.3635C2.54774 6.08646 4.87353 3.3335 7.99967 3.3335C11.1258 3.3335 13.4516 6.08646 14.3623 7.3635Z" stroke="currentColor" stroke-width="1.2"/>
+                      <path d="M10 8C10 6.8954 9.1046 6 8 6C6.8954 6 6 6.8954 6 8C6 9.1046 6.8954 10 8 10C9.1046 10 10 9.1046 10 8Z" stroke="currentColor" stroke-width="1.2"/>
+                    </svg>
+                    View Details
+                  </button>
                 </div>
-
-                <!-- Quick View Button -->
-                <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M14.3623 7.3635C14.565 7.6477 14.6663 7.78983 14.6663 8.00016C14.6663 8.2105 14.565 8.35263 14.3623 8.63683C13.4516 9.9139 11.1258 12.6668 7.99967 12.6668C4.87353 12.6668 2.54774 9.9139 1.63703 8.63683C1.43435 8.35263 1.33301 8.2105 1.33301 8.00016C1.33301 7.78983 1.43435 7.6477 1.63703 7.3635C2.54774 6.08646 4.87353 3.3335 7.99967 3.3335C11.1258 3.3335 13.4516 6.08646 14.3623 7.3635Z" stroke="currentColor" stroke-width="1.2"/>
-                    <path d="M10 8C10 6.8954 9.1046 6 8 6C6.8954 6 6 6.8954 6 8C6 9.1046 6.8954 10 8 10C9.1046 10 10 9.1046 10 8Z" stroke="currentColor" stroke-width="1.2"/>
-                  </svg>
-                  View Details
-                </button>
               </div>
             </div>
           </div>
@@ -787,19 +787,18 @@ export default {
   position: relative;
   min-width: 220px;
   max-width: 220px;
-  border: 1px solid #e3e6e6;
-  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s;
   background: #fff;
   display: flex;
   flex-direction: column;
+  padding: 16px;
 }
 
 .menu-product-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  transform: translateY(-6px);
-  border-color: #ff6b35;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Product Badges */
@@ -841,25 +840,26 @@ export default {
 /* Product Image */
 .product-image-wrapper {
   width: 100%;
-  height: 220px;
+  height: 192px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
   overflow: hidden;
   cursor: pointer;
-  padding: 15px;
+  padding: 0;
+  margin-bottom: 16px;
+  border-radius: 4px;
 }
 
 .product-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: transform 0.3s ease;
 }
 
 .menu-product-card:hover .product-img {
-  transform: scale(1.08);
+  transform: none;
 }
 
 .no-image {
@@ -871,10 +871,10 @@ export default {
 
 /* Product Info */
 .product-info-wrapper {
-  padding: 14px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 
@@ -887,18 +887,18 @@ export default {
 }
 
 .product-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #1f2937;
-  line-height: 1.5;
-  margin: 0;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  min-height: 39px;
+  height: 40px;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -911,6 +911,10 @@ export default {
 .product-pricing {
   margin-top: auto;
   padding-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .price-group {
@@ -918,18 +922,19 @@ export default {
   align-items: baseline;
   gap: 6px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .price-current {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #ef4444;
+  color: #2563eb;
 }
 
 .price-range {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
-  color: #ef4444;
+  color: #2563eb;
 }
 
 /* Quick View Button */
@@ -937,24 +942,29 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 9px;
-  margin-top: 10px;
-  background: linear-gradient(135deg, #ff6b35 0%, #ff8c61 100%);
-  border: none;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
+  color: #0068e1;
+  font-size: 0;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: none;
+  flex-shrink: 0;
 }
 
 .quick-view-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+  background: #f3f4f6;
+  border-color: #0068e1;
+}
+
+.quick-view-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: #0068e1;
 }
 
 /* Loading State */

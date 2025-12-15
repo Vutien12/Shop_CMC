@@ -152,6 +152,12 @@
             <span>Flash Sales</span>
           </router-link>
         </li>
+        <li class="treeview" :class="activeMenu('reports')">
+          <router-link :to="{ name: 'admin.reports.index' }" @click="closeSidebarOnMobile">
+            <i class="fa fa-file-text-o"></i>
+            <span>Reports</span>
+          </router-link>
+        </li>
       </ul>
     </section>
   </aside>
