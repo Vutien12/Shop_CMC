@@ -42,15 +42,18 @@
                                 <div class="tab-content">
                                     <!-- General Tab -->
                                     <div v-show="activeTab === 'general'">
-                                        <div class="form-group row">
-                                            <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
-                                            <div class="col-md-9">
+                                        <div class="form-group-wrapper">
+                                            <label class="form-label">
+                                                Name
+                                                <span class="text-red">*</span>
+                                            </label>
+                                            <div class="form-input-wrapper">
                                                 <input type="text" class="form-control" v-model="form.name">
                                             </div>
                                         </div>
-                                        <div class="form-group row">
-                                            <label class="col-md-3 control-label">Status</label>
-                                            <div class="col-md-9">
+                                        <div class="form-group-wrapper">
+                                            <label class="form-label">Status</label>
+                                            <div class="form-input-wrapper">
                                                 <div class="checkbox-wrapper">
                                                     <input type="checkbox" id="is_active" v-model="form.is_active">
                                                     <label for="is_active">Enable the category</label>
@@ -61,9 +64,9 @@
 
                                     <!-- Image Tab -->
                                     <div v-show="activeTab === 'image'">
-                                        <div class="form-group row">
-                                            <label class="col-md-3 control-label">Thumbnail</label>
-                                            <div class="col-md-9">
+                                        <div class="form-group-wrapper">
+                                            <label class="form-label">Thumbnail</label>
+                                            <div class="form-input-wrapper">
                                                 <ImageUploader
                                                     title="Category Thumbnail"
                                                     v-model="form.thumbnail"
@@ -75,9 +78,9 @@
                                     </div>
 
                                     <!-- Submit Buttons -->
-                                    <div class="form-group row">
-                                        <label class="col-md-3 control-label"></label>
-                                        <div class="col-md-9">
+                                    <div class="form-group-wrapper">
+                                        <label class="form-label"></label>
+                                        <div class="form-input-wrapper">
                                             <button type="submit" class="btn btn-primary" :disabled="saving">
                                                 {{ saving ? 'Saving...' : 'Save' }}
                                             </button>
@@ -416,6 +419,30 @@ export default {
 .btn-primary:hover { background: #367fa9; }
 .btn-link { background: none; border: none; color: #337ab7; }
 .btn-link:hover { text-decoration: underline; }
+
+/* Form group wrapper for horizontal layout */
+.form-group-wrapper {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.form-label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 7px;
+}
+
+.form-input-wrapper {
+    flex: 1;
+    max-width: 500px;
+}
+
 .form-group { margin-bottom: 15px; }
 .form-group.row { display: flex; align-items: flex-start; }
 .col-md-3 { width: 120px; min-width: 120px; padding-right: 15px; padding-top: 7px; }
@@ -423,7 +450,7 @@ export default {
 .control-label { font-weight: 600; text-align: left; padding-top: 0; font-size: 13px; }
 .checkbox-wrapper { display: flex; align-items: center; gap: 8px; }
 .checkbox-wrapper input[type="checkbox"] { margin: 0; width: 16px; height: 16px; }
-.checkbox-wrapper label { margin: 0; cursor: pointer; }
+.checkbox-wrapper label { font-weight: normal; position: relative; top: 5px; }
 .form-control { width: 100%; padding: 6px 12px; border: 1px solid #ccc; border-radius: 3px; }
 .nav-tabs { list-style: none; padding: 0; border-bottom: 1px solid #ddd; margin-bottom: 0; }
 .nav-tabs li { display: inline-block; margin-bottom: -1px; }
