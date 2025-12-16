@@ -497,11 +497,17 @@ export default {
         const response = await getTrendingCategories()
 
         if (response.code === 200 && response.result) {
-          this.showcaseCategories = response.result.slice(0, 6)
+          this.showcaseCategories = response.result.slice(0, 6).map(cat => ({
+            ...cat,
+            icon: cat.thumbnail?.url || cat.thumbnail || null
+          }))
         }
       } catch (error) {
         console.error('Error loading trending categories:', error)
-        this.showcaseCategories = this.categories.slice(0, 6)
+        this.showcaseCategories = this.categories.slice(0, 6).map(cat => ({
+          ...cat,
+          icon: cat.thumbnail?.url || cat.thumbnail || null
+        }))
       } finally {
         this.loadingTrending = false
       }
@@ -557,11 +563,16 @@ export default {
     calculateDiscount(product) {
       if (!product.variants || product.variants.length === 0) return null
 
-      // Find variant with special price
-      const variantWithDiscount = product.variants.find(v => v.specialPrice && v.specialPrice < v.price)
+      // Find variant with selling price (discount applied)
+      const variantWithDiscount = product.variants.find(v =>
+        v.sellingPrice && v.price && v.sellingPrice < v.price
+      )
+
       if (!variantWithDiscount) return null
 
-      const discountPercent = Math.round(((variantWithDiscount.price - variantWithDiscount.specialPrice) / variantWithDiscount.price) * 100)
+      const discountPercent = Math.round(
+        ((variantWithDiscount.price - variantWithDiscount.sellingPrice) / variantWithDiscount.price) * 100
+      )
       return discountPercent > 0 ? `-${discountPercent}%` : null
     },
 

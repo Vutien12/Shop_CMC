@@ -904,12 +904,12 @@ export default {
       // Transform API product to match ProductCard format
       const firstVariant = apiProduct.variants && apiProduct.variants.length > 0 ? apiProduct.variants[0] : null;
 
-      // Calculate discount
+      // Calculate discount using sellingPrice from backend
       let discount = null;
       let originalPrice = null;
-      if (firstVariant && firstVariant.specialPrice) {
+      if (firstVariant && firstVariant.sellingPrice && firstVariant.sellingPrice < firstVariant.price) {
         originalPrice = firstVariant.price;
-        const discountPercent = ((firstVariant.price - firstVariant.specialPrice) / firstVariant.price) * 100;
+        const discountPercent = ((firstVariant.price - firstVariant.sellingPrice) / firstVariant.price) * 100;
         discount = `-${Math.round(discountPercent)}%`;
       }
 

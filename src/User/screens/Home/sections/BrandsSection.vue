@@ -15,7 +15,7 @@
               class="brand-card"
             >
               <img
-                :src="brand.fileLogo"
+                :src="brand.fileLogo?.url || brand.fileLogo"
                 :alt="brand.name"
                 class="brand-logo"
                 @error="handleImageError"
@@ -136,7 +136,7 @@ const handleImageError = (e) => {
     height: 80px;
     min-width: 150px;
   }
-  
+
   .brands-track {
     animation-duration: 15s;
   }
@@ -148,7 +148,7 @@ const handleImageError = (e) => {
     padding: 16px 10px;
     min-width: 120px;
   }
-  
+
   .brands-track {
     animation-duration: 12s;
   }

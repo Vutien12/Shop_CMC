@@ -160,7 +160,7 @@
                           <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                         </template>
                       </div>
-                      
+
                       <!-- Quick View Button -->
                       <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -343,7 +343,7 @@
                           <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                         </template>
                       </div>
-                      
+
                       <!-- Quick View Button -->
                       <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -454,12 +454,12 @@ const bannerImages2List = computed(() => bannerImages2.value.slice(0, 2))
 const transformProduct = (apiProduct) => {
   const firstVariant = apiProduct.variants && apiProduct.variants.length > 0 ? apiProduct.variants[0] : null
 
-  // Calculate discount
+  // Calculate discount using sellingPrice from backend
   let discount = null
   let originalPrice = null
-  if (firstVariant && firstVariant.specialPrice) {
+  if (firstVariant && firstVariant.sellingPrice && firstVariant.sellingPrice < firstVariant.price) {
     originalPrice = firstVariant.price
-    const discountPercent = ((firstVariant.price - firstVariant.specialPrice) / firstVariant.price) * 100
+    const discountPercent = ((firstVariant.price - firstVariant.sellingPrice) / firstVariant.price) * 100
     discount = `-${Math.round(discountPercent)}%`
   }
 
