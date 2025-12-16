@@ -160,7 +160,7 @@
                           <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                         </template>
                       </div>
-                      
+
                       <!-- Quick View Button -->
                       <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -343,7 +343,7 @@
                           <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                         </template>
                       </div>
-                      
+
                       <!-- Quick View Button -->
                       <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -394,6 +394,7 @@ import { searchProducts, getNewArrivals, getSpecialProducts, getFeaturedProducts
 import { getCategories } from '@/api/categoryApi'
 import { getBrands } from '@/api/brandApi'
 import { getActiveFlashSales } from '@/api/flashsaleApi'
+import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils'
 
 import Menu from './Menu.vue'
 import BestDealsSection from './sections/BestDealsSection.vue'
@@ -452,22 +453,18 @@ const bannerImages2List = computed(() => bannerImages2.value.slice(0, 2))
 // Transform API product to match ProductCard format (kept for potential future use)
 // eslint-disable-next-line no-unused-vars
 const transformProduct = (apiProduct) => {
-  const firstVariant = apiProduct.variants && apiProduct.variants.length > 0 ? apiProduct.variants[0] : null
+  // Calculate discount using utility function
+  const discount = calculateProductDiscount(apiProduct)
 
-  // Calculate discount
-  let discount = null
-  let originalPrice = null
-  if (firstVariant && firstVariant.specialPrice) {
-    originalPrice = firstVariant.price
-    const discountPercent = ((firstVariant.price - firstVariant.specialPrice) / firstVariant.price) * 100
-    discount = `-${Math.round(discountPercent)}%`
-  }
+  // Get best selling price if available
+  const bestSellingPrice = getBestSellingPrice(apiProduct)
+  const originalPrice = bestSellingPrice ? apiProduct.minPrice : null
 
   return {
     id: apiProduct.id,
     name: apiProduct.name,
     image: apiProduct.thumbnail?.url || apiProduct.thumbnail,
-    price: apiProduct.minPrice,
+    price: bestSellingPrice || apiProduct.minPrice,
     originalPrice: originalPrice,
     discount: discount,
     isNew: !!(apiProduct.newFrom || apiProduct.newTo),
@@ -699,8 +696,13 @@ const fetchBrands = async () => {
   try {
     const response = await getBrands()
     if (response.code === 200) {
-      // Filter only active brands
-      brands.value = response.result.filter(brand => brand.isActive)
+      // Filter only active brands and extract logo URLs from objects
+      brands.value = response.result
+        .filter(brand => brand.isActive)
+        .map(brand => ({
+          ...brand,
+          fileLogo: brand.fileLogo?.url || brand.fileLogo || '/placeholder.png'
+        }))
     }
   } catch (error) {
     console.error('Error fetching brands:', error)

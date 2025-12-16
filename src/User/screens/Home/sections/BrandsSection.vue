@@ -136,7 +136,7 @@ const handleImageError = (e) => {
     height: 80px;
     min-width: 150px;
   }
-  
+
   .brands-track {
     animation-duration: 15s;
   }
@@ -148,7 +148,7 @@ const handleImageError = (e) => {
     padding: 16px 10px;
     min-width: 120px;
   }
-  
+
   .brands-track {
     animation-duration: 12s;
   }

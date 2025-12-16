@@ -375,6 +375,7 @@ import { getProductById, getRelatedProducts } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
+import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils'
 
 export default {
   name: 'ProductDetail',
@@ -902,22 +903,19 @@ export default {
 
     transformRelatedProduct(apiProduct) {
       // Transform API product to match ProductCard format
-      const firstVariant = apiProduct.variants && apiProduct.variants.length > 0 ? apiProduct.variants[0] : null;
 
-      // Calculate discount
-      let discount = null;
-      let originalPrice = null;
-      if (firstVariant && firstVariant.specialPrice) {
-        originalPrice = firstVariant.price;
-        const discountPercent = ((firstVariant.price - firstVariant.specialPrice) / firstVariant.price) * 100;
-        discount = `-${Math.round(discountPercent)}%`;
-      }
+      // Calculate discount using utility function that matches backend
+      const discount = calculateProductDiscount(apiProduct);
+
+      // Get best selling price if available
+      const bestSellingPrice = getBestSellingPrice(apiProduct);
+      const originalPrice = bestSellingPrice ? apiProduct.minPrice : null;
 
       return {
         id: apiProduct.id,
         name: apiProduct.name,
         image: apiProduct.thumbnail?.url || apiProduct.thumbnail || this.placeholderImage,
-        price: apiProduct.minPrice || 0,
+        price: bestSellingPrice || apiProduct.minPrice || 0,
         originalPrice: originalPrice,
         discount: discount,
         isNew: !!(apiProduct.newFrom || apiProduct.newTo),

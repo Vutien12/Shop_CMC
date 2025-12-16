@@ -1,10 +1,20 @@
 // src/User/stores/productStore.js
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { searchProducts } from '@/api/productApi.js';
-import { getCategories } from '@/api/categoryApi.js';
+import { searchProducts } from '@/api/productApi';
+import { getCategories } from '@/api/categoryApi';
+import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils';
 
-export const useProductStore = defineStore('product', () => {
+const isInWishlist = (productId) => {
+  try {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    return wishlist.some(item => item.productId === productId);
+  } catch {
+    return false;
+  }
+};
+
+export const useProductStore = defineStore('productStore', () => {
   // === STATE ===
   const products = ref([]);
   const latestProducts = ref([]);
@@ -82,13 +92,21 @@ export const useProductStore = defineStore('product', () => {
           ? today >= p.newFrom && today <= p.newTo
           : false;
 
+        // Calculate discount using utility function that matches backend
+        const discount = calculateProductDiscount(p);
+
+        // Get best selling price if available
+        const bestSellingPrice = getBestSellingPrice(p);
+        const originalPrice = bestSellingPrice ? p.minPrice : null;
+
         return {
           id: p.id,
           name: p.name,
-          price: p.minPrice,
+          price: bestSellingPrice || p.minPrice,
           maxPrice: p.maxPrice,
-          originalPrice: null,
-          badge: !p.inStock ? 'Out of Stock' : (isNew ? 'New' : null),
+          originalPrice: originalPrice,
+          discount: discount,
+          badge: !p.inStock ? 'Out of Stock' : (discount ? null : (isNew ? 'New' : null)),
           badgeColor: !p.inStock ? 'red' : (isNew ? 'green' : null),
           image: p.thumbnail?.url || p.thumbnail || '/placeholder.png',
           // Use API flag if provided, otherwise fallback to localStorage-based check

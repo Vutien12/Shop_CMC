@@ -131,7 +131,7 @@
               @click="selectCategory(category.id)"
             >
               <div class="category-icon">
-                <img v-if="category.icon" :src="category.icon" :alt="category.name" />
+                <img v-if="category.thumbnail" :src="category.thumbnail" :alt="category.name" />
                 <font-awesome-icon v-else :icon="getCategoryIcon(category.name)" />
               </div>
               <span class="category-name">{{ category.name }}</span>
@@ -217,7 +217,7 @@
                       <span class="price-range">{{ formatPrice(product.minPrice) }} - {{ formatPrice(product.maxPrice) }}</span>
                     </template>
                   </div>
-                  
+
                   <!-- Quick View Button -->
                   <button class="quick-view-btn" @click="navigateToProductDetail(product.id)">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -272,6 +272,7 @@
 <script>
 import { getCategories, getTrendingCategories } from '@/api/categoryApi'
 import { getProductsByCategory } from '@/api/productApi'
+import { calculateProductDiscount } from '@/Utils/discountUtils'
 
 export default {
   name: 'CategoryMenu',
@@ -305,7 +306,7 @@ export default {
     navigateToProducts(categoryId) {
       this.$router.push({
         name: 'Product',
-        query: { categoryId }
+        query: { category: categoryId }
       })
     },
 
@@ -352,7 +353,12 @@ export default {
       // Create a map for quick lookup
       const categoryMap = {}
       categories.forEach(cat => {
-        categoryMap[cat.id] = { ...cat, children: [], isExpanded: false }
+        categoryMap[cat.id] = {
+          ...cat,
+          thumbnail: cat.thumbnail?.url || cat.thumbnail,
+          children: [],
+          isExpanded: false
+        }
       })
 
       // Build tree structure
@@ -381,7 +387,12 @@ export default {
         console.log('Categories response:', response)
 
         if (response.code === 200 && response.result) {
-          const activeCategories = response.result.filter(cat => cat.isActive)
+          const activeCategories = response.result
+            .filter(cat => cat.isActive)
+            .map(cat => ({
+              ...cat,
+              thumbnail: cat.thumbnail?.url || cat.thumbnail
+            }))
           this.categories = activeCategories
 
           // Build tree structure for sidebar menu
@@ -497,11 +508,19 @@ export default {
         const response = await getTrendingCategories()
 
         if (response.code === 200 && response.result) {
-          this.showcaseCategories = response.result.slice(0, 6)
+          // Transform categories to extract thumbnail URL from object
+          this.showcaseCategories = response.result.slice(0, 6).map(cat => ({
+            ...cat,
+            thumbnail: cat.thumbnail?.url || cat.thumbnail
+          }))
         }
       } catch (error) {
         console.error('Error loading trending categories:', error)
-        this.showcaseCategories = this.categories.slice(0, 6)
+        // Transform fallback categories as well
+        this.showcaseCategories = this.categories.slice(0, 6).map(cat => ({
+          ...cat,
+          thumbnail: cat.thumbnail?.url || cat.thumbnail
+        }))
       } finally {
         this.loadingTrending = false
       }
@@ -553,16 +572,9 @@ export default {
       return today >= newFrom && today <= newTo
     },
 
-    // Calculate discount percentage
+    // Calculate discount percentage (using utility function that matches backend)
     calculateDiscount(product) {
-      if (!product.variants || product.variants.length === 0) return null
-
-      // Find variant with special price
-      const variantWithDiscount = product.variants.find(v => v.specialPrice && v.specialPrice < v.price)
-      if (!variantWithDiscount) return null
-
-      const discountPercent = Math.round(((variantWithDiscount.price - variantWithDiscount.specialPrice) / variantWithDiscount.price) * 100)
-      return discountPercent > 0 ? `-${discountPercent}%` : null
+      return calculateProductDiscount(product)
     },
 
     // Format price for display
