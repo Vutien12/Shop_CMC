@@ -1,8 +1,8 @@
 <template>
     <div class="data-table-page">
         <!-- Header -->
-        <PageBreadcrumb 
-            :title="title" 
+        <PageBreadcrumb
+            :title="title"
             :breadcrumbs="breadcrumbs"
             :home-route="homeRoute"
         />
@@ -33,8 +33,8 @@
                         <option :value="100">100</option>
                     </select>
                     <span class="entries-label">entries</span>
-                    
-                    <button 
+
+                    <button
                         v-if="showDeleteButton"
                         class="btn-delete"
                         :disabled="localSelectedIds.length === 0"
@@ -43,7 +43,7 @@
                         <i class="fa fa-trash"></i> Delete
                     </button>
                 </div>
-                
+
                 <div class="controls-right">
                     <!-- Custom filters slot -->
                     <div v-if="$slots['filters']" class="filters-slot">
@@ -52,8 +52,8 @@
 
                     <div class="search-box">
                         <i class="fa fa-search search-icon"></i>
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             v-model="localSearchQuery"
                             @input="handleSearch"
                             placeholder="Search here..."
@@ -69,16 +69,16 @@
                     <thead>
                         <tr>
                             <th class="th-checkbox" v-if="selectable" @click.stop>
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     id="select-all"
                                     :checked="allSelected"
                                     @change="toggleSelectAll"
                                     class="checkbox-input"
                                 >
                             </th>
-                            <th 
-                                v-for="column in columns" 
+                            <th
+                                v-for="column in columns"
                                 :key="column.key"
                                 :class="[`th-${column.key}`, { sortable: column.sortable }]"
                                 :style="column.width ? `width: ${column.width}` : ''"
@@ -86,9 +86,9 @@
                             >
                                 <div class="th-content">
                                     <span>{{ column.label }}</span>
-                                    <i 
+                                    <i
                                         v-if="column.sortable"
-                                        class="fa" 
+                                        class="fa"
                                         :class="getSortIcon(column.key)"
                                     ></i>
                                 </div>
@@ -96,27 +96,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr 
-                            v-for="row in paginatedData" 
+                        <tr
+                            v-for="row in paginatedData"
                             :key="row[rowKey]"
                             :class="['table-row', { 'clickable-row': rowClickable }]"
                             @click="handleRowClick(row)"
                         >
                             <td v-if="selectable" @click.stop>
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     :value="row[rowKey]"
                                     v-model="localSelectedIds"
                                     class="checkbox-input"
                                 >
                             </td>
-                            <td 
-                                v-for="column in columns" 
+                            <td
+                                v-for="column in columns"
                                 :key="column.key"
                             >
-                                <slot 
-                                    :name="`cell-${column.key}`" 
-                                    :row="row" 
+                                <slot
+                                    :name="`cell-${column.key}`"
+                                    :row="row"
                                     :value="row[column.key]"
                                 >
                                     {{ formatCellValue(row, column) }}
@@ -141,41 +141,41 @@
                 </div>
                 <div class="footer-right">
                     <div class="pagination">
-                        <button 
+                        <button
                             class="page-btn"
-                            :disabled="localCurrentPage === 1"
+                            :disabled="currentPage === 1"
                             @click="changePage(1)"
                         >
                             <i class="fa fa-angle-double-left"></i>
                         </button>
-                        <button 
+                        <button
                             class="page-btn"
-                            :disabled="localCurrentPage === 1"
-                            @click="changePage(localCurrentPage - 1)"
+                            :disabled="currentPage === 1"
+                            @click="changePage(currentPage - 1)"
                         >
                             <i class="fa fa-angle-left"></i>
                         </button>
-                        
-                        <button 
-                            v-for="page in visiblePages" 
+
+                        <button
+                            v-for="page in visiblePages"
                             :key="page"
                             class="page-btn"
-                            :class="{ active: page === localCurrentPage }"
+                            :class="{ active: page === currentPage }"
                             @click="changePage(page)"
                         >
                             {{ page }}
                         </button>
-                        
-                        <button 
+
+                        <button
                             class="page-btn"
-                            :disabled="localCurrentPage === totalPages"
-                            @click="changePage(localCurrentPage + 1)"
+                            :disabled="currentPage === totalPages"
+                            @click="changePage(currentPage + 1)"
                         >
                             <i class="fa fa-angle-right"></i>
                         </button>
-                        <button 
+                        <button
                             class="page-btn"
-                            :disabled="localCurrentPage === totalPages"
+                            :disabled="currentPage === totalPages"
                             @click="changePage(totalPages)"
                         >
                             <i class="fa fa-angle-double-right"></i>
@@ -197,7 +197,6 @@ export default {
     components: {
         PageBreadcrumb
     },
-    emits: ['delete', 'row-click'],
     props: {
         title: {
             type: String,
@@ -260,9 +259,18 @@ export default {
         perPage: {
             type: Number,
             default: 20
+        },
+        serverSide: {
+            type: Boolean,
+            default: false
+        },
+        pagination: {
+            type: Object,
+            default: null
+            // Format: { currentPage: 1, pageSize: 20, totalElements: 100, totalPages: 5 }
         }
     },
-    emits: ['delete', 'sort', 'search', 'page-change', 'row-click'],
+    emits: ['delete', 'sort', 'search', 'page-change', 'per-page-change', 'row-click'],
     setup(props, { emit }) {
         const localSelectedIds = ref([]);
         const localSearchQuery = ref('');
@@ -272,6 +280,11 @@ export default {
         const localPerPage = ref(props.perPage);
 
         const filteredData = computed(() => {
+            // In server-side mode, don't filter or sort locally
+            if (props.serverSide) {
+                return props.data;
+            }
+
             let result = [...props.data];
 
             // Search filter
@@ -307,33 +320,63 @@ export default {
         });
 
         const paginatedData = computed(() => {
+            // In server-side mode, data is already paginated from the server
+            if (props.serverSide) {
+                return props.data;
+            }
+
             const start = (localCurrentPage.value - 1) * localPerPage.value;
             const end = start + localPerPage.value;
             return filteredData.value.slice(start, end);
         });
 
         const totalPages = computed(() => {
+            // Use server-side pagination data if available
+            if (props.serverSide && props.pagination) {
+                return props.pagination.totalPages || 0;
+            }
             return Math.ceil(filteredData.value.length / localPerPage.value);
         });
 
         const filteredTotal = computed(() => {
+            // Use server-side pagination data if available
+            if (props.serverSide && props.pagination) {
+                return props.pagination.totalElements || 0;
+            }
             return filteredData.value.length;
         });
 
         const showingStart = computed(() => {
             if (filteredData.value.length === 0) return 0;
+            // Use server-side pagination data if available
+            if (props.serverSide && props.pagination) {
+                return (props.pagination.currentPage - 1) * props.pagination.pageSize + 1;
+            }
             return (localCurrentPage.value - 1) * localPerPage.value + 1;
         });
 
         const showingEnd = computed(() => {
+            // Use server-side pagination data if available
+            if (props.serverSide && props.pagination) {
+                const end = props.pagination.currentPage * props.pagination.pageSize;
+                return Math.min(end, props.pagination.totalElements);
+            }
             const end = localCurrentPage.value * localPerPage.value;
             return Math.min(end, filteredData.value.length);
+        });
+
+        const currentPage = computed(() => {
+            return props.serverSide && props.pagination
+                ? props.pagination.currentPage
+                : localCurrentPage.value;
         });
 
         const visiblePages = computed(() => {
             const pages = [];
             const total = totalPages.value;
-            const current = localCurrentPage.value;
+            const current = props.serverSide && props.pagination
+                ? props.pagination.currentPage
+                : localCurrentPage.value;
 
             if (total <= 5) {
                 for (let i = 1; i <= total; i++) {
@@ -383,12 +426,17 @@ export default {
         };
 
         const handleSearch = () => {
-            localCurrentPage.value = 1;
+            if (!props.serverSide) {
+                localCurrentPage.value = 1;
+            }
             emit('search', localSearchQuery.value);
         };
 
         const handlePerPageChange = () => {
             localCurrentPage.value = 1;
+            if (props.serverSide) {
+                emit('per-page-change', localPerPage.value);
+            }
         };
 
         const changePage = (page) => {
@@ -449,6 +497,7 @@ export default {
             showingStart,
             showingEnd,
             visiblePages,
+            currentPage,
             allSelected,
             toggleSelectAll,
             handleSort,
@@ -458,8 +507,8 @@ export default {
             changePage,
             handleDelete,
             handleRowClick,
-            formatCellValue
-            , goToCreate
+            formatCellValue,
+            goToCreate
         };
     }
 };
@@ -468,7 +517,7 @@ export default {
 <style scoped>
 .data-table-page {
     margin:20px;
-    padding:0,5px;
+    padding:0 5px;
     min-height: 100vh;
 }
 
@@ -793,41 +842,41 @@ export default {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .controls-left,
     .controls-right {
         width: 100%;
     }
-    
+
     .search-box {
         width: 100%;
     }
-    
+
     .search-input {
         width: 100%;
     }
-    
+
     /* Responsive for table content */
     .table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     .data-table {
         min-width: 600px;
     }
-    
+
     .data-table th {
         padding: 10px 8px;
         font-size: 12px;
         white-space: nowrap;
     }
-    
+
     .data-table td {
         padding: 12px 8px;
         font-size: 13px;
     }
-    
+
     .data-table th:not(.th-checkbox),
     .data-table td:not(:first-child) {
         min-width: 120px;
@@ -838,37 +887,37 @@ export default {
     .table-controls {
         padding: 12px;
     }
-    
+
     .controls-left {
         flex-wrap: wrap;
         gap: 8px;
     }
-    
+
     .search-input {
         padding: 6px 10px 6px 32px;
         font-size: 13px;
     }
-    
+
     /* Smaller table content for mobile */
     .data-table {
         min-width: 500px;
     }
-    
+
     .data-table th {
         padding: 8px 6px;
         font-size: 11px;
     }
-    
+
     .data-table td {
         padding: 10px 6px;
         font-size: 12px;
     }
-    
+
     .data-table th:not(.th-checkbox),
     .data-table td:not(:first-child) {
         min-width: 100px;
     }
-    
+
     .checkbox-input {
         width: 14px;
         height: 14px;

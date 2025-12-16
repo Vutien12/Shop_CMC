@@ -15,7 +15,7 @@
               class="brand-card"
             >
               <img
-                :src="brand.fileLogo"
+                :src="brand.fileLogo?.url || brand.fileLogo"
                 :alt="brand.name"
                 class="brand-logo"
                 @error="handleImageError"

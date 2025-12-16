@@ -104,6 +104,7 @@ export default {
       isEditMode: false,
       productId: null,
       redirectAfterSave: '0',
+      pendingDeleteFiles: [], // Track files to delete on save (only in edit mode)
       form: {
         name: '',
         slug: '',
@@ -556,6 +557,21 @@ export default {
 
         // Get the product ID
         const productId = this.productId || response.result?.id;
+
+        // Delete pending files (only in edit mode)
+        if (this.isEditMode && this.pendingDeleteFiles.length > 0) {
+          console.log('Deleting pending files:', this.pendingDeleteFiles);
+          for (const fileId of this.pendingDeleteFiles) {
+            try {
+              await deleteEntityFile(fileId);
+              console.log(`Entity file ${fileId} deleted successfully`);
+            } catch (error) {
+              console.error(`Error deleting entity file ${fileId}:`, error);
+            }
+          }
+          // Clear pending delete list
+          this.pendingDeleteFiles = [];
+        }
 
         // Attach images to entity-files table
         if (productId && this.form.media && this.form.media.length > 0) {
@@ -1041,20 +1057,17 @@ export default {
     },
 
     async removeThumbnailHandler() {
-      // Remove thumbnail and delete from server if it has an id
+      // Track file for deletion in edit mode, remove immediately from UI
       if (this.form.thumbnail && this.form.thumbnail.id) {
-        try {
-          console.log('[Parent] Deleting thumbnail entity file:', this.form.thumbnail.id);
-          await deleteEntityFile(this.form.thumbnail.id);
-          console.log('[Parent] Thumbnail entity file deleted successfully');
-        } catch (error) {
-          console.error('[Parent] Error deleting thumbnail entity file:', error);
-          const notification = useNotification();
-          notification.error('Error!', 'Failed to delete thumbnail from server');
-          return;
+        if (this.isEditMode) {
+          // In edit mode: track for deletion on save
+          console.log('[Parent] Tracking thumbnail for deletion on save:', this.form.thumbnail.id);
+          this.pendingDeleteFiles.push(this.form.thumbnail.id);
         }
+        // In create mode: do nothing, just remove from UI
       }
 
+      // Remove from UI immediately
       this.form.thumbnail = null;
       this.syncMediaArray();
     },
@@ -1065,24 +1078,21 @@ export default {
                 currentGallery: this.form.gallery,
                 length: this.form.gallery ? this.form.gallery.length : 0
             });
-            // Remove gallery image at specific index
+
+            // Track file for deletion in edit mode, remove immediately from UI
             if (this.form.gallery && this.form.gallery.length > galleryIndex) {
                 const galleryItem = this.form.gallery[galleryIndex];
 
                 if (galleryItem.id) {
-                    try {
-                        console.log('[Parent] Deleting entity file:', galleryItem.id);
-                        await deleteEntityFile(galleryItem.id);
-                        console.log('[Parent] Entity file deleted successfully');
-                    } catch (error) {
-                        console.error('[Parent] Error deleting entity file:', error);
-                        const notification = useNotification();
-                        notification.error('Error!', 'Failed to delete image from server');
-                        return;
+                    if (this.isEditMode) {
+                        // In edit mode: track for deletion on save
+                        console.log('[Parent] Tracking gallery item for deletion on save:', galleryItem.id);
+                        this.pendingDeleteFiles.push(galleryItem.id);
                     }
+                    // In create mode: do nothing, just remove from UI
                 }
 
-                // Create new array for reactivity
+                // Remove from UI immediately
                 const newGallery = [...this.form.gallery];
                 newGallery.splice(galleryIndex, 1);
                 console.log('[Parent] After splice', { newLength: newGallery.length, newGallery });
