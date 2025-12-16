@@ -7,8 +7,14 @@
         :create-route="{ name: 'admin.products.create' }"
         create-button-text="Create Product"
         :row-clickable="true"
+        :pagination="paginationData"
+        :server-side="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
+        @page-change="handlePageChange"
+        @per-page-change="handlePerPageChange"
+        @sort="handleSort"
+        @search="handleSearch"
     >
         <!-- Custom cell for Thumbnail column -->
         <template #cell-thumbnail="{ value }">
@@ -77,6 +83,23 @@ export default {
         const notification = useNotification();
         const products = ref([]);
 
+        // Pagination state
+        const currentPage = ref(0); // API uses 0-based indexing
+        const pageSize = ref(20);
+        const totalElements = ref(0);
+        const totalPages = ref(0);
+        const searchQuery = ref('');
+        const sortBy = ref('updatedAt');
+        const sortDirection = ref('desc');
+
+        // Pagination data for DataTable
+        const paginationData = ref({
+            currentPage: 1, // DataTable uses 1-based indexing
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0
+        });
+
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '60px' },
             { key: 'thumbnail', label: 'Thumbnail', sortable: false, width: '80px' },
@@ -89,20 +112,43 @@ export default {
 
         const loadProducts = async () => {
             try {
-                // Gọi API search products
-                const response = await searchProducts({
-                    page: 0, // API page bắt đầu từ 0
-                    size: 20
-                });
+                // Gọi API search products với các tham số phân trang
+                const params = {
+                    page: currentPage.value,
+                    size: pageSize.value,
+                    sortBy: sortBy.value,
+                    direction: sortDirection.value.toUpperCase()
+                };
+
+                // Thêm search query nếu có
+                if (searchQuery.value) {
+                    params.keyword = searchQuery.value;
+                }
+
+                const response = await searchProducts(params);
 
                 console.log('API Response:', response);
                 console.log('Response.result:', response.result);
 
                 // searchProducts đã return response.data
-                // API response: { code, message, result: { content: [...], ... } }
-                const productList = response.result?.content || [];
+                // API response: { code, message, result: { content: [...], pageable: {...}, totalElements, totalPages, ... } }
+                const result = response.result || {};
+                const productList = result.content || [];
+
+                // Cập nhật pagination state từ API response
+                totalElements.value = result.totalElements || 0;
+                totalPages.value = result.totalPages || 0;
+
+                // Cập nhật paginationData cho DataTable (1-based indexing)
+                paginationData.value = {
+                    currentPage: currentPage.value + 1,
+                    pageSize: pageSize.value,
+                    totalElements: totalElements.value,
+                    totalPages: totalPages.value
+                };
 
                 console.log('Product list:', productList);
+                console.log('Pagination:', paginationData.value);
 
                 products.value = productList.map(product => ({
                     id: product.id,
@@ -120,6 +166,14 @@ export default {
             } catch (error) {
                 console.error('Error loading products:', error);
                 products.value = [];
+                totalElements.value = 0;
+                totalPages.value = 0;
+                paginationData.value = {
+                    currentPage: 1,
+                    pageSize: pageSize.value,
+                    totalElements: 0,
+                    totalPages: 0
+                };
             }
         };
 
@@ -179,6 +233,30 @@ export default {
             return `${diffYears} years ago`;
         };
 
+        const handlePageChange = async (page) => {
+            currentPage.value = page - 1; // Convert to 0-based indexing for API
+            await loadProducts();
+        };
+
+        const handlePerPageChange = async (perPage) => {
+            pageSize.value = perPage;
+            currentPage.value = 0; // Reset to first page
+            await loadProducts();
+        };
+
+        const handleSort = async ({ column, direction }) => {
+            sortBy.value = column;
+            sortDirection.value = direction;
+            currentPage.value = 0; // Reset to first page
+            await loadProducts();
+        };
+
+        const handleSearch = async (query) => {
+            searchQuery.value = query;
+            currentPage.value = 0; // Reset to first page
+            await loadProducts();
+        };
+
         onMounted(() => {
             loadProducts();
         });
@@ -186,8 +264,13 @@ export default {
         return {
             products,
             columns,
+            paginationData,
             handleRowClick,
             handleDelete,
+            handlePageChange,
+            handlePerPageChange,
+            handleSort,
+            handleSearch,
             formatPrice,
             formatRelativeTime
         };

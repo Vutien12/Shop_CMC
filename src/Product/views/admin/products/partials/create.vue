@@ -106,6 +106,8 @@ export default {
       isEditMode: false,
       productId: null,
       redirectAfterSave: '0',
+      pendingDeleteFiles: [],
+      pendingAttachFiles: [],
       form: {
         name: '',
         slug: '',
@@ -543,12 +545,12 @@ export default {
           content: this.form.description
         });
 
-        // Ensure variants are generated (especially for simple products without variations)
+        // Ensure variants are generated
         if (this.form.variants.length === 0) {
           this.generateVariants();
         }
 
-        // Transform form data sang format API backend yêu cầu
+        // Transform form data
         const productData = this.transformFormData();
 
         console.log('Submitting product data:', productData);
@@ -559,7 +561,7 @@ export default {
           response = await updateProduct(this.productId, productData);
           console.log('Product updated successfully:', response);
         } else {
-          // Create new product
+          // Create new product - Backend will handle image attachments
           response = await createProduct(productData);
           console.log('Product created successfully:', response);
         }
@@ -567,37 +569,47 @@ export default {
         // Get the product ID
         const productId = this.productId || response.result?.id;
 
-        // Attach images to entity-files table
-        if (productId && this.form.media && this.form.media.length > 0) {
-          for (let i = 0; i < this.form.media.length; i++) {
-            const media = this.form.media[i];
-
-            // Only attach if media has an id (from file manager)
-            if (media.id) {
+        // ONLY handle image operations in EDIT mode
+        if (this.isEditMode && productId) {
+          // Delete pending files
+          if (this.pendingDeleteFiles.length > 0) {
+            console.log('Deleting pending files:', this.pendingDeleteFiles);
+            for (const fileId of this.pendingDeleteFiles) {
               try {
-                // First image is thumbnail, rest are gallery
-                const zone = i === 0 ? 'THUMBNAIL' : 'GALLERY';
-
-                await attachFileToEntity({
-                  fileId: media.id,
-                  entityId: productId,
-                  entityType: 'PRODUCT',
-                  zone: zone
-                });
-                console.log(`${zone === 'thumbnail' ? 'Thumbnail' : 'Gallery'} image ${media.id} attached successfully`);
+                await deleteEntityFile(fileId);
+                console.log(`Entity file ${fileId} deleted successfully`);
               } catch (error) {
-                console.error(`Error attaching image ${media.id}:`, error);
+                console.error(`Error deleting entity file ${fileId}:`, error);
               }
             }
+            this.pendingDeleteFiles = [];
+          }
+
+          // Attach NEW files (only files added during this edit session)
+          if (this.pendingAttachFiles.length > 0) {
+            console.log('Attaching new files:', this.pendingAttachFiles);
+            for (const fileInfo of this.pendingAttachFiles) {
+              try {
+                await attachFileToEntity({
+                  fileId: fileInfo.fileId,
+                  entityId: productId,
+                  entityType: 'PRODUCT',
+                  zone: fileInfo.zone
+                });
+                console.log(`${fileInfo.zone} image ${fileInfo.fileId} attached successfully`);
+              } catch (error) {
+                console.error(`Error attaching image ${fileInfo.fileId}:`, error);
+              }
+            }
+            this.pendingAttachFiles = [];
           }
         }
+        // In CREATE mode: do NOT attach images manually - backend handles it
 
         // Handle success
         if (this.redirectAfterSave === '1') {
-          // Redirect to products list
           this.$router.push({ name: 'admin.products.index' });
         } else {
-          // Redirect to edit page của product vừa tạo/cập nhật
           if (productId) {
             this.$router.push({ name: 'admin.products.edit', params: { id: productId } });
           }
@@ -1035,33 +1047,44 @@ export default {
       };
 
       if (this.currentImageTarget === 'thumbnail') {
-        // Set thumbnail directly
         this.form.thumbnail = newImage;
+
+        // Track for attachment in edit mode only
+        if (this.isEditMode) {
+          this.pendingAttachFiles.push({
+            fileId: media.id,
+            zone: 'THUMBNAIL'
+          });
+        }
       } else if (this.currentImageTarget === 'gallery') {
-        // Add to gallery array
         if (!this.form.gallery) {
           this.form.gallery = [];
         }
         this.form.gallery.push(newImage);
+
+        // Track for attachment in edit mode only
+        if (this.isEditMode) {
+          this.pendingAttachFiles.push({
+            fileId: media.id,
+            zone: 'GALLERY'
+          });
+        }
       }
 
-      // Sync to media array for component compatibility
       this.syncMediaArray();
       this.closeFileManager();
     },
 
     async removeThumbnailHandler() {
-      // Remove thumbnail and delete from server if it has an id
       if (this.form.thumbnail && this.form.thumbnail.id) {
-        try {
-          console.log('[Parent] Deleting thumbnail entity file:', this.form.thumbnail.id);
-          await deleteEntityFile(this.form.thumbnail.id);
-          console.log('[Parent] Thumbnail entity file deleted successfully');
-        } catch (error) {
-          console.error('[Parent] Error deleting thumbnail entity file:', error);
-          const notification = useNotification();
-          notification.error('Error!', 'Failed to delete thumbnail from server');
-          return;
+        if (this.isEditMode) {
+          console.log('[Parent] Tracking thumbnail for deletion on save:', this.form.thumbnail.id);
+          this.pendingDeleteFiles.push(this.form.thumbnail.id);
+
+          // Remove from pending attach list if it was just added
+          this.pendingAttachFiles = this.pendingAttachFiles.filter(
+            f => f.fileId !== this.form.thumbnail.id
+          );
         }
       }
 
@@ -1069,40 +1092,35 @@ export default {
       this.syncMediaArray();
     },
 
-        async removeGalleryHandler(galleryIndex) {
-            console.log('[Parent] removeGalleryHandler called', {
-                index: galleryIndex,
-                currentGallery: this.form.gallery,
-                length: this.form.gallery ? this.form.gallery.length : 0
-            });
-            // Remove gallery image at specific index
-            if (this.form.gallery && this.form.gallery.length > galleryIndex) {
-                const galleryItem = this.form.gallery[galleryIndex];
+    async removeGalleryHandler(galleryIndex) {
+      console.log('[Parent] removeGalleryHandler called', {
+        index: galleryIndex,
+        currentGallery: this.form.gallery,
+        length: this.form.gallery ? this.form.gallery.length : 0
+      });
 
-                if (galleryItem.id) {
-                    try {
-                        console.log('[Parent] Deleting entity file:', galleryItem.id);
-                        await deleteEntityFile(galleryItem.id);
-                        console.log('[Parent] Entity file deleted successfully');
-                    } catch (error) {
-                        console.error('[Parent] Error deleting entity file:', error);
-                        const notification = useNotification();
-                        notification.error('Error!', 'Failed to delete image from server');
-                        return;
-                    }
-                }
+      if (this.form.gallery && this.form.gallery.length > galleryIndex) {
+        const galleryItem = this.form.gallery[galleryIndex];
 
-                // Create new array for reactivity
-                const newGallery = [...this.form.gallery];
-                newGallery.splice(galleryIndex, 1);
-                console.log('[Parent] After splice', { newLength: newGallery.length, newGallery });
-                this.form.gallery = newGallery;
-                console.log('[Parent] After assignment', { currentLength: this.form.gallery.length });
-            } else {
-                console.error('[Parent] Invalid index or gallery not initialized!');
-            }
-            this.syncMediaArray();
-        },
+        if (galleryItem.id) {
+          if (this.isEditMode) {
+            console.log('[Parent] Tracking gallery item for deletion on save:', galleryItem.id);
+            this.pendingDeleteFiles.push(galleryItem.id);
+
+            // Remove from pending attach list if it was just added
+            this.pendingAttachFiles = this.pendingAttachFiles.filter(
+              f => f.fileId !== galleryItem.id
+            );
+          }
+        }
+
+        const newGallery = [...this.form.gallery];
+        newGallery.splice(galleryIndex, 1);
+        this.form.gallery = newGallery;
+      }
+
+      this.syncMediaArray();
+    },
 
     updateGalleryHandler(newGalleryArray) {
       // Update gallery from drag and drop
