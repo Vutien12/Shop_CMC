@@ -107,13 +107,13 @@ export default {
             loading.value = true;
             try {
                 const response = await getAttributeSet(route.params.id);
-                const data = response.data.result || response.data;
+                const data = response.result || response;
                 formData.value = {
                     name: data.name || ''
                 };
             } catch (error) {
-                console.error('Error loading attribute set:', error);
-                notification.error('Error', 'Failed to load attribute set');
+                console.error('Failed to load attribute set:', error);
+                notification.error('Lỗi!', 'Không thể tải attribute set');
                 router.push({ name: 'admin.attribute-sets.index' });
             } finally {
                 loading.value = false;
@@ -123,7 +123,7 @@ export default {
         const handleSubmit = async () => {
             // Validation
             if (!formData.value.name || formData.value.name.trim() === '') {
-                notification.error('Validation error', 'Please enter attribute set name');
+                notification.error('Lỗi kiểm tra', 'Vui lòng nhập tên attribute set');
                 return;
             }
 
@@ -131,15 +131,15 @@ export default {
             try {
                 if (isEditMode.value) {
                     await updateAttributeSet(route.params.id, formData.value);
-                    notification.success('Success', 'Attribute set updated successfully');
+                    notification.success('Thành công!', 'Đã cập nhật attribute set');
                 } else {
                     await createAttributeSet(formData.value);
-                    notification.success('Success', 'Attribute set created successfully');
+                    notification.success('Thành công!', 'Đã tạo attribute set');
                 }
                 router.push({ name: 'admin.attribute-sets.index' });
             } catch (error) {
-                console.error('Error saving attribute set:', error);
-                notification.error('Error', 'Failed to save attribute set: ' + (error.response?.data?.message || error.message));
+                console.error('Failed to save attribute set:', error);
+                notification.error('Lỗi!', 'Không thể lưu attribute set: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }

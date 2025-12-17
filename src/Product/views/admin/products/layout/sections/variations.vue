@@ -130,6 +130,10 @@
                                                     <option value="color">
                                                         {{ trans('product::products.form.variations.variation_types.color') }}
                                                     </option>
+
+                                                    <option value="image">
+                                                        {{ trans('product::products.form.variations.variation_types.image') }}
+                                                    </option>
                                                 </select>
 
                                                 <span
@@ -159,6 +163,10 @@
                                                     </th>
                                                     <th v-if="variation.type === 'color'" style="width: 25%;">
                                                         {{ trans('product::products.form.variations.color') }}
+                                                        <span class="text-red">*</span>
+                                                    </th>
+                                                    <th v-if="variation.type === 'image'" style="width: 25%;">
+                                                        {{ trans('product::products.form.variations.image') }}
                                                         <span class="text-red">*</span>
                                                     </th>
                                                     <th style="width: 80px;"></th>
@@ -230,17 +238,25 @@
                                                         >
                                                         </span>
                                                     </td>
-                                                    <td v-else-if="variation.type === 'image'">
-                                                        <div class="d-flex">
-                                                            <div
-                                                                class="image-holder"
+                                                    <td v-if="variation.type === 'image'">
+                                                        <div class="image-picker-cell">
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-default image-picker-btn"
                                                                 @click="chooseVariationImage(index, variation.uid, valueIndex, value.uid)"
                                                             >
-                                                                <template v-if="value.image.id">
-                                                                    <img :src="value.image.path" alt="variation image">
-                                                                </template>
-
-                                                                <img v-else :src="placeholderImage" class="placeholder-image" alt="Placeholder image">
+                                                                <i class="fa fa-folder-open"></i> Browse
+                                                            </button>
+                                                            <div v-if="value.image && value.image.path" class="image-preview-small">
+                                                                <img :src="value.image.path" alt="Preview">
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn-remove-image-small"
+                                                                    @click.stop="removeVariationImage(index, variation.uid, valueIndex, value.uid)"
+                                                                    title="Remove image"
+                                                                >
+                                                                    <i class="fa fa-times"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
 
@@ -465,6 +481,8 @@ export default {
                 newValue.color = ''; // Để rỗng để hiển thị checkerboard
             } else if (variation.type === 'image') {
                 newValue.image = { id: null, path: '' };
+            } else {
+                newValue.value = '';
             }
 
             variation.values.push(newValue);
@@ -497,6 +515,14 @@ export default {
 
         chooseVariationImage(variationIndex, variationUid, valueIndex, valueUid) {
             this.$emit('choose-variation-image', { variationIndex, variationUid, valueIndex, valueUid });
+        },
+
+        removeVariationImage(variationIndex, variationUid, valueIndex, valueUid) {
+            const variation = this.form.variations[variationIndex];
+            const value = variation.values[valueIndex];
+            
+            // Xóa image
+            value.image = { id: null, path: '' };
         },
 
         generateVariants() {
@@ -539,7 +565,18 @@ export default {
                     if (variationType === 'color') {
                         newValue.color = value.value || value.color || ''; // Để rỗng để hiển thị checkerboard
                     } else if (variationType === 'image') {
-                        newValue.image = value.image || { id: null, path: value.value || '' };
+                        // Đảm bảo luôn có object image với cấu trúc đúng
+                        if (value.image && typeof value.image === 'object') {
+                            newValue.image = { 
+                                id: value.image.id || null, 
+                                path: value.image.path || '' 
+                            };
+                        } else {
+                            newValue.image = { 
+                                id: null, 
+                                path: value.value || value.image || '' 
+                            };
+                        }
                     } else {
                         // For text or other types, store value
                         newValue.value = value.value || '';
@@ -662,6 +699,65 @@ export default {
 .variation-values table td.text-center .drag-handle i {
     display: inline-block;
     margin: 0 0.5px;
+}
+
+/* Image picker styles */
+.image-picker-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.image-picker-btn {
+    white-space: nowrap;
+    padding: 6px 12px;
+}
+
+.image-picker-btn i {
+    margin-right: 4px;
+}
+
+.image-preview-small {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.image-preview-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-remove-image-small {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    border-radius: 3px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.btn-remove-image-small:hover {
+    background: rgba(189, 33, 48, 1);
+}
+
+.btn-remove-image-small i {
+    margin: 0;
 }
 
 /* Fix spacing between Name and Type columns */

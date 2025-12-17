@@ -1,38 +1,81 @@
 import axiosInstance from './axiosInstance';
 
 /**
+ * Get all attributes
+ */
+export const getAttributes = async () => {
+    try {
+        const response = await axiosInstance.get('/attributes');
+        return response.data;
+    } catch (error) {
+        console.error('Error getting attributes:', error);
+        throw error;
+    }
+};
+
+/**
  * Search attributes with pagination and filters
  */
-export const searchAttributes = (params) => {
-    return axiosInstance.get('/attributes/search', { params });
+export const searchAttributes = async (params = {}) => {
+    try {
+        const response = await axiosInstance.get('/attributes/search', { params });
+        return response.data;
+    } catch (error) {
+        console.error('Error searching attributes:', error);
+        throw error;
+    }
 };
 
 /**
  * Get a single attribute by ID
  */
-export const getAttribute = (id) => {
-    return axiosInstance.get(`/attributes/${id}`);
+export const getAttribute = async (id) => {
+    try {
+        const response = await axiosInstance.get(`/attributes/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error getting attribute ${id}:`, error);
+        throw error;
+    }
 };
 
 /**
  * Create a new attribute
  */
-export const createAttribute = (data) => {
-    return axiosInstance.post('/attributes', data);
+export const createAttribute = async (data) => {
+    try {
+        const response = await axiosInstance.post('/attributes', data);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating attribute:', error);
+        throw error;
+    }
 };
 
 /**
  * Update an existing attribute
  */
-export const updateAttribute = (id, data) => {
-    return axiosInstance.put(`/attributes/${id}`, data);
+export const updateAttribute = async (id, data) => {
+    try {
+        const response = await axiosInstance.put(`/attributes/${id}`, data);
+        return response.data;
+    } catch (error) {
+        console.error(`Error updating attribute ${id}:`, error);
+        throw error;
+    }
 };
 
 /**
  * Delete a single attribute
  */
-export const deleteAttribute = (id) => {
-    return axiosInstance.delete(`/attributes/${id}`);
+export const deleteAttribute = async (id) => {
+    try {
+        const response = await axiosInstance.delete(`/attributes/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error deleting attribute ${id}:`, error);
+        throw error;
+    }
 };
 
 /**

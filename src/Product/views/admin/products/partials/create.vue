@@ -174,7 +174,8 @@ export default {
       },
       placeholderImage: '/assets/placeholder_image.png',
       isFileManagerOpen: false,
-      currentImageTarget: null, // 'thumbnail' or 'gallery'
+      currentImageTarget: null, // 'thumbnail', 'gallery', or 'variation'
+      currentVariationImageData: null, // Store variation image selection context
       isLoadingData: false,
     };
   },
@@ -420,7 +421,7 @@ export default {
               if (variation.type?.toLowerCase() === 'color') {
                 valueObj.color = value.value;
               } else if (variation.type?.toLowerCase() === 'image') {
-                valueObj.image = { path: value.value };
+                valueObj.image = { id: null, path: value.value || '' };
               }
 
               return valueObj;
@@ -1068,8 +1069,10 @@ export default {
     },
 
     chooseVariationImage(data) {
-      // Handle choosing image for variation value
-      console.log('Choose variation image:', data);
+      // Store variation image context and open file manager
+      this.currentImageTarget = 'variation';
+      this.currentVariationImageData = data;
+      this.isFileManagerOpen = true;
     },
 
 
@@ -1095,6 +1098,7 @@ export default {
     closeFileManager() {
       this.isFileManagerOpen = false;
       this.currentImageTarget = null;
+      this.currentVariationImageData = null;
     },
 
     handleImageSelect(media) {
@@ -1127,6 +1131,19 @@ export default {
             zone: 'GALLERY'
           });
         }
+      } else if (this.currentImageTarget === 'variation' && this.currentVariationImageData) {
+        // Handle variation value image selection
+        const { variationIndex, valueIndex } = this.currentVariationImageData;
+        const variation = this.form.variations[variationIndex];
+        const value = variation.values[valueIndex];
+        
+        // Update value.image with structure { id, path }
+        value.image = {
+          id: media.id,
+          path: media.path
+        };
+        
+        console.log('Updated variation value image:', value);
       }
 
       this.syncMediaArray();

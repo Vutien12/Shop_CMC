@@ -32,10 +32,10 @@
                         <li class="breadcrumb-item">
                             <!-- Clickable link for parent items (not the last one) -->
                             <a 
-                                v-if="item.route && index < breadcrumbItems.length - 1"
+                                v-if="(item.route || item.to) && index < breadcrumbItems.length - 1"
                                 href="#" 
                                 class="breadcrumb-link" 
-                                @click.prevent="goTo(item.route)"
+                                @click.prevent="goTo(item.route || item.to)"
                             >
                                 {{ item.label }}
                             </a>

@@ -11,7 +11,7 @@
 
         <div class="box-body">
             <div id="product-attributes-wrapper">
-                <div class="table-responsive">
+                <div v-if="form.attributes.length > 0" class="table-responsive">
                     <table class="options table table-bordered">
                         <thead class="hidden-xs">
                             <tr>

@@ -37,37 +37,37 @@
           </div>
         </div>
 
-        <!-- Right Content -->
-        <div class="col-lg-9 col-md-8">
-          <div class="accordion-box-content">
-            <div class="tab-content clearfix">
-              <!-- General Tab -->
-              <div
-                class="tab-pane fade"
-                :class="{ 'in active': activeTab === 'general' }"
-                id="general"
-              >
-                <h4 class="tab-content-title">General</h4>
-
-                <div class="form-group-wrapper">
-                  <label for="attribute_set_id" class="form-label">
-                    Attribute set
-                    <span class="text-red">*</span>
-                  </label>
-                  <div class="form-input-wrapper">
-                    <select
-                      v-model="form.attribute_set_id"
-                      name="attribute_set_id"
-                      class="form-control"
-                      id="attribute_set_id"
-                    >
-                      <option value="">Please select</option>
-                      <option v-for="set in attributeSets" :key="set.id" :value="set.id">
-                        {{ set.name }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
+                <!-- Right Content -->
+                <div class="col-lg-9 col-md-8">
+                    <div class="accordion-box-content">
+                        <div class="tab-content clearfix">
+                            <!-- General Tab -->
+                            <div class="tab-pane fade" :class="{ 'in active': activeTab === 'general' }" id="general">
+                                <h4 class="tab-content-title">General</h4>
+                                
+                                <div class="form-group-wrapper">
+                                    <label for="attribute_set_id" class="form-label">
+                                        Attribute set
+                                        <span class="text-red">*</span>
+                                    </label>
+                                    <div class="form-input-wrapper">
+                                        <select
+                                            v-model="form.attribute_set_id"
+                                            name="attribute_set_id"
+                                            class="form-control"
+                                            id="attribute_set_id"
+                                        >
+                                            <option value="">Please select</option>
+                                            <option 
+                                                v-for="set in attributeSets" 
+                                                :key="set.id" 
+                                                :value="String(set.id)"
+                                            >
+                                                {{ set.name }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
 
                 <div class="form-group-wrapper">
                   <label for="name" class="form-label">
@@ -110,29 +110,29 @@
                         </div>
                       </div>
 
-                      <!-- Simple Multi-select dropdown -->
-                      <select
-                        v-show="isCategoryDropdownOpen"
-                        multiple
-                        name="categories"
-                        id="categories"
-                        class="form-control categories-select"
-                        @change="handleCategoriesChange"
-                        size="8"
-                        style="width: 100%"
-                      >
-                        <option
-                          v-for="category in categories"
-                          :key="category.id"
-                          :value="category.id"
-                          :selected="form.categories.includes(category.id)"
-                        >
-                          {{ category.name }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                                            <!-- Simple Multi-select dropdown -->
+                                            <select
+                                                v-show="isCategoryDropdownOpen"
+                                                multiple
+                                                name="categories"
+                                                id="categories"
+                                                class="form-control categories-select"
+                                                @change="handleCategoriesChange"
+                                                size="8"
+                                                style="width: 100%;"
+                                            >
+                                                <option 
+                                                    v-for="category in getCategoryTree()" 
+                                                    :key="category.id" 
+                                                    :value="category.id"
+                                                    :selected="form.categories.includes(category.id)"
+                                                >
+                                                    {{ getIndent(category.level) }} {{ category.name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
 
                 <div class="form-group-wrapper">
                   <label for="is_filterable" class="form-label">Filterable</label>
@@ -255,69 +255,81 @@ export default {
     const attributeSets = ref([])
     const categories = ref([])
 
-    const form = reactive({
-      attribute_set_id: '',
-      name: '',
-      categories: [],
-      is_filterable: false,
-      values: [{ value: '' }],
-    })
+        const form = reactive({
+            attribute_set_id: '',
+            name: '',
+            categories: [],
+            is_filterable: false,
+            values: [
+                { value: '' }
+            ]
+        });
 
-    const isEditMode = computed(() => !!route.params.id)
 
-    // Load attribute sets from API
-    const loadAttributeSets = async () => {
-      try {
-        const response = await getAttributeSets()
-        const data = response.data
+        const isEditMode = computed(() => !!route.params.id);
 
-        if (data.code === 200 && data.result) {
-          attributeSets.value = data.result.content || data.result || []
-        } else {
-          attributeSets.value = []
-        }
-      } catch (error) {
-        console.error('Error loading attribute sets:', error)
-        notification.error('Error', 'Failed to load attribute sets')
-        attributeSets.value = []
-      }
-    }
+        // Load attribute sets and categories from API
+        const loadInitialData = async () => {
+            try {
+                const [attributeSetsRes, categoriesRes] = await Promise.all([
+                    getAttributeSets(),
+                    getCategories()
+                ]);
 
-    // Load categories from API
-    const loadCategories = async () => {
-      try {
-        const response = await getCategories()
-        console.log('Categories API response:', response)
-        const data = response.data
-        console.log('Categories data:', data)
+                if (attributeSetsRes.code === 200) {
+                    const items = attributeSetsRes.result?.content ?? attributeSetsRes.result ?? [];
+                    attributeSets.value = items;
+                }
 
-        if (data.code === 200 && data.result) {
-          categories.value = data.result || []
-          console.log('Categories loaded:', categories.value)
-        } else {
-          console.warn('Invalid categories response:', data)
-          categories.value = []
-        }
-      } catch (error) {
-        console.error('Error loading categories:', error)
-        notification.error('Error', 'Failed to load categories')
-        categories.value = []
-      }
-    }
+                if (categoriesRes.code === 200) {
+                    const items = categoriesRes.result?.content ?? categoriesRes.result ?? [];
+                    categories.value = items;
+                }
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+                notification.error('Lỗi!', 'Không thể tải dữ liệu ban đầu');
+            }
+        };
 
-    // Category methods
-    const getCategoryName = (categoryId) => {
-      if (!categories.value || categories.value.length === 0) {
-        console.warn('Categories not loaded yet')
-        return `Category ${categoryId}`
-      }
-      const category = categories.value.find((c) => c.id === categoryId)
-      if (!category) {
-        console.warn(`Category with id ${categoryId} not found in categories:`, categories.value)
-        return `Category ${categoryId}`
-      }
-      return category.name
-    }
+        // Category methods
+        const getCategoryTree = () => {
+            // Build flattened tree with level info for indentation
+            const tree = [];
+            const buildTree = (cats, level = 0) => {
+                cats.forEach(category => {
+                    tree.push({
+                        id: category.id,
+                        name: category.name,
+                        parentId: category.parentId,
+                        level: level
+                    });
+
+                    // Find children
+                    const children = categories.value.filter(c => c.parentId === category.id);
+                    if (children.length > 0) {
+                        buildTree(children, level + 1);
+                    }
+                });
+            };
+
+            // Start with root categories (parentId = null)
+            const rootCategories = categories.value.filter(c => c.parentId === null);
+            buildTree(rootCategories);
+
+            return tree;
+        };
+
+        const getIndent = (level) => {
+            // Create indentation using pipe symbols like FleetCart: ¦–– ¦–– Category
+            if (level === 0) return '';
+            return '¦–– '.repeat(level);
+        };
+
+        const getCategoryName = (categoryId) => {
+            const categoryTree = getCategoryTree();
+            const found = categoryTree.find(c => c.id === categoryId);
+            return found ? found.name : '';
+        };
 
     const removeCategory = (categoryId) => {
       const index = form.categories.indexOf(categoryId)
@@ -356,33 +368,65 @@ export default {
       }
     }
 
-    const loadAttribute = async () => {
-      if (!isEditMode.value) return
+        const loadAttribute = async () => {
+            if (!isEditMode.value) return;
 
-      loading.value = true
-      try {
-        const response = await getAttribute(route.params.id)
-        const data = response.data.result || response.data
-
-        console.log('Loaded attribute data:', data)
-
-        // Map from backend camelCase to frontend snake_case form
-        form.attribute_set_id = data.attributeSetId || data.attributeSet?.id || ''
-        form.name = data.name || ''
-        form.categories = data.categoryIds || (data.categories || []).map((c) => c.id) || []
-        form.is_filterable = data.filterable !== undefined ? data.filterable : false
-        form.values =
-          data.attributeValues && data.attributeValues.length > 0
-            ? data.attributeValues.map((v) => ({ id: v.id, value: v.value }))
-            : [{ value: '' }]
-      } catch (error) {
-        console.error('Error loading attribute:', error)
-        notification.error('Error', 'Failed to load attribute')
-        router.push({ name: 'admin.attributes.index' })
-      } finally {
-        loading.value = false
-      }
-    }
+            loading.value = true;
+            try {
+                const response = await getAttribute(route.params.id);
+                const data = response.result || response;
+                
+                console.log('Loaded attribute data:', data);
+                
+                // Convert to appropriate types to match select/multi-select values
+                // Backend returns attributeSet as object, extract id
+                if (data.attributeSet && data.attributeSet.id) {
+                    form.attribute_set_id = String(data.attributeSet.id);
+                } else if (data.attributeSetId) {
+                    form.attribute_set_id = String(data.attributeSetId);
+                } else {
+                    form.attribute_set_id = '';
+                }
+                
+                form.name = data.name || '';
+                
+                // Backend returns categories as array of objects, extract ids
+                if (data.categories && Array.isArray(data.categories)) {
+                    form.categories = data.categories.map(cat => 
+                        typeof cat === 'object' ? cat.id : (typeof cat === 'number' ? cat : parseInt(cat))
+                    );
+                } else if (data.categoryIds && Array.isArray(data.categoryIds)) {
+                    form.categories = data.categoryIds.map(id => 
+                        typeof id === 'number' ? id : parseInt(id)
+                    );
+                } else {
+                    form.categories = [];
+                }
+                
+                form.is_filterable = data.filterable || false;
+                
+                // Map attribute values
+                if (data.attributeValues && data.attributeValues.length > 0) {
+                    form.values = data.attributeValues.map(v => ({ 
+                        value: v.value || '' 
+                    }));
+                } else {
+                    form.values = [{ value: '' }];
+                }
+                
+                console.log('Form after loading:', {
+                    attribute_set_id: form.attribute_set_id,
+                    categories: form.categories,
+                    values: form.values.length
+                });
+            } catch (error) {
+                console.error('Failed to load attribute:', error);
+                notification.error('Lỗi!', 'Không thể tải attribute');
+                router.push({ name: 'admin.attributes.index' });
+            } finally {
+                loading.value = false;
+            }
+        };
 
     const handleSubmit = async () => {
       // Validation
@@ -398,23 +442,19 @@ export default {
         return
       }
 
-      loading.value = true
-      try {
-        // Map to backend API format (camelCase)
-        const data = {
-          attributeSetId: form.attribute_set_id,
-          name: form.name,
-          categoryIds: form.categories,
-          filterable: form.is_filterable,
-          attributeValues: form.values
-            .filter((v) => v.value && v.value.trim() !== '')
-            .map((v) => ({
-              id: v.id || null,
-              value: v.value.trim(),
-            })),
-        }
-
-        console.log('Submitting attribute data:', data)
+            loading.value = true;
+            try {
+                // Map frontend form to backend DTO format
+                const data = {
+                    name: form.name,
+                    attributeSetId: parseInt(form.attribute_set_id),
+                    categoryIds: form.categories.map(id => parseInt(id)),
+                    filterable: form.is_filterable,
+                    isGlobal: false,
+                    attributeValues: form.values
+                        .filter(v => v.value.trim() !== '')
+                        .map(v => ({ value: v.value }))
+                };
 
         if (isEditMode.value) {
           await updateAttribute(route.params.id, data)
@@ -436,32 +476,38 @@ export default {
       }
     }
 
-    onMounted(() => {
-      loadAttributeSets()
-      loadCategories()
-      loadAttribute()
-      // Close dropdown when clicking outside
-      document.addEventListener('click', handleClickOutside)
-    })
+        onMounted(async () => {
+            await loadInitialData();
+            await loadAttribute();
+            // Close dropdown when clicking outside
+            document.addEventListener('click', handleClickOutside);
+        });
 
-    return {
-      form,
-      loading,
-      activeTab,
-      isEditMode,
-      isCategoryDropdownOpen,
-      attributeSets,
-      categories,
-      addNewValue,
-      removeValue,
-      handleSubmit,
-      getCategoryName,
-      removeCategory,
-      handleCategoriesChange,
-      toggleCategoryDropdown,
+        // Clean up event listener
+        const onBeforeUnmount = () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+
+        return {
+            form,
+            loading,
+            activeTab,
+            isEditMode,
+            isCategoryDropdownOpen,
+            attributeSets,
+            categories,
+            addNewValue,
+            removeValue,
+            handleSubmit,
+            getCategoryTree,
+            getIndent,
+            getCategoryName,
+            removeCategory,
+            handleCategoriesChange,
+            toggleCategoryDropdown
+        };
     }
-  },
-}
+  }
 </script>
 
 <style scoped>

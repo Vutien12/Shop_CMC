@@ -37,7 +37,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { searchAttributes, deleteManyAttributes } from '@/api/attributeApi.js';
+import { getAttributes, searchAttributes, deleteAttribute, deleteManyAttributes } from '@/api/attributeApi.js';
 
 export default {
     name: 'AttributeIndex',
@@ -63,7 +63,7 @@ export default {
 
         const columns = [
             { key: 'id', label: 'Id', sortable: true, width: '80px' },
-            { key: 'name', label: 'Name', sortable: true },
+            { key: 'name', label: 'Name', sortable: true, width: '150px' },
             { key: 'attributeSet', label: 'Attribute set', sortable: true, width: '200px' },
             { key: 'filterable', label: 'Filterable', sortable: true, width: '120px' },
             { key: 'createdAt', label: 'Created', sortable: true, width: '150px' }
@@ -114,8 +114,8 @@ export default {
                     }));
                 }
             } catch (error) {
-                console.error('Error loading attributes:', error);
-                notification.error('Error', 'Failed to load attributes: ' + (error.response?.data?.message || error.message));
+                console.error('Failed to load attributes:', error);
+                notification.error('Lỗi!', 'Không thể tải danh sách attributes');
             } finally {
                 loading.value = false;
             }
@@ -150,25 +150,29 @@ export default {
 
         const handleDelete = async (selectedIds) => {
             const confirmed = await notification.confirm(
-                'Confirm delete',
-                `Are you sure you want to delete ${selectedIds.length} attribute(s)?`
+                'Xác nhận xóa',
+                `Bạn có chắc chắn muốn xóa ${selectedIds.length} attribute(s)?`
             );
+            
+            if (confirmed) {
+                try {
+                    loading.value = true;
 
-            if (!confirmed) {
-                return;
-            }
+                    if (selectedIds.length === 1) {
+                        await deleteAttribute(selectedIds[0]);
+                    } else {
+                        await deleteManyAttributes(selectedIds);
+                    }
 
-            loading.value = true;
-            try {
-                await deleteManyAttributes(selectedIds);
-                notification.success('Success', 'Attributes deleted successfully');
-                // Reload the list
-                await loadAttributes();
-            } catch (error) {
-                console.error('Error deleting attributes:', error);
-                notification.error('Error', 'Failed to delete attributes: ' + (error.response?.data?.message || error.message));
-            } finally {
-                loading.value = false;
+                    // Reload the list
+                    await loadAttributes();
+                    notification.success('Thành công!', 'Đã xóa attributes thành công');
+                } catch (error) {
+                    console.error('Failed to delete attributes:', error);
+                    notification.error('Lỗi!', 'Không thể xóa attributes');
+                } finally {
+                    loading.value = false;
+                }
             }
         };
 
