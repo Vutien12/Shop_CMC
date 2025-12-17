@@ -269,6 +269,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
             productId: item.productId,
             productVariantId: item.variantId,
             qty: 1,
+            unitPrice: variant.sellingPrice || variant.price || item.rawPrice || item.productPrice,
             cartItemVariations: cartItemVariations.length > 0 ? cartItemVariations : undefined,
             cartItemOptions: []
           }
@@ -282,7 +283,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
 
       return true;
     } catch (error) {
-      console.error('❌ Failed to add wishlist item to cart:', error);
+      console.error('Failed to add wishlist item to cart:', error);
       throw error;
     }
   };
