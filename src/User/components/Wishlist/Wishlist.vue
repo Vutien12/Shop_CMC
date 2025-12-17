@@ -675,28 +675,28 @@ onMounted(async () => {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .wishlist-table {
     min-width: 800px;
   }
-  
+
   .thumbnail {
     width: 60px;
     height: 60px;
   }
-  
+
   .wishlist-row td {
     padding: 12px 8px;
   }
-  
-  .product-name-main { 
+
+  .product-name-main {
     font-size: 13px;
   }
-  
-  .price { 
+
+  .price {
     font-size: 13px;
   }
-  
+
   .action-btn {
     width: 38px;
     height: 38px;
@@ -709,49 +709,49 @@ onMounted(async () => {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  
+
   .wishlist-table {
     min-width: 700px !important;
   }
-  
+
   .wishlist-table th {
     font-size: 12px !important;
     padding: 10px 8px !important;
     white-space: nowrap !important;
   }
-  
+
   .wishlist-row td {
     padding: 12px 8px !important;
     font-size: 13px !important;
   }
-  
+
   .thumbnail {
     width: 60px !important;
     height: 60px !important;
   }
-  
-  .product-name-main { 
+
+  .product-name-main {
     font-size: 13px !important;
     line-height: 1.4 !important;
   }
-  
-  .product-variant { 
+
+  .product-variant {
     font-size: 11px !important;
   }
-  
-  .price { 
+
+  .price {
     font-size: 14px !important;
   }
-  
+
   .status-badge {
     padding: 5px 12px !important;
     font-size: 11px !important;
   }
-  
+
   .action-buttons {
     gap: 8px !important;
   }
-  
+
   .action-btn {
     width: 38px !important;
     height: 38px !important;

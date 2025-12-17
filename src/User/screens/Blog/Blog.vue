@@ -35,9 +35,13 @@
       </div>
 
       <div v-if="totalPages > 1" class="blog-pagination">
-        <button class="page-btn" @click="goPrev" :disabled="page === 0">Prev</button>
+        <button class="page-btn" @click="goPrev" :disabled="page === 0">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
         <span class="page-status">Trang {{ page + 1 }} / {{ totalPages }}</span>
-        <button class="page-btn" @click="goNext" :disabled="page >= totalPages - 1">Next</button>
+        <button class="page-btn" @click="goNext" :disabled="page >= totalPages - 1">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
       </div>
     </div>
 

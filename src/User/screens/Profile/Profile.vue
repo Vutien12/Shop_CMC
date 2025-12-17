@@ -18,12 +18,12 @@
             <router-link to="/orders" @mouseenter="prefetch('/orders')" @mouseleave="cancel" class="nav-item">
               <i class="fa-solid fa-cart-shopping"></i><span>My Orders</span>
             </router-link>
+            <router-link to="/wishlist" @mouseenter="prefetch('/wishlist')" @mouseleave="cancel" class="nav-item">
+              <i class="fa-regular fa-heart"></i><span>My Wishlist</span>
+            </router-link>
             <router-link to="/my-cases" @mouseenter="prefetch('/my-cases')" @mouseleave="cancel" class="nav-item">
               <i class="fa-solid fa-rotate-left"></i>
               <span>My Cases</span>
-            </router-link>
-            <router-link to="/wishlist" @mouseenter="prefetch('/wishlist')" @mouseleave="cancel" class="nav-item">
-              <i class="fa-regular fa-heart"></i><span>My Wishlist</span>
             </router-link>
             <router-link to="/addresses" @mouseenter="prefetch('/addresses')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-address-book"></i><span>My Addresses</span>
