@@ -379,7 +379,7 @@
                                                     <div v-if="hasAnyVariant && form.variants.length > 1 && variant.manage_stock == 1" class="col-sm-6">
                                                          <div class="form-group">
                                                              <label :for="`variants-${variant.uid}-qty`">
-                                                                 {{ trans('product::products.form.variants.qty') }}<span class="text-red">*</span>
+                                                                 {{ trans('product::products.form.variants.qty') }}
                                                              </label>
                                                              <input
                                                                  type="number"
@@ -391,12 +391,6 @@
                                                                  @wheel="$event.target.blur()"
                                                                  v-model.number="variant.qty"
                                                              >
-                                                             <span class="help-block text-red" v-if="variant.qty <= 0">
-                                                                 {{ trans('product::products.form.variants.qty_error') }}
-                                                             </span>
-                                                             <span class="help-block text-red" v-else-if="!variant.qty && variant.manage_stock == 1">
-                                                                 {{ trans('product::products.form.variants.qty_required') }}
-                                                             </span>
                                                          </div>
                                                      </div>
                                                 </div>

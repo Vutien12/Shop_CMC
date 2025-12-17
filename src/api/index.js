@@ -85,3 +85,6 @@ export * from './flashsaleApi.js';
 
 // Shipping APIs
 export * from './shippingApi.js';
+
+// Report APIs
+export * from './reportApi.js';

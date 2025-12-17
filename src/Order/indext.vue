@@ -79,7 +79,7 @@ export default {
                 'Xác nhận xóa',
                 `Bạn có chắc chắn muốn xóa ${selectedIds.length} đơn hàng?`
             );
-            
+
             if (!confirmed) {
                 return;
             }
@@ -162,8 +162,7 @@ export default {
     min-width: fit-content;
 }
 
-.status-completed,
-.status-delivered {
+.status-completed {
     background: #d1fae5;
     color: #065f46;
 }

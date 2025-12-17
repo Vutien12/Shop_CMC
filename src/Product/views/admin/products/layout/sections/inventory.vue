@@ -82,7 +82,25 @@
           </label>
 
           <div class="col-sm-12">
-            <input type="text" name="sku" id="sku" class="form-control" v-model="form.sku" />
+            <div style="display: flex; gap: 10px;">
+              <input
+                type="text"
+                name="sku"
+                id="sku"
+                class="form-control"
+                v-model="form.sku"
+                style="flex: 1;"
+              />
+              <button
+                type="button"
+                class="btn btn-default"
+                @click="generateRandomSku"
+                title="Generate random SKU"
+                style="white-space: nowrap;"
+              >
+                <i class="fa fa-refresh"></i> Generate
+              </button>
+            </div>
             <span
               v-if="errors.has('sku')"
               class="help-block text-red"
@@ -216,6 +234,17 @@ export default {
       }
 
       return typeof result === 'string' ? result : key
+    },
+
+    generateRandomSku() {
+      // Generate random SKU: SKU-YYYYMMDD-XXXXX
+      const date = new Date()
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const random = Math.random().toString(36).substring(2, 7).toUpperCase()
+
+      this.form.sku = `SKU-${year}${month}${day}-${random}`
     },
   },
 }

@@ -67,8 +67,6 @@
                   <div class="skeleton-cell"></div>
                   <div class="skeleton-cell short"></div>
                   <div class="skeleton-cell short"></div>
-                  <div class="skeleton-cell short"></div>
-                  <div class="skeleton-cell short"></div>
                   <div class="skeleton-cell action"></div>
                 </div>
               </div>
@@ -86,26 +84,24 @@
                 <table class="wishlist-table">
                   <thead>
                   <tr>
-                    <th>Thumbnail</th>
-                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Product Name</th>
                     <th>Price</th>
-                    <th>Sku</th>
                     <th>Status</th>
-                    <th>Added at</th>
-                    <th class="text-center">Action</th>
+                    <th>Actions</th>
                   </tr>
                   </thead>
                   <tbody>
                   <tr v-for="(item, i) in wishlistItems" :key="item.id" class="wishlist-row fade-in"
                       :style="{ animationDelay: `${i * 0.1}s` }">
-                    <!-- Thumbnail -->
+                    <!-- Image -->
                     <td>
                       <div class="thumbnail">
                         <img :src="item.productImage" :alt="item.productName" />
                       </div>
                     </td>
 
-                    <!-- Product Name + Variant + Info Changed -->
+                    <!-- Product Name -->
                     <td>
                       <div class="product-info">
                         <div class="product-name-main">{{ item.productName }}</div>
@@ -122,42 +118,26 @@
 
                     <!-- Price -->
                     <td>
-                      <div class="price" :title="formatPrice(item.rawPrice, item.currency)">
+                      <div class="price">
                         {{ formatPrice(item.rawPrice, item.currency) }}
-                      </div>
-                    </td>
-
-                    <!-- SKU -->
-                    <td>
-                      <div class="sku-wrapper" :title="item.productSku">
-                        <code class="sku">{{ item.productSku || '-' }}</code>
                       </div>
                     </td>
 
                     <!-- Status -->
                     <td>
                       <div class="status-cell">
-                          <span class="status-badge" :class="getStatusClass(item.status)">
-                            {{ getStatusLabel(item.status) }}
-                          </span>
-                        <span v-if="item.status === 'OUT_OF_STOCK'" class="status-hint">Hết hàng tạm thời</span>
+                        <span class="status-badge" :class="getStatusClass(item.status)">
+                          {{ getStatusLabel(item.status) }}
+                        </span>
+                        <span v-if="item.status === 'OUT_OF_STOCK'" class="status-hint">Out of stock temporarily</span>
                         <span v-if="item.status === 'INACTIVE'" class="status-hint">Hidden</span>
                         <span v-if="item.status === 'DELETED'" class="status-hint">Deleted</span>
-                      </div>
-                    </td>
-
-                    <!-- Added At -->
-                    <td>
-                      <div class="added-at">
-                        <i class="fa-regular fa-clock"></i>
-                        {{ item.addedAt }}
                       </div>
                     </td>
 
                     <!-- Actions -->
                     <td class="action-col">
                       <div class="action-buttons">
-                        <button
                         <button class="action-btn cart-btn"
                           @click="addToCart(item)"
                           :disabled="isCartDisabled(item.status)"
@@ -444,7 +424,7 @@ onMounted(async () => {
 
 .wishlist-row td {
   padding: 14px 10px;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 /* Thumbnail */
@@ -475,16 +455,14 @@ onMounted(async () => {
 
 /* Product Info */
 .product-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: inline-block;
 }
 
 .product-name-main {
   font-weight: 600;
   color: #1a1a1a;
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.5;
 }
 
 .product-variant {
@@ -534,9 +512,7 @@ onMounted(async () => {
   color: #e74c3c;
   font-size: 14px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
+  line-height: 1.5;
 }
 
 /* SKU */
@@ -561,17 +537,18 @@ onMounted(async () => {
 
 /* Status */
 .status-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: inline-block;
 }
 
 .status-badge {
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.3px;
+  width: fit-content;
+  white-space: nowrap;
 }
 
 .status-badge.available { background: #d4edda; color: #155724; }
@@ -602,26 +579,30 @@ onMounted(async () => {
 
 /* Action */
 .action-col {
-  text-align: center;
+  text-align: left;
+  vertical-align: middle;
+  padding-left: 0 !important;
 }
 
 .action-buttons {
   display: flex;
-  gap: 6px;
-  justify-content: center;
+  gap: 10px;
+  align-items: center;
+  padding-left: 0;
 }
 
 .action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .cart-btn {
@@ -688,38 +669,94 @@ onMounted(async () => {
   color: #555;
 }
 
-/* Responsive */
+/* Responsive - Tablet/iPad */
 @media (max-width: 992px) {
-  .wishlist-table thead {
-    display: none;
+  .wishlist-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .wishlist-row {
-    display: block;
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  .wishlist-table {
+    min-width: 800px;
   }
+
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
   .wishlist-row td {
-    display: block;
-    text-align: right;
-    padding: 6px 0;
-    border: none;
+    padding: 12px 8px;
   }
-  .wishlist-row td::before {
-    content: attr(data-label);
-    float: left;
-    font-weight: 600;
-    color: #555;
-    text-transform: uppercase;
-    font-size: 11px;
+
+  .product-name-main {
+    font-size: 13px;
   }
-  .action-col {
-    text-align: right;
+
+  .price {
+    font-size: 13px;
   }
-  .product-name-main { font-size: 13px; }
-  .product-variant { font-size: 11.5px; }
-  .price { font-size: 13px; max-width: 100px; }
+
+  .action-btn {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .wishlist-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .wishlist-table {
+    min-width: 700px !important;
+  }
+
+  .wishlist-table th {
+    font-size: 12px !important;
+    padding: 10px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .wishlist-row td {
+    padding: 12px 8px !important;
+    font-size: 13px !important;
+  }
+
+  .thumbnail {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .product-name-main {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .product-variant {
+    font-size: 11px !important;
+  }
+
+  .price {
+    font-size: 14px !important;
+  }
+
+  .status-badge {
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+  }
+
+  .action-buttons {
+    gap: 8px !important;
+  }
+
+  .action-btn {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 14px !important;
+  }
 }
 
 /* Reuse từ /account */

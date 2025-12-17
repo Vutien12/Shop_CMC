@@ -1,5 +1,7 @@
 // Router/router.js
 import { createWebHistory, createRouter } from "vue-router";
+import jwt_decode from 'jwt-decode';
+
 import Home from "../User/screens/Home/Home.vue";
 import Header1 from "../User/components/Header/Header1.vue";
 import Footer from "../User/components/Footer/Footer.vue";
@@ -323,11 +325,33 @@ router.beforeEach((to, from, next) => {
   }
 
   // Check if route requires admin access
-  if (to.meta.requiresAdmin && !token) {
-    return next({
-      path: '/login',
-      query: { redirect: to.fullPath }
-    });
+  if (to.meta.requiresAdmin) {
+    if (!token) {
+      return next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      });
+    }
+
+    // Decode token để lấy role
+    try {
+      const decoded = jwt_decode(token);
+      const role = decoded.scope; // "ROLE_ADMIN" hoặc "ROLE_USER"
+
+      if (role !== 'ROLE_ADMIN') {
+        // Nếu không phải admin, redirect về home
+        console.warn('Access denied: User does not have admin role');
+        return next({ path: '/' });
+      }
+    } catch (error) {
+      // Token không hợp lệ
+      console.error('Invalid token:', error);
+      localStorage.removeItem('accessToken');
+      return next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      });
+    }
   }
 
   // If already logged in and trying to access login page, redirect to home
