@@ -140,7 +140,8 @@
   color: #1a1a1a;
   margin: 0 0 12px 0;
   line-height: 1.4;
-  height: calc(1.4em * 2);
+  min-height: 2.8em; /* Ensure consistent height for 2 lines */
+  max-height: 2.8em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
