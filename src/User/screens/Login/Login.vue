@@ -64,7 +64,7 @@
                   class="toggle-password"
                   @click="showPassword = !showPassword"
                 >
-                  <font-awesome-icon :icon="['fas', showPassword ? 'eye-slash' : 'eye']" />
+
                 </button>
               </div>
               <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
