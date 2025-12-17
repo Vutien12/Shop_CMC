@@ -50,7 +50,8 @@ import CouponIndex from "../Coupons/indext.vue";
 import BlogIndex from "../Blog/index.vue";
 import BlogCreate from "../Blog/create.vue";
 import Contact from "../User/screens/Contact/Contact.vue";
-import UserIndex from "../Admin/view/form/user.vue";
+import UserIndex from "../Admin/view/Role/user.vue";
+import CreateUser from "../Admin/view/Role/createuser.vue";
 import ReviewIndex from "../Review/indext.vue";
 import ReviewEdit from "../Review/edit.vue";
 import FlashSaleIndex from "../Flashsale/indext.vue";
@@ -62,6 +63,7 @@ import AttributeIndex from "../Attribute/Attributes/index.vue";
 import AttributeCreate from "../Attribute/Attributes/create.vue";
 import AttributeSetIndex from "../Attribute/AttributesSets/indext.vue";
 import AttributeSetCreate from "../Attribute/AttributesSets/create.vue";
+import AdminProfile from "../Admin/view/Role/profile.vue";
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -256,12 +258,12 @@ const routes = [
             },
             {
                 name: 'admin.users.create',
-                component: UserIndex,
+                component: CreateUser,
                 path: 'users/create',
             },
             {
                 name: 'admin.users.edit',
-                component: UserIndex,
+                component: CreateUser,
                 path: 'users/:id/edit',
             },
             {
@@ -303,6 +305,11 @@ const routes = [
                 name: 'admin.reports.index',
                 component: ReportIndex,
                 path: 'reports',
+            },
+            {
+                name: 'admin.profile',
+                component: AdminProfile,
+                path: 'profile',
             },
         ]
     },

@@ -4,6 +4,8 @@
         :data="users"
         :columns="columns"
         :row-clickable="true"
+        :create-route="{ name: 'admin.users.create' }"
+        create-button-text="Create User"
         @delete="handleDelete"
         @row-click="handleRowClick"
     >
@@ -29,6 +31,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getUsers, deleteUser, deleteManyUsers } from '@/api/userApi';
 
@@ -39,6 +42,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const notification = useNotification();
         const users = ref([]);
         const loading = ref(false);
 
@@ -73,7 +77,7 @@ export default {
             } catch (error) {
                 console.error('Failed to load users:', error);
                 console.error('Error response:', error.response);
-                alert('Failed to load users. Please try again.');
+                notification.error('Error!', 'Failed to load users. Please try again.');
             } finally {
                 loading.value = false;
             }
@@ -84,7 +88,12 @@ export default {
         };
 
         const handleDelete = async (selectedIds) => {
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} user(s)?`)) {
+            const confirmed = await notification.confirm(
+                'Confirm Delete',
+                `Are you sure you want to delete ${selectedIds.length} user(s)?`
+            );
+
+            if (confirmed) {
                 try {
                     loading.value = true;
 
@@ -96,10 +105,10 @@ export default {
 
                     // Reload users after deletion
                     await loadUsers();
-                    alert('User(s) deleted successfully!');
+                    notification.success('Success!', `${selectedIds.length} user(s) deleted successfully!`);
                 } catch (error) {
                     console.error('Failed to delete users:', error);
-                    alert('Failed to delete users. Please try again.');
+                    notification.error('Error!', 'Failed to delete users. Please try again.');
                 } finally {
                     loading.value = false;
                 }
