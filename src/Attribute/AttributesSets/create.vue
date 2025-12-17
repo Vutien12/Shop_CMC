@@ -82,7 +82,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
-import { getAttributeSet, createAttributeSet, updateAttributeSet } from '@/api/attributeApi.js';
+import { getAttributeSet, createAttributeSet, updateAttributeSet } from '@/api/attributeSetApi.js';
 
 export default {
     name: 'AttributeSetCreate',

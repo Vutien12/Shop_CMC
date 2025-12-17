@@ -29,22 +29,40 @@ export const searchAttributeSets = async (params = {}) => {
 /**
  * Get a single attribute set by ID
  */
-export const getAttributeSet = (id) => {
-    return axiosInstance.get(`/attribute-sets/${id}`);
+export const getAttributeSet = async (id) => {
+    try {
+        const response = await axiosInstance.get(`/attribute-sets/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error getting attribute set ${id}:`, error);
+        throw error;
+    }
 };
 
 /**
  * Create a new attribute set
  */
-export const createAttributeSet = (data) => {
-    return axiosInstance.post('/attribute-sets', data);
+export const createAttributeSet = async (data) => {
+    try {
+        const response = await axiosInstance.post('/attribute-sets', data);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating attribute set:', error);
+        throw error;
+    }
 };
 
 /**
  * Update an existing attribute set
  */
-export const updateAttributeSet = (id, data) => {
-    return axiosInstance.put(`/attribute-sets/${id}`, data);
+export const updateAttributeSet = async (id, data) => {
+    try {
+        const response = await axiosInstance.put(`/attribute-sets/${id}`, data);
+        return response.data;
+    } catch (error) {
+        console.error(`Error updating attribute set ${id}:`, error);
+        throw error;
+    }
 };
 
 /**

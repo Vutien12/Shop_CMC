@@ -44,7 +44,7 @@
                             <!-- General Tab -->
                             <div class="tab-pane fade" :class="{ 'in active': activeTab === 'general' }" id="general">
                                 <h4 class="tab-content-title">General</h4>
-                                
+
                                 <div class="form-group-wrapper">
                                     <label for="attribute_set_id" class="form-label">
                                         Attribute set
@@ -58,9 +58,9 @@
                                             id="attribute_set_id"
                                         >
                                             <option value="">Please select</option>
-                                            <option 
-                                                v-for="set in attributeSets" 
-                                                :key="set.id" 
+                                            <option
+                                                v-for="set in attributeSets"
+                                                :key="set.id"
                                                 :value="String(set.id)"
                                             >
                                                 {{ set.name }}
@@ -121,9 +121,9 @@
                                                 size="8"
                                                 style="width: 100%;"
                                             >
-                                                <option 
-                                                    v-for="category in getCategoryTree()" 
-                                                    :key="category.id" 
+                                                <option
+                                                    v-for="category in getCategoryTree()"
+                                                    :key="category.id"
                                                     :value="category.id"
                                                     :selected="form.categories.includes(category.id)"
                                                 >
@@ -227,7 +227,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNotification } from '@/Admin/composables/useNotification.js'
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue'
@@ -235,8 +235,9 @@ import {
   getAttribute,
   createAttribute,
   updateAttribute,
-  getAttributeSets,
 } from '@/api/attributeApi.js'
+import { getAttributeSets } from '@/api/attributeSetApi.js'
+import { getCategories } from '@/api/categoryApi.js'
 
 export default {
   name: 'AttributeCreate',
@@ -276,15 +277,33 @@ export default {
                     getCategories()
                 ]);
 
+                console.log('Attribute Sets Response:', attributeSetsRes);
+                console.log('Categories Response:', categoriesRes);
+
                 if (attributeSetsRes.code === 200) {
-                    const items = attributeSetsRes.result?.content ?? attributeSetsRes.result ?? [];
-                    attributeSets.value = items;
+                    // Backend returns paginated data with result.content
+                    if (attributeSetsRes.result?.content) {
+                        attributeSets.value = attributeSetsRes.result.content;
+                    } else if (Array.isArray(attributeSetsRes.result)) {
+                        attributeSets.value = attributeSetsRes.result;
+                    } else {
+                        attributeSets.value = [];
+                    }
                 }
 
                 if (categoriesRes.code === 200) {
-                    const items = categoriesRes.result?.content ?? categoriesRes.result ?? [];
-                    categories.value = items;
+                    // Backend returns paginated data with result.content
+                    if (categoriesRes.result?.content) {
+                        categories.value = categoriesRes.result.content;
+                    } else if (Array.isArray(categoriesRes.result)) {
+                        categories.value = categoriesRes.result;
+                    } else {
+                        categories.value = [];
+                    }
                 }
+
+                console.log('Loaded attribute sets:', attributeSets.value);
+                console.log('Loaded categories:', categories.value);
             } catch (error) {
                 console.error('Failed to load initial data:', error);
                 notification.error('Lỗi!', 'Không thể tải dữ liệu ban đầu');
@@ -339,11 +358,10 @@ export default {
     }
 
     const handleCategoriesChange = (event) => {
-      const selectedOptions = Array.from(event.target.selectedOptions, (option) => {
+      form.categories = Array.from(event.target.selectedOptions, (option) => {
         const val = option.value
         return isNaN(val) ? val : parseInt(val)
       })
-      form.categories = selectedOptions
     }
 
     const toggleCategoryDropdown = (event) => {
@@ -375,9 +393,9 @@ export default {
             try {
                 const response = await getAttribute(route.params.id);
                 const data = response.result || response;
-                
+
                 console.log('Loaded attribute data:', data);
-                
+
                 // Convert to appropriate types to match select/multi-select values
                 // Backend returns attributeSet as object, extract id
                 if (data.attributeSet && data.attributeSet.id) {
@@ -387,33 +405,33 @@ export default {
                 } else {
                     form.attribute_set_id = '';
                 }
-                
+
                 form.name = data.name || '';
-                
+
                 // Backend returns categories as array of objects, extract ids
                 if (data.categories && Array.isArray(data.categories)) {
-                    form.categories = data.categories.map(cat => 
+                    form.categories = data.categories.map(cat =>
                         typeof cat === 'object' ? cat.id : (typeof cat === 'number' ? cat : parseInt(cat))
                     );
                 } else if (data.categoryIds && Array.isArray(data.categoryIds)) {
-                    form.categories = data.categoryIds.map(id => 
+                    form.categories = data.categoryIds.map(id =>
                         typeof id === 'number' ? id : parseInt(id)
                     );
                 } else {
                     form.categories = [];
                 }
-                
+
                 form.is_filterable = data.filterable || false;
-                
+
                 // Map attribute values
                 if (data.attributeValues && data.attributeValues.length > 0) {
-                    form.values = data.attributeValues.map(v => ({ 
-                        value: v.value || '' 
+                    form.values = data.attributeValues.map(v => ({
+                        value: v.value || ''
                     }));
                 } else {
                     form.values = [{ value: '' }];
                 }
-                
+
                 console.log('Form after loading:', {
                     attribute_set_id: form.attribute_set_id,
                     categories: form.categories,
@@ -483,10 +501,10 @@ export default {
             document.addEventListener('click', handleClickOutside);
         });
 
-        // Clean up event listener
-        const onBeforeUnmount = () => {
+        // Clean up event listener on component unmount
+        onBeforeUnmount(() => {
             document.removeEventListener('click', handleClickOutside);
-        };
+        });
 
         return {
             form,

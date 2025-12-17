@@ -37,7 +37,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { getAttributes, searchAttributes, deleteAttribute, deleteManyAttributes } from '@/api/attributeApi.js';
+import { searchAttributes, deleteAttribute, deleteManyAttributes } from '@/api/attributeApi.js';
 
 export default {
     name: 'AttributeIndex',
@@ -88,10 +88,11 @@ export default {
                 const response = await searchAttributes(params);
                 console.log('Attributes response:', response);
 
-                // Map API response to table format
-                const result = response.data.result;
+                // searchAttributes already returns response.data
+                // Response structure: { code: 200, message: "Success", result: { content: [...], ... } }
+                const result = response.result;
 
-                if (result.content) {
+                if (result?.content) {
                     // Paginated response
                     attributes.value = result.content.map(attr => ({
                         id: attr.id,
@@ -103,15 +104,17 @@ export default {
 
                     pagination.value.totalElements = result.totalElements || 0;
                     pagination.value.totalPages = result.totalPages || 0;
-                } else {
-                    // Non-paginated response
-                    attributes.value = (result || []).map(attr => ({
+                } else if (Array.isArray(result)) {
+                    // Non-paginated response (array directly)
+                    attributes.value = result.map(attr => ({
                         id: attr.id,
                         name: attr.name,
                         attributeSet: attr.attributeSet?.name || 'N/A',
                         filterable: attr.filterable || false,
                         createdAt: attr.createdAt
                     }));
+                } else {
+                    attributes.value = [];
                 }
             } catch (error) {
                 console.error('Failed to load attributes:', error);
@@ -153,7 +156,7 @@ export default {
                 'Xác nhận xóa',
                 `Bạn có chắc chắn muốn xóa ${selectedIds.length} attribute(s)?`
             );
-            
+
             if (confirmed) {
                 try {
                     loading.value = true;

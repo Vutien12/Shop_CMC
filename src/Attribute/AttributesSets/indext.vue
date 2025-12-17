@@ -30,7 +30,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { getAttributeSets, searchAttributeSets, deleteAttributeSet, deleteManyAttributeSets } from '@/api/attributeSetApi.js';
+import { searchAttributeSets, deleteAttributeSet, deleteManyAttributeSets } from '@/api/attributeSetApi.js';
 
 export default {
     name: 'AttributeSetIndex',
@@ -75,9 +75,10 @@ export default {
                 }
 
                 const response = await searchAttributeSets(params);
-                const result = response.data.result;
+                // searchAttributeSets already returns response.data
+                const result = response.result;
 
-                if (result.content) {
+                if (result?.content) {
                     attributeSets.value = result.content.map(set => ({
                         id: set.id,
                         name: set.name,
@@ -86,12 +87,14 @@ export default {
 
                     pagination.value.totalElements = result.totalElements || 0;
                     pagination.value.totalPages = result.totalPages || 0;
-                } else {
-                    attributeSets.value = (result || []).map(set => ({
+                } else if (Array.isArray(result)) {
+                    attributeSets.value = result.map(set => ({
                         id: set.id,
                         name: set.name,
                         createdAt: set.createdAt
                     }));
+                } else {
+                    attributeSets.value = [];
                 }
             } catch (error) {
                 console.error('Failed to load attribute sets:', error);
@@ -133,7 +136,7 @@ export default {
                 'Xác nhận xóa',
                 `Bạn có chắc chắn muốn xóa ${selectedIds.length} attribute set(s)?`
             );
-            
+
             if (confirmed) {
                 try {
                     loading.value = true;
