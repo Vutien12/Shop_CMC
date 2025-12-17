@@ -67,7 +67,7 @@
 
                                     <span class="variation-name" style="margin-left:5px;color:#7b7778;">{{ variation.name || trans('product::products.variations.new_variation') }}</span>
                                 </div>
-                                
+
                                 <span
                                     class="delete-option"
                                     @click.stop="deleteVariation(index, variation.uid)"
@@ -210,7 +210,7 @@
                                                                 placeholder="#000000"
                                                                 style="flex: 1; min-width: 80px; border: none; outline: none; border-radius: 0; padding: 6px 8px; font-size: 14px;"
                                                             >
-                                                            <label 
+                                                            <label
                                                                 :for="`variations-${variation.uid}-values-${value.uid}-color-picker`"
                                                                 :style="getColorButtonStyle(value.color)"
                                                                 :title="'Pick color: ' + (value.color || 'Select a color')"
@@ -520,15 +520,16 @@ export default {
 
             const newVariation = {
                 uid: uid,
-                id: selectedVariation.id, // Lưu id để biết đây là global variation
+                id: selectedVariation.id, // Lưu id để backend biết đây là global variation
                 name: selectedVariation.name,
                 type: selectedVariation.type?.toLowerCase() || '', // API có thể trả về "Text", "Color", cần lowercase
                 isGlobal: true, // Đánh dấu đây là global variation
+                originalVariation: JSON.parse(JSON.stringify(selectedVariation)), // Lưu bản gốc để so sánh sau
                 values: variationValues.map((value, index) => {
                     const valueUid = this.generateUid();
                     const newValue = {
                         uid: valueUid,
-                        id: value.id, // Lưu id của variation value
+                        id: value.id, // Lưu id của variation value để backend biết là existing
                         label: value.label,
                         position: index,
                     };
@@ -562,8 +563,8 @@ export default {
         getColorButtonStyle(color) {
             const isValidHex = color && /^#[0-9A-Fa-f]{6}$/.test(color);
             return {
-                backgroundImage: isValidHex 
-                    ? 'none' 
+                backgroundImage: isValidHex
+                    ? 'none'
                     : 'repeating-linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%, #aaa), repeating-linear-gradient(45deg, #aaa 25%, #fff 25%, #fff 75%, #aaa 75%, #aaa)',
                 backgroundColor: isValidHex ? color : 'transparent',
                 backgroundSize: isValidHex ? 'auto' : '8px 8px, 8px 8px',
@@ -685,16 +686,16 @@ export default {
         padding-left: 20px;
         padding-right: 15px;
     }
-    
+
     .accordion-box-footer {
         flex-wrap: wrap;
         gap: 15px;
     }
-    
+
     .insert-template {
         flex-wrap: wrap;
     }
-    
+
     .insert-template select {
         width: 180px !important;
     }
@@ -705,94 +706,94 @@ export default {
     .box-header {
         padding: 12px 15px !important;
     }
-    
+
     .box-header h5 {
         font-size: 16px !important;
     }
-    
+
     .panel-title > div {
         min-height: 35px;
     }
-    
+
     .variation-name {
         font-size: 14px;
         margin-right: 10px;
     }
-    
+
     .drag-handle {
         margin-left: 6px !important;
     }
-    
+
     .delete-option {
         padding: 4px 8px;
         margin-right: 6px;
     }
-    
+
     .variation-form-row > .col-sm-6 {
         padding-left: 10px !important;
         padding-right: 10px !important;
     }
-    
+
     .variation-form-row > .col-sm-3 {
         padding-left: 10px !important;
         padding-right: 10px !important;
     }
-    
+
     .variation-values table {
         font-size: 14px;
     }
-    
+
     .variation-values table th,
     .variation-values table td {
         padding: 8px 6px;
     }
-    
+
     .variation-values table td.text-center {
         width: 40px !important;
     }
-    
+
     .variation-values table th:first-child,
     .variation-values table td:first-child {
         width: 40px !important;
     }
-    
+
     .variation-values table th:last-child,
     .variation-values table td:last-child {
         width: 60px !important;
     }
-    
+
     .variation-values .btn-default.delete-row {
         padding: 6px 10px;
         font-size: 13px;
     }
-    
+
     .variation-values > .btn-default {
         width: auto;
         padding: 8px 20px;
     }
-    
+
     .accordion-box-footer {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .accordion-box-footer .btn {
         width: 100%;
     }
-    
+
     .insert-template {
         width: 100%;
         flex-direction: row;
         justify-content: space-between;
     }
-    
+
     .insert-template select {
         flex: 1;
         max-width: 200px;
         margin-right: 10px !important;
     }
-    
+
     .insert-template .btn {
         flex-shrink: 0;
         width: auto;
@@ -805,136 +806,136 @@ export default {
     .box-header {
         padding: 10px 12px !important;
     }
-    
+
     .box-header h5 {
         font-size: 15px !important;
     }
-    
+
     .box-header .d-flex {
         gap: 8px;
     }
-    
+
     .toggle-accordion,
     .box-header .drag-handle {
         font-size: 13px;
     }
-    
+
     .panel-heading {
         padding: 10px 12px !important;
     }
-    
+
     .panel-body {
         padding: 12px !important;
     }
-    
+
     .panel-title > div {
         min-height: 32px;
     }
-    
+
     .variation-name {
         font-size: 13px;
         margin-right: 8px;
         margin-left: 3px !important;
     }
-    
+
     .drag-handle {
         margin-left: 4px !important;
         font-size: 12px;
     }
-    
+
     .delete-option {
         padding: 3px 6px;
         margin-right: 4px;
     }
-    
+
     .delete-option i {
         font-size: 13px;
     }
-    
+
     .form-group label {
         font-size: 13px;
         margin-bottom: 6px;
     }
-    
+
     .form-control {
         font-size: 14px;
         padding: 6px 10px;
     }
-    
+
     .variation-form-row > .col-sm-6 {
         padding-left: 8px !important;
         padding-right: 8px !important;
     }
-    
+
     .variation-form-row > .col-sm-3 {
         padding-left: 8px !important;
         padding-right: 8px !important;
     }
-    
+
     .variation-values {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     .variation-values .table-responsive {
         margin-bottom: 12px;
     }
-    
+
     .variation-values table {
         font-size: 13px;
         min-width: 500px;
     }
-    
+
     .variation-values table th,
     .variation-values table td {
         padding: 6px 4px;
     }
-    
+
     .variation-values table td input[type="text"] {
         min-width: 80px !important;
         font-size: 13px;
         padding: 5px 8px;
     }
-    
+
     .variation-values table td.text-center {
         width: 35px !important;
     }
-    
+
     .variation-values table th:first-child,
     .variation-values table td:first-child {
         width: 35px !important;
     }
-    
+
     .variation-values table th:last-child,
     .variation-values table td:last-child {
         width: 50px !important;
     }
-    
+
     .variation-values .btn-default.delete-row {
         padding: 5px 8px;
         font-size: 12px;
     }
-    
+
     .variation-values > .btn-default {
         width: auto;
         margin-top: 8px;
         padding: 6px 16px;
     }
-    
+
     .help-block {
         font-size: 12px;
     }
-    
+
     .insert-template {
         flex-wrap: wrap;
     }
-    
+
     .insert-template select {
         flex: 1;
         min-width: 150px;
         max-width: none;
     }
-    
+
     .insert-template .btn {
         flex: 1;
         min-width: 100px;
@@ -946,59 +947,59 @@ export default {
     .box-header {
         padding: 8px 10px !important;
     }
-    
+
     .box-header h5 {
         font-size: 14px !important;
     }
-    
+
     .panel-heading {
         padding: 8px 10px !important;
     }
-    
+
     .panel-body {
         padding: 10px !important;
     }
-    
+
     .variation-name {
         font-size: 12px;
     }
-    
+
     .drag-handle {
         font-size: 11px;
     }
-    
+
     .form-group label {
         font-size: 12px;
     }
-    
+
     .form-control {
         font-size: 13px;
         padding: 5px 8px;
     }
-    
+
     .variation-values table {
         font-size: 12px;
     }
-    
+
     .variation-values table td input[type="text"] {
         font-size: 12px;
         padding: 4px 6px;
     }
-    
+
     .variation-form-row > .col-sm-6 {
         padding-left: 6px !important;
         padding-right: 6px !important;
     }
-    
+
     .variation-form-row > .col-sm-3 {
         padding-left: 6px !important;
         padding-right: 6px !important;
     }
-    
+
     .insert-template select {
         min-width: 120px;
     }
-    
+
     .insert-template .btn {
         min-width: 80px;
         padding: 6px 10px;

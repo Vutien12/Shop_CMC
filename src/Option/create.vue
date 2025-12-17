@@ -1,6 +1,6 @@
 <template>
   <div class="option-create-page">
-    <PageBreadcrumb 
+    <PageBreadcrumb
       :title="isEditMode ? 'Edit Option' : 'Create Option'"
       :breadcrumbs="[
         { label: 'Options', route: { name: 'admin.options.index' } },
@@ -323,6 +323,7 @@ export default {
   },
   data() {
     return {
+      notification: null,
       loading: false,
       activeTab: 'general',
       form: {
@@ -382,14 +383,16 @@ export default {
             priceType: v.priceType || 'FIXED'
           }));
         } else {
-          const notification = useNotification();
-          notification.error('Lỗi!', 'Không thể tải dữ liệu tùy chọn');
+          if (this.notification) {
+            this.notification.error('Lỗi!', 'Không thể tải dữ liệu tùy chọn');
+          }
           this.$router.push({ name: 'admin.options.index' });
         }
       } catch (error) {
         console.error('Error loading option:', error);
-        const notification = useNotification();
-        notification.error('Lỗi!', 'Không thể tải tùy chọn');
+        if (this.notification) {
+          this.notification.error('Lỗi!', 'Không thể tải tùy chọn');
+        }
         this.$router.push({ name: 'admin.options.index' });
       } finally {
         this.loading = false;
@@ -458,26 +461,33 @@ export default {
       this.form.optionValues.splice(index, 1);
     },
     async saveForm() {
-      const notification = useNotification();
       // Validate form
       if (!this.form.name.trim()) {
-        notification.warning('Cảnh báo!', 'Vui lòng nhập tên tùy chọn');
+        if (this.notification) {
+          this.notification.warning('Cảnh báo!', 'Vui lòng nhập tên tùy chọn');
+        }
         return;
       }
 
       if (!this.form.type) {
-        notification.warning('Cảnh báo!', 'Vui lòng chọn loại tùy chọn');
+        if (this.notification) {
+          this.notification.warning('Cảnh báo!', 'Vui lòng chọn loại tùy chọn');
+        }
         return;
       }
 
       if (this.form.optionValues.length === 0) {
-        notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị');
+        if (this.notification) {
+          this.notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị');
+        }
         return;
       }
 
       // Validate select type has labels
       if (this.isSelectType && !this.form.optionValues.some(v => v.label.trim())) {
-        notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị có nhãn');
+        if (this.notification) {
+          this.notification.warning('Cảnh báo!', 'Vui lòng thêm ít nhất một giá trị có nhãn');
+        }
         return;
       }
 
@@ -506,18 +516,26 @@ export default {
           : await createOption(optionData);
 
         if (response.code === 200) {
-          notification.success('Thành công!', `Đã ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn thành công`);
+          if (this.notification) {
+            this.notification.success('Thành công!', `Đã ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn thành công`);
+          }
           this.$router.push({ name: 'admin.options.index' });
         } else {
-          notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn: ` + (response.message || 'Lỗi không xác định'));
+          if (this.notification) {
+            this.notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn: ` + (response.message || 'Lỗi không xác định'));
+          }
         }
       } catch (error) {
         console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} option:`, error);
-        notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn`);
+        if (this.notification) {
+          this.notification.error('Lỗi!', `Không thể ${this.isEditMode ? 'cập nhật' : 'tạo'} tùy chọn`);
+        }
       }
     }
   },
   mounted() {
+    // Initialize notification
+    this.notification = useNotification();
     this.loadOption();
   }
 };

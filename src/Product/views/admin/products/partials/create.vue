@@ -101,6 +101,7 @@ export default {
   },
   data() {
     return {
+      notification: null, // Will be initialized in mounted
       isEditMode: false,
       productId: null,
       redirectAfterSave: '0',
@@ -149,7 +150,7 @@ export default {
         },
       },
       formLeftSections: ['options', 'variations', 'variants'],
-      formRightSections: ['price', 'inventory', 'additional', 'media'],
+      formRightSections: ['media', 'price', 'inventory', 'additional'],
       rootCategories: [],
       brands: [],
       globalOptions: [],
@@ -183,6 +184,9 @@ export default {
     }
   },
   mounted() {
+    // Initialize notification
+    this.notification = useNotification();
+
     // Check if we're in edit mode
     this.productId = this.$route.params.id;
     this.isEditMode = !!this.productId;
@@ -325,12 +329,16 @@ export default {
         if (this.isEditMode && this.productId) {
           await this.loadProductData();
         } else {
+          // CREATE mode: Auto-generate SKU
+          this.generateRandomSku();
           // Generate default variant for simple product (no variations)
           this.generateVariants();
         }
       } catch (error) {
         console.error('Error loading initial data:', error);
-        // Có thể show notification lỗi cho user
+        if (this.notification) {
+          this.notification.error('Lỗi!', 'Không thể tải dữ liệu ban đầu: ' + error.message);
+        }
       } finally {
         this.isLoadingData = false;
       }
@@ -343,15 +351,13 @@ export default {
 
         console.log('Loaded product for editing:', product);
 
-        // Find brand by name
-        const brand = this.brands.find(b => b.name === product.brand);
-
         // Transform API response to form format
         this.form.name = product.name || '';
         this.form.slug = product.slug || '';
         this.form.description = product.description || '';
         this.form.short_description = product.shortDescription || '';
-        this.form.brand_id = brand ? brand.id : '';
+        // Brand is now an object with id and name
+        this.form.brand_id = product.brand?.id || '';
         this.form.sku = product.sku || '';
         this.form.manage_stock = product.manageStock ? 1 : 0;
         this.form.qty = product.qty || 0;
@@ -360,14 +366,9 @@ export default {
         this.form.new_from = product.newFrom || '';
         this.form.new_to = product.newTo || '';
 
-        // Map categories from names to IDs
+        // Categories is now an array of objects with id and name
         if (product.categories && product.categories.length > 0) {
-          this.form.categories = product.categories
-            .map(categoryName => {
-              const category = this.findCategoryByName(categoryName, this.rootCategories);
-              return category ? category.id : null;
-            })
-            .filter(id => id !== null);
+          this.form.categories = product.categories.map(cat => cat.id);
         }
 
         // Set thumbnail and gallery separately
@@ -390,10 +391,14 @@ export default {
         // Transform variations
         if (product.variations && product.variations.length > 0) {
           this.form.variations = product.variations.map(variation => ({
-            id: variation.id,
+            uid: this.generateUid(), // Generate uid for template rendering
+            id: variation.id, // Preserve ID for backend
             name: variation.name,
-            type: variation.type?.toLowerCase() || 'text',
+            type: variation.type || 'text',
             isGlobal: variation.isGlobal || false,
+            originalVariation: variation.isGlobal ? JSON.parse(JSON.stringify(variation)) : null, // Lưu bản gốc cho global variation
+            is_open: false, // Default to collapsed
+            position: 0,
             values: (variation.variationValues || []).map(value => {
               const valueObj = {
                 id: value.id, // Preserve ID for update
@@ -462,7 +467,7 @@ export default {
           }
         }
 
-        // Transform options
+        // Transform options - create deep copy to avoid modifying global options
         if (product.options && product.options.length > 0) {
           this.form.options = product.options.map(option => ({
             id: option.id,
@@ -481,24 +486,12 @@ export default {
 
         this.hasAnyVariant = this.form.variations.length > 0;
 
-            } catch (error) {
-                console.error('Error loading product data:', error);
-                const notification = useNotification();
-                notification.error('Error!', 'Failed to load product data: ' + error.message);
-            }
-        },
-
-    findCategoryByName(name, categories) {
-      for (const category of categories) {
-        if (category.name === name) {
-          return category;
-        }
-        if (category.children && category.children.length > 0) {
-          const found = this.findCategoryByName(name, category.children);
-          if (found) return found;
+      } catch (error) {
+        console.error('Error loading product data:', error);
+        if (this.notification) {
+          this.notification.error('Lỗi!', 'Không thể tải dữ liệu sản phẩm: ' + error.message);
         }
       }
-      return null;
     },
 
     mapOptionTypeFromAPI(apiType) {
@@ -597,6 +590,14 @@ export default {
         // In CREATE mode: do NOT attach images manually - backend handles it
 
         // Handle success
+        if (this.notification) {
+          if (this.isEditMode) {
+            this.notification.success('Thành công!', 'Đã cập nhật sản phẩm thành công');
+          } else {
+            this.notification.success('Thành công!', 'Đã tạo sản phẩm thành công');
+          }
+        }
+
         if (this.redirectAfterSave === '1') {
           this.$router.push({ name: 'admin.products.index' });
         } else {
@@ -645,23 +646,50 @@ export default {
               'specialPriceEnd': 'special_price_end',
             };
 
-                        Object.keys(validationErrors).forEach(key => {
-                            const errorMsg = validationErrors[key];
-                            // Convert camelCase API field name to snake_case form field name
-                            const formFieldName = fieldNameMap[key] || key;
-                            this.errors.errors[formFieldName] = Array.isArray(errorMsg) ? errorMsg : [errorMsg];
-                        });
-                        console.log('Validation errors mapped:', this.errors.errors);
-                    } else if (errorData.message) {
-                        const notification = useNotification();
-                        notification.error('Error!', errorData.message);
-                    }
-                } else {
-                    const notification = useNotification();
-                    notification.error('Error!', 'Failed to create product: ' + error.message);
-                }
+            Object.keys(validationErrors).forEach(key => {
+              const errorMsg = validationErrors[key];
+              // Convert camelCase API field name to snake_case form field name
+              const formFieldName = fieldNameMap[key] || key;
+              this.errors.errors[formFieldName] = Array.isArray(errorMsg) ? errorMsg : [errorMsg];
+            });
+            console.log('Validation errors mapped:', this.errors.errors);
+
+            // Show notification for validation errors
+            if (this.notification) {
+              this.notification.error('Dữ liệu không hợp lệ!', 'Vui lòng kiểm tra lại thông tin đã nhập');
             }
-        },
+          } else if (errorData.message) {
+            if (this.notification) {
+              this.notification.error('Lỗi!', errorData.message);
+            }
+          } else {
+            if (this.notification) {
+              this.notification.error('Lỗi!', 'Không thể lưu sản phẩm');
+            }
+          }
+        } else if (error.response) {
+          // Handle HTTP status code errors
+          const status = error.response.status;
+          if (this.notification) {
+            if (status === 400) {
+              this.notification.error('Dữ liệu không hợp lệ!', error.response.data?.message || 'Vui lòng kiểm tra lại thông tin');
+            } else if (status === 404) {
+              this.notification.error('Không tìm thấy!', 'Sản phẩm không tồn tại');
+            } else if (status === 409) {
+              this.notification.error('Trùng lặp!', 'SKU hoặc tên sản phẩm đã tồn tại');
+            } else if (status === 500) {
+              this.notification.error('Lỗi máy chủ!', 'Vui lòng thử lại sau');
+            } else {
+              this.notification.error('Lỗi!', 'Không thể lưu sản phẩm');
+            }
+          }
+        } else {
+          if (this.notification) {
+            this.notification.error('Lỗi!', 'Không thể kết nối đến máy chủ: ' + error.message);
+          }
+        }
+      }
+    },
 
     transformFormData() {
       // Calculate selling price
@@ -731,13 +759,37 @@ export default {
       return this.form.variations.map(variation => {
         const variationType = variation.type?.toLowerCase();
 
-        const transformed = {
+        console.log('transformVariations - variation:', {
           name: variation.name,
-          type: variation.type?.toUpperCase() || 'TEXT', // API expect uppercase: COLOR, TEXT, IMAGE
-          isGlobal: variation.isGlobal || false,
+          id: variation.id,
+          isGlobal: variation.isGlobal,
+          type: variation.type,
+          originalType: variation.originalVariation?.type,
+          isEditMode: this.isEditMode
+        });
+
+        // Luôn gửi full data (giống như options)
+        // Backend cần tôn trọng isGlobal flag:
+        // - isGlobal=true: Sử dụng/gán global variation (không clone)
+        // - isGlobal=false: Clone hoặc tạo mới local variation
+        console.log('  -> Sending full variation data with isGlobal flag');
+
+        let typeValue;
+        if (variation.isGlobal && variation.originalVariation?.type) {
+          typeValue = variation.originalVariation.type;
+        } else if (variation.type) {
+          typeValue = variation.type.charAt(0).toUpperCase() + variation.type.slice(1).toLowerCase();
+        } else {
+          typeValue = 'Text';
+        }
+
+        const transformed = {
+          name: variation.name || '',
+          type: typeValue,
+          isGlobal: variation.isGlobal || false, // Giữ nguyên isGlobal flag
           variationValues: (variation.values || []).map(value => {
             const valueData = {
-              label: value.label
+              label: value.label || ''
             };
 
             // Map value dựa theo type
@@ -749,7 +801,7 @@ export default {
               valueData.value = value.value || value.label || '';
             }
 
-            // Nếu có id (từ variation value đã có sẵn), thêm vào để backend biết là update
+            // Nếu value có id, gửi kèm để backend biết đây là existing value
             if (value.id) {
               valueData.id = value.id;
             }
@@ -758,7 +810,7 @@ export default {
           })
         };
 
-        // Nếu có id (từ global variation), thêm vào
+        // Nếu có id (variation đã tồn tại trong DB), gửi kèm để backend biết
         if (variation.id) {
           transformed.id = variation.id;
         }
@@ -766,6 +818,7 @@ export default {
         return transformed;
       });
     },
+
 
     transformVariants() {
       return this.form.variants.map(variant => {
@@ -961,6 +1014,17 @@ export default {
     generateUid() {
       // Generate unique ID for form elements
       return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    },
+
+    generateRandomSku() {
+      // Generate random SKU: SKU-YYYYMMDD-XXXXX
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+
+      this.form.sku = `SKU-${year}${month}${day}-${random}`;
     },
 
     formatDateTimeForAPI(dateString) {
