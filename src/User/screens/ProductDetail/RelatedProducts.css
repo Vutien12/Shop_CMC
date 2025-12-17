@@ -1,4 +1,4 @@
-/* Related Products Section - Isolated Styles */
+/* Related Products Section - Horizontal Scroll with Dots */
 .pd-related-products {
   margin-top: 3rem;
   padding: 2.5rem 0;
@@ -7,177 +7,259 @@
 
 .pd-related-products__title {
   font-size: 24px;
-  font-weight: 400;
-  color: #6e6e6e;
+  font-weight: 600;
+  color: #333;
   margin: 0 0 24px 0;
   font-family: 'Poppins', sans-serif;
 }
 
-.pd-related-products__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+.pd-related-products__container {
   width: 100%;
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
-/* Make ProductCard match Product.vue style */
-.pd-related-products__grid .product-card {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: box-shadow 0.3s;
-  padding: 16px !important;
+.pd-related-products__scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 20px 0;
+  cursor: grab;
+  user-select: none;
+
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pd-related-products__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.pd-related-products__scroll:active {
+  cursor: grabbing;
+}
+
+/* ProductCard styling */
+.pd-related-product-card {
+  flex: 0 0 220px;
   min-width: 220px;
   max-width: 220px;
 }
 
-.pd-related-products__grid .product-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  transform: none !important;
+/* ProductCard Component Styles (from Home.css) */
+.pd-related-products .product-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
 }
 
-/* Fix image size to stay within card */
-.pd-related-products__grid .product-image1 {
-  width: 100% !important;
-  height: 192px !important;
-  aspect-ratio: unset !important;
-  background-color: white !important;
-  border-radius: 4px !important;
-  margin-bottom: 16px !important;
-  overflow: hidden !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+.pd-related-products .product-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
 }
 
-.pd-related-products__grid .product-image1 img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  transform: none !important;
+.pd-related-products .product-badges {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.pd-related-products__grid .product-card:hover .product-image1 img {
-  transform: none !important;
+.pd-related-products .badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 60px;
 }
 
-/* Match Product.vue text styling */
-.pd-related-products__grid .product-name {
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: #1f2937 !important;
-  height: 40px !important;
-  margin-bottom: 8px !important;
-  line-height: 1.4 !important;
-  overflow: hidden !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
+.pd-related-products .badge.out-of-stock {
+  background: #dc3545;
+  color: white;
 }
 
-.pd-related-products__grid .product-info {
-  padding: 0 !important;
-  margin-top: 0 !important;
+.pd-related-products .badge.discount {
+  background: #28a745;
+  color: white;
 }
 
-.pd-related-products__grid .product-footer {
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
-  margin-top: auto !important;
-  padding-top: 8px !important;
+.pd-related-products .badge.new {
+  background: #007bff;
+  color: white;
 }
 
-.pd-related-products__grid .price-section {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 4px !important;
-  flex: 1 !important;
+.pd-related-products .product-image1 {
+  width: 100%;
+  aspect-ratio: 4/5;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 
-.pd-related-products__grid .current-price {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  color: #2563eb !important;
+.pd-related-products .product-image1 img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
-.pd-related-products__grid .current-price.sale-price {
-  color: #ef4444 !important;
+.pd-related-products .product-card:hover .product-image1 img {
+  transform: scale(1.08);
 }
 
-.pd-related-products__grid .original-price {
-  font-size: 14px !important;
-  color: #9ca3af !important;
-  text-decoration: line-through !important;
+.pd-related-products .product-info {
+  margin-top: 20px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
 }
 
-.pd-related-products__grid .action-btn {
-  width: 36px !important;
-  height: 36px !important;
-  padding: 8px !important;
-  background: #ffffff !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
+.pd-related-products .product-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+  height: calc(1.4em * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.pd-related-products__grid .action-btn:hover {
-  background: #f3f4f6 !important;
-  border-color: #0068e1 !important;
+.pd-related-products .product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
 }
 
-.pd-related-products__grid .action-btn svg {
-  width: 20px !important;
-  height: 20px !important;
+.pd-related-products .price-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* Responsive - Match Product.vue */
-/* Desktop Large (1400px+) */
+.pd-related-products .current-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0068e1;
+}
+
+.pd-related-products .current-price.sale-price {
+  color: #dc3545;
+}
+
+.pd-related-products .original-price {
+  font-size: 16px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.pd-related-products .action-btn {
+  border-radius: 8px;
+  border: none;
+  background: #d0e4fa;
+  color: rgb(88, 106, 243);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 8px;
+}
+
+.pd-related-products .action-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.pd-related-products .action-btn:disabled {
+  background: #dadada;
+  cursor: not-allowed;
+}
+
+/* Pagination Dots */
+.pd-related-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.pd-related-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e3e6e6;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.pd-related-dot:hover {
+  background: #ff6b35;
+  transform: scale(1.2);
+}
+
+.pd-related-dot.active {
+  background: #ff6b35;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Responsive */
 @media (min-width: 1400px) {
-  .pd-related-products__grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  .pd-related-product-card {
+    flex: 0 0 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
 }
 
-/* Desktop (1200px - 1399px) */
 @media (min-width: 1200px) and (max-width: 1399px) {
-  .pd-related-products__grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  .pd-related-product-card {
+    flex: 0 0 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
 }
 
-/* Laptop/Tablet Landscape (992px - 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
-  .pd-related-products__grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-  }
-  
-  .pd-related-products__grid .product-card {
+  .pd-related-product-card {
+    flex: 0 0 200px;
     min-width: 200px;
     max-width: 200px;
   }
-  
-  .pd-related-products__grid .product-image1 {
-    height: 180px !important;
+
+  .pd-related-products__scroll {
+    gap: 16px;
   }
 }
 
-/* Tablet Portrait (768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
-  .pd-related-products__grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-  }
-
   .pd-related-products {
     padding: 2rem 0;
     margin-top: 2rem;
@@ -187,15 +269,38 @@
     font-size: 20px;
     margin-bottom: 16px;
   }
-  
-  .pd-related-products__grid .product-card {
-    padding: 12px !important;
+
+  .pd-related-product-card {
+    flex: 0 0 200px;
     min-width: 200px;
     max-width: 200px;
   }
-  
-  .pd-related-products__grid .product-image1 {
-    height: 180px !important;
+
+  .pd-related-products__scroll {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  .pd-related-products {
+    padding: 1.5rem 0;
+    margin-top: 1.5rem;
+  }
+
+  .pd-related-products__title {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .pd-related-product-card {
+    flex: 0 0 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .pd-related-products__scroll {
+    gap: 12px;
+    padding: 12px 0;
   }
 }
 
@@ -215,33 +320,33 @@
     font-size: 18px;
     margin-bottom: 16px;
   }
-  
+
   .pd-related-products__grid .product-card {
     padding: 10px !important;
     min-width: unset;
     max-width: unset;
   }
-  
+
   .pd-related-products__grid .product-image1 {
     height: 160px !important;
     margin-bottom: 12px !important;
   }
-  
+
   .pd-related-products__grid .product-name {
     font-size: 13px !important;
     height: 36px !important;
   }
-  
+
   .pd-related-products__grid .current-price {
     font-size: 16px !important;
   }
-  
+
   .pd-related-products__grid .action-btn {
     min-width: 32px !important;
     min-height: 32px !important;
     padding: 6px !important;
   }
-  
+
   .pd-related-products__grid .action-btn svg {
     width: 18px !important;
     height: 18px !important;

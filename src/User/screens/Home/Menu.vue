@@ -289,7 +289,7 @@ export default {
       loadingProducts: false,
       hoveredCategory: null,
       hideMenuTimeout: null,
-      megaMenuStyle: {}, // <-- added: inline style for positioning mega menu
+      megaMenuStyle: {},
       canScrollLeft: false,
       canScrollRight: false,
       currentDotIndex: 0,
@@ -654,7 +654,7 @@ export default {
     // Initialize features
     this.features = [
       { id: 1,
-        icon: ['fas', 'headset'],
+        icon: ['fas', 'headphones'],
         title: '24/7 SUPPORT',
         description: 'Support every time',
       },
@@ -664,17 +664,17 @@ export default {
         description: 'Visa, Paypal, Master',
       },
       { id: 3,
-        icon: ['fas', 'shield-alt'],
+        icon: ['fas', 'shield'],
         title: 'SECURED PAYMENT',
         description: '100% secured',
       },
       { id: 4,
-        icon: ['fas', 'truck'],
+        icon: ['fas', 'truck-fast'],
         title: 'FREE SHIPPING',
         description: 'Order over $100',
       },
       { id: 5,
-        icon: null, // intentionally no icon for this feature
+        icon: ['fas', 'rotate-left'],
         title: '30 DAYS RETURN',
         description: '30 days guarantee',
       },

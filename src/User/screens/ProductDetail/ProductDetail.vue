@@ -258,8 +258,8 @@
             <div class="meta-item">
               <strong>Categories:</strong>
               <template v-if="product.categories && product.categories.length">
-                <span v-for="(category, index) in product.categories" :key="category">
-                  <a href="#" class="meta-link">{{ category }}</a>
+                <span v-for="(category, index) in product.categories" :key="category.id || category">
+                  <a href="#" class="meta-link">{{ category.name || category }}</a>
                   <span v-if="index < product.categories.length - 1">, </span>
                 </span>
               </template>
@@ -323,9 +323,9 @@
             <h3>Specification</h3>
             <ul>
               <li><strong>Product Name:</strong> {{ product.name }}</li>
-              <li><strong>Brand:</strong> {{ product.brand }}</li>
+              <li v-if="product.brand"><strong>Brand:</strong> {{ product.brand.name || product.brand }}</li>
               <li><strong>SKU:</strong> {{ product.sku }}</li>
-              <li v-if="product.categories?.length"><strong>Category:</strong> {{ product.categories.join(', ') }}</li>
+              <li v-if="product.categories?.length"><strong>Category:</strong> {{ getCategoriesString(product.categories) }}</li>
               <li><strong>Stock Status:</strong> {{ product.inStock ? 'In Stock' : 'Out of Stock' }}</li>
               <li><strong>Available Quantity:</strong> {{ product.qty }}</li>
               <li><strong>Current Price:</strong> {{ formatPrice(currentPrice) }}</li>
@@ -344,15 +344,33 @@
       <!-- Related Products -->
       <div v-if="relatedProducts.length > 0" class="pd-related-products">
         <h3 class="pd-related-products__title">You might also like</h3>
-        <div class="pd-related-products__grid">
+        <div class="pd-related-products__container">
           <div
-            v-for="item in relatedProducts"
-            :key="item.id"
-            @click="navigateToProduct(item.id)"
-            style="cursor: pointer;"
+            class="pd-related-products__scroll"
+            ref="relatedProductsScroll"
+            @mousedown="startDragRelated"
+            @mousemove="onDragRelated"
+            @mouseup="endDragRelated"
+            @mouseleave="endDragRelated"
           >
-            <ProductCard :product="transformRelatedProduct(item)" />
+            <ProductCard
+              v-for="item in relatedProducts"
+              :key="item.id"
+              :product="item"
+              class="pd-related-product-card"
+            />
           </div>
+        </div>
+
+        <!-- Pagination Dots -->
+        <div v-if="relatedProducts.length > relatedItemsPerPage" class="pd-related-pagination">
+          <button
+            v-for="page in relatedMaxPages"
+            :key="page"
+            class="pd-related-dot"
+            :class="{ active: relatedCurrentPage === page - 1 }"
+            @click="goToRelatedPage(page - 1)"
+          ></button>
         </div>
       </div>
     </div>
@@ -375,7 +393,6 @@ import { getProductById, getRelatedProducts } from '@/api/productApi.js'
 import { useReviewStore } from '@/User/stores/reviewStore.js'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
-import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils'
 
 export default {
   name: 'ProductDetail',
@@ -400,7 +417,7 @@ export default {
       // Dữ liệu variation
       variations: [],
       options: [],
-      selectedVariations: {},   // { variationId: valueObject }
+      selectedVariations: {},
       selectedOptions: {},
       optionErrors: {},
       selectedVariant: null,
@@ -417,6 +434,11 @@ export default {
 
       // Related products
       relatedProducts: [],
+      relatedCurrentPage: 0,
+      relatedItemsPerPage: 6,
+      isDraggingRelated: false,
+      startXRelated: 0,
+      scrollLeftRelated: 0,
     }
   },
   async mounted() {
@@ -901,26 +923,47 @@ export default {
       this.$router.push({ name: 'ProductDetail', params: { id: productId } });
     },
 
-    transformRelatedProduct(apiProduct) {
-      // Transform API product to match ProductCard format
+    getCategoriesString(categories) {
+      if (!categories || !Array.isArray(categories)) return '';
+      return categories.map(cat => cat.name || cat).join(', ');
+    },
 
-      // Calculate discount using utility function that matches backend
-      const discount = calculateProductDiscount(apiProduct);
+    // Related Products Scroll
+    startDragRelated(e) {
+      if (!this.$refs.relatedProductsScroll) return;
+      this.isDraggingRelated = true;
+      this.startXRelated = e.pageX - this.$refs.relatedProductsScroll.offsetLeft;
+      this.scrollLeftRelated = this.$refs.relatedProductsScroll.scrollLeft;
+      this.$refs.relatedProductsScroll.style.cursor = 'grabbing';
+    },
 
-      // Get best selling price if available
-      const bestSellingPrice = getBestSellingPrice(apiProduct);
-      const originalPrice = bestSellingPrice ? apiProduct.minPrice : null;
+    onDragRelated(e) {
+      if (!this.isDraggingRelated || !this.$refs.relatedProductsScroll) return;
+      e.preventDefault();
+      const x = e.pageX - this.$refs.relatedProductsScroll.offsetLeft;
+      const walk = (x - this.startXRelated) * 2;
+      this.$refs.relatedProductsScroll.scrollLeft = this.scrollLeftRelated - walk;
+    },
 
-      return {
-        id: apiProduct.id,
-        name: apiProduct.name,
-        image: apiProduct.thumbnail?.url || apiProduct.thumbnail || this.placeholderImage,
-        price: bestSellingPrice || apiProduct.minPrice || 0,
-        originalPrice: originalPrice,
-        discount: discount,
-        isNew: !!(apiProduct.newFrom || apiProduct.newTo),
-        isOutOfStock: !apiProduct.inStock,
-      };
+    endDragRelated() {
+      if (!this.$refs.relatedProductsScroll) return;
+      this.isDraggingRelated = false;
+      this.$refs.relatedProductsScroll.style.cursor = 'grab';
+
+      // Update current page based on scroll position
+      const container = this.$refs.relatedProductsScroll;
+      const cardWidth = 240; // card width + gap
+      const scrollAmount = cardWidth * this.relatedItemsPerPage;
+      this.relatedCurrentPage = Math.round(container.scrollLeft / scrollAmount);
+    },
+
+    goToRelatedPage(page) {
+      if (!this.$refs.relatedProductsScroll) return;
+      const container = this.$refs.relatedProductsScroll;
+      const cardWidth = 240;
+      const scrollAmount = cardWidth * this.relatedItemsPerPage * page;
+      container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+      this.relatedCurrentPage = page;
     },
 
     formatPrice(price) {
@@ -1002,6 +1045,9 @@ export default {
       div.innerHTML = this.product.description
       const text = div.textContent || div.innerText || ''
       return `<div>${text.substring(0, this.descriptionMaxLength)}...</div>`
+    },
+    relatedMaxPages() {
+      return Math.ceil(this.relatedProducts.length / this.relatedItemsPerPage);
     }
   }
 }

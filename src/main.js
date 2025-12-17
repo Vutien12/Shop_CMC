@@ -21,7 +21,12 @@ import {
   faEye,
   faEyeSlash,
   faUser,
-  faPhone
+  faPhone,
+  faTruckFast,
+  faShield,
+  faCreditCardAlt,
+  faHeadphones,
+  faRotateLeft,
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faGoogle,
@@ -41,6 +46,11 @@ library.add(
   faEyeSlash,
   faUser,
   faPhone,
+  faHeadphones,
+  faCreditCardAlt,
+  faShield,
+  faTruckFast,
+  faRotateLeft,
   faGoogle,
   faFacebook,
   faGithub
