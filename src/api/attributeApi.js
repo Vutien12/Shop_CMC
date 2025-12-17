@@ -90,3 +90,4 @@ export const deleteManyAttributes = async (ids) => {
         throw error;
     }
 };
+

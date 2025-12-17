@@ -53,6 +53,28 @@ export {
   deleteOption
 } from './optionApi.js';
 
+// Attribute APIs
+export {
+  getAttributes,
+  searchAttributes,
+  getAttribute,
+  createAttribute,
+  updateAttribute,
+  deleteAttribute,
+  deleteManyAttributes
+} from './attributeApi.js';
+
+// Attribute Set APIs
+export {
+  getAttributeSets,
+  searchAttributeSets,
+  getAttributeSet,
+  createAttributeSet,
+  updateAttributeSet,
+  deleteAttributeSet,
+  deleteManyAttributeSets
+} from './attributeSetApi.js';
+
 // Cart APIs
 export * from './cartApi.js';
 

@@ -89,6 +89,7 @@ import {
   getCategories,
   getGlobalVariations,
   getGlobalOptions,
+  getAttributeSets,
   attachFileToEntity,
   deleteEntityFile
 } from '@/api';
@@ -129,7 +130,7 @@ export default {
         qty: '',
         variations: [],
         variants: [],
-        attributes: [],
+        attributes: [], // Product attributes with their selected values
         options: [],
         thumbnail: null, // Separate thumbnail
         gallery: [], // Separate gallery array
@@ -311,12 +312,13 @@ export default {
     async loadInitialData() {
       this.isLoadingData = true;
       try {
-        // Load brands, categories, global variations, global options từ API
-        const [brandsRes, categoriesRes, variationsRes, optionsRes] = await Promise.all([
+        // Load brands, categories, global variations, global options, attribute sets từ API
+        const [brandsRes, categoriesRes, variationsRes, optionsRes, attributeSetsRes] = await Promise.all([
           getBrands(),
           getCategories(),
           getGlobalVariations(),
-          getGlobalOptions()
+          getGlobalOptions(),
+          getAttributeSets()
         ]);
 
         this.brands = brandsRes.result || [];
@@ -326,7 +328,7 @@ export default {
 
         this.globalVariations = variationsRes.result || [];
         this.globalOptions = optionsRes.result || [];
-        this.attributeSets = []; // Giữ giao diện nhưng không gọi BE
+        this.attributeSets = attributeSetsRes.result || [];
 
         console.log('Loaded initial data:', {
           brands: this.brands.length,
@@ -490,6 +492,19 @@ export default {
               label: value.label,
               price: value.price || 0,
               price_type: value.priceType?.toLowerCase() || 'fixed'
+            }))
+          }));
+        }
+
+        // Transform attributes - backend sends in correct format already
+        if (product.attributes && product.attributes.length > 0) {
+          this.form.attributes = product.attributes.map(attr => ({
+            attributeId: attr.attributeId,
+            attributeName: attr.attributeName,
+            filterable: attr.filterable !== undefined ? attr.filterable : true,
+            attributeValues: (attr.attributeValues || []).map(value => ({
+              id: value.id,
+              value: value.value
             }))
           }));
         }
@@ -755,10 +770,12 @@ export default {
         // Transform options
         options: this.transformOptions(),
 
+        // Transform attributes to attributeValues format for backend
+        attributeValues: this.transformAttributesToAttributeValues(),
+
         // Meta data
         meta: this.form.meta || {},
 
-        // Price info (nếu không có variants)
         price: price,
         sellingPrice: sellingPrice,
       };
@@ -903,6 +920,37 @@ export default {
         return transformed;
       });
     },
+
+    transformAttributesToAttributeValues() {
+      // Transform from UI format (grouped by attribute) to backend format (flat array)
+      // UI: [{ attributeId: 1, attributeValues: [{id: 1}, {id: 2}] }]
+      // Backend: [{ attributeId: 1, attributeValueId: 1 }, { attributeId: 1, attributeValueId: 2 }]
+
+      console.log('=== transformAttributesToAttributeValues ===');
+      console.log('Input form.attributes:', JSON.stringify(this.form.attributes, null, 2));
+
+      if (!this.form.attributes || this.form.attributes.length === 0) {
+        console.log('No attributes to transform');
+        return [];
+      }
+
+      const result = [];
+
+      this.form.attributes.forEach(attribute => {
+        if (attribute.attributeId && attribute.attributeValues) {
+          attribute.attributeValues.forEach(value => {
+            result.push({
+              attributeId: attribute.attributeId,
+              attributeValueId: value.id
+            });
+          });
+        }
+      });
+
+      console.log('Output attributeValues:', JSON.stringify(result, null, 2));
+      return result;
+    },
+
 
     generateVariants() {
       // Generate product variants from variations
@@ -1136,13 +1184,13 @@ export default {
         const { variationIndex, valueIndex } = this.currentVariationImageData;
         const variation = this.form.variations[variationIndex];
         const value = variation.values[valueIndex];
-        
+
         // Update value.image with structure { id, path }
         value.image = {
           id: media.id,
           path: media.path
         };
-        
+
         console.log('Updated variation value image:', value);
       }
 
