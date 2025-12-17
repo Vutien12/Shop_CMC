@@ -277,7 +277,7 @@
 
 
 .status-paid { background: #d4edda; color: #155724; }
-.status-pending { background: #fff3cd; color: #856404; }
+.status-pending { background: #D4EDDA; color: #155724; }
 .status-pending-payment { background: #f8d7da; color: #721c24; }
 .status-cancelled { background: #f5c6cb; color: #721c24; }
 
