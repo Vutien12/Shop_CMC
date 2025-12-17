@@ -9,8 +9,14 @@
         :create-route="{ name: 'admin.attribute-sets.create' }"
         create-button-text="Create Attribute Set"
         :row-clickable="true"
+        :server-side="true"
+        :pagination="pagination"
         @delete="handleDelete"
         @row-click="handleRowClick"
+        @search="handleSearch"
+        @page-change="handlePageChange"
+        @per-page-change="handlePerPageChange"
+        @sort="handleSort"
     >
         <!-- Custom cell for Created column with formatted date -->
         <template #cell-createdAt="{ value }">
@@ -24,7 +30,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
-import { searchAttributeSets, deleteManyAttributeSets } from '@/api/attributeSetApi.js';
+import { searchAttributeSets, deleteManyAttributeSets } from '@/api/attributeApi.js';
 
 export default {
     name: 'AttributeSetIndex',
@@ -37,6 +43,17 @@ export default {
         const attributeSets = ref([]);
         const loading = ref(false);
 
+        // Search and pagination state
+        const searchQuery = ref('');
+        const pagination = ref({
+            currentPage: 1,
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0
+        });
+        const sortBy = ref('createdAt');
+        const sortDirection = ref('DESC');
+
         const columns = [
             { key: 'id', label: 'Id', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
@@ -46,26 +63,65 @@ export default {
         const loadAttributeSets = async () => {
             loading.value = true;
             try {
-                const response = await searchAttributeSets({
-                    page: 0,
-                    size: 100,
-                    sortBy: 'createdAt',
-                    direction: 'DESC'
-                });
+                const params = {
+                    page: pagination.value.currentPage - 1,
+                    size: pagination.value.pageSize,
+                    sortBy: sortBy.value,
+                    direction: sortDirection.value
+                };
 
-                // Map API response to table format
+                if (searchQuery.value) {
+                    params.keyword = searchQuery.value;
+                }
+
+                const response = await searchAttributeSets(params);
                 const result = response.data.result;
-                attributeSets.value = (result.content || result).map(set => ({
-                    id: set.id,
-                    name: set.name,
-                    createdAt: set.createdAt
-                }));
+
+                if (result.content) {
+                    attributeSets.value = result.content.map(set => ({
+                        id: set.id,
+                        name: set.name,
+                        createdAt: set.createdAt
+                    }));
+
+                    pagination.value.totalElements = result.totalElements || 0;
+                    pagination.value.totalPages = result.totalPages || 0;
+                } else {
+                    attributeSets.value = (result || []).map(set => ({
+                        id: set.id,
+                        name: set.name,
+                        createdAt: set.createdAt
+                    }));
+                }
             } catch (error) {
                 console.error('Error loading attribute sets:', error);
                 notification.error('Error', 'Failed to load attribute sets: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleSearch = (query) => {
+            searchQuery.value = query;
+            pagination.value.currentPage = 1;
+            loadAttributeSets();
+        };
+
+        const handlePageChange = (page) => {
+            pagination.value.currentPage = page;
+            loadAttributeSets();
+        };
+
+        const handlePerPageChange = (perPage) => {
+            pagination.value.pageSize = perPage;
+            pagination.value.currentPage = 1;
+            loadAttributeSets();
+        };
+
+        const handleSort = ({ sortBy: newSortBy, direction }) => {
+            sortBy.value = newSortBy;
+            sortDirection.value = direction.toUpperCase();
+            loadAttributeSets();
         };
 
         const handleRowClick = (row) => {
@@ -123,8 +179,13 @@ export default {
             attributeSets,
             columns,
             loading,
+            pagination,
             handleRowClick,
             handleDelete,
+            handleSearch,
+            handlePageChange,
+            handlePerPageChange,
+            handleSort,
             formatDate
         };
     }

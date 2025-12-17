@@ -42,18 +42,18 @@
                             <div class="tab-content clearfix">
                                 <div class="tab-pane fade in active" id="general">
                                     <h4 class="tab-content-title">General</h4>
-                                    
+
                                     <div class="form-group-wrapper">
                                         <label for="name" class="form-label">
                                             Name
                                             <span class="text-red">*</span>
                                         </label>
                                         <div class="form-input-wrapper">
-                                            <input 
+                                            <input
                                                 v-model="formData.name"
-                                                name="name" 
-                                                class="form-control" 
-                                                id="name" 
+                                                name="name"
+                                                class="form-control"
+                                                id="name"
                                                 type="text"
                                                 placeholder="Enter attribute set name"
                                             />
@@ -82,7 +82,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
-import { getAttributeSet, createAttributeSet, updateAttributeSet } from '@/api/attributeSetApi.js';
+import { getAttributeSet, createAttributeSet, updateAttributeSet } from '@/api/attributeApi.js';
 
 export default {
     name: 'AttributeSetCreate',

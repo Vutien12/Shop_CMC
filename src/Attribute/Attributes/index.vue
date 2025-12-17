@@ -9,8 +9,14 @@
         :create-route="{ name: 'admin.attributes.create' }"
         create-button-text="Create Attribute"
         :row-clickable="true"
+        :server-side="true"
+        :pagination="pagination"
         @delete="handleDelete"
         @row-click="handleRowClick"
+        @search="handleSearch"
+        @page-change="handlePageChange"
+        @per-page-change="handlePerPageChange"
+        @sort="handleSort"
     >
         <!-- Custom cell for Filterable column with badge -->
         <template #cell-filterable="{ value }">
@@ -44,6 +50,17 @@ export default {
         const attributes = ref([]);
         const loading = ref(false);
 
+        // Search and pagination state
+        const searchQuery = ref('');
+        const pagination = ref({
+            currentPage: 1,
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0
+        });
+        const sortBy = ref('createdAt');
+        const sortDirection = ref('DESC');
+
         const columns = [
             { key: 'id', label: 'Id', sortable: true, width: '80px' },
             { key: 'name', label: 'Name', sortable: true },
@@ -55,28 +72,76 @@ export default {
         const loadAttributes = async () => {
             loading.value = true;
             try {
-                const response = await searchAttributes({
-                    page: 0,
-                    size: 100,
-                    sortBy: 'createdAt',
-                    direction: 'DESC'
-                });
+                const params = {
+                    page: pagination.value.currentPage - 1, // API uses 0-based page
+                    size: pagination.value.pageSize,
+                    sortBy: sortBy.value,
+                    direction: sortDirection.value
+                };
+
+                // Add search keyword if exists
+                if (searchQuery.value) {
+                    params.keyword = searchQuery.value;
+                }
+
+                console.log('Loading attributes with params:', params);
+                const response = await searchAttributes(params);
+                console.log('Attributes response:', response);
 
                 // Map API response to table format
                 const result = response.data.result;
-                attributes.value = (result.content || result).map(attr => ({
-                    id: attr.id,
-                    name: attr.name,
-                    attributeSet: attr.attributeSet?.name || 'N/A',
-                    filterable: attr.filterable || false,
-                    createdAt: attr.createdAt
-                }));
+
+                if (result.content) {
+                    // Paginated response
+                    attributes.value = result.content.map(attr => ({
+                        id: attr.id,
+                        name: attr.name,
+                        attributeSet: attr.attributeSet?.name || 'N/A',
+                        filterable: attr.filterable || false,
+                        createdAt: attr.createdAt
+                    }));
+
+                    pagination.value.totalElements = result.totalElements || 0;
+                    pagination.value.totalPages = result.totalPages || 0;
+                } else {
+                    // Non-paginated response
+                    attributes.value = (result || []).map(attr => ({
+                        id: attr.id,
+                        name: attr.name,
+                        attributeSet: attr.attributeSet?.name || 'N/A',
+                        filterable: attr.filterable || false,
+                        createdAt: attr.createdAt
+                    }));
+                }
             } catch (error) {
                 console.error('Error loading attributes:', error);
                 notification.error('Error', 'Failed to load attributes: ' + (error.response?.data?.message || error.message));
             } finally {
                 loading.value = false;
             }
+        };
+
+        const handleSearch = (query) => {
+            searchQuery.value = query;
+            pagination.value.currentPage = 1; // Reset to first page
+            loadAttributes();
+        };
+
+        const handlePageChange = (page) => {
+            pagination.value.currentPage = page;
+            loadAttributes();
+        };
+
+        const handlePerPageChange = (perPage) => {
+            pagination.value.pageSize = perPage;
+            pagination.value.currentPage = 1; // Reset to first page
+            loadAttributes();
+        };
+
+        const handleSort = ({ sortBy: newSortBy, direction }) => {
+            sortBy.value = newSortBy;
+            sortDirection.value = direction.toUpperCase();
+            loadAttributes();
         };
 
         const handleRowClick = (row) => {
@@ -134,8 +199,13 @@ export default {
             attributes,
             columns,
             loading,
+            pagination,
             handleRowClick,
             handleDelete,
+            handleSearch,
+            handlePageChange,
+            handlePerPageChange,
+            handleSort,
             formatDate
         };
     }
