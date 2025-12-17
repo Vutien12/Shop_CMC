@@ -145,7 +145,7 @@
                   <!-- Product Info -->
                   <div class="product-info-wrapper">
                     <!-- Brand -->
-                    <div v-if="product.brand" class="product-brand">{{ product.brand }}</div>
+                    <div v-if="product.brand" class="product-brand">{{ product.brand.name || product.brand }}</div>
 
                     <!-- Product Name -->
                     <h5 class="product-title" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>
@@ -328,7 +328,7 @@
                   <!-- Product Info -->
                   <div class="product-info-wrapper">
                     <!-- Brand -->
-                    <div v-if="product.brand" class="product-brand">{{ product.brand }}</div>
+                    <div v-if="product.brand" class="product-brand">{{ product.brand.name || product.brand }}</div>
 
                     <!-- Product Name -->
                     <h5 class="product-title" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>
@@ -394,7 +394,6 @@ import { searchProducts, getNewArrivals, getSpecialProducts, getFeaturedProducts
 import { getCategories } from '@/api/categoryApi'
 import { getBrands } from '@/api/brandApi'
 import { getActiveFlashSales } from '@/api/flashsaleApi'
-import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils'
 
 import Menu from './Menu.vue'
 import BestDealsSection from './sections/BestDealsSection.vue'
@@ -450,27 +449,6 @@ const bannerImages2 = ref([
 // Prepare first two banners for display to avoid mixing v-for and v-if
 const bannerImages2List = computed(() => bannerImages2.value.slice(0, 2))
 
-// Transform API product to match ProductCard format (kept for potential future use)
-// eslint-disable-next-line no-unused-vars
-const transformProduct = (apiProduct) => {
-  // Calculate discount using utility function
-  const discount = calculateProductDiscount(apiProduct)
-
-  // Get best selling price if available
-  const bestSellingPrice = getBestSellingPrice(apiProduct)
-  const originalPrice = bestSellingPrice ? apiProduct.minPrice : null
-
-  return {
-    id: apiProduct.id,
-    name: apiProduct.name,
-    image: apiProduct.thumbnail?.url || apiProduct.thumbnail,
-    price: bestSellingPrice || apiProduct.minPrice,
-    originalPrice: originalPrice,
-    discount: discount,
-    isNew: !!(apiProduct.newFrom || apiProduct.newTo),
-    isOutOfStock: !apiProduct.inStock,
-  }
-}
 
 // Fetch all data on mount
 onMounted(async () => {

@@ -202,7 +202,7 @@
               <!-- Product Info -->
               <div class="product-info-wrapper">
                 <!-- Brand -->
-                <div v-if="product.brand" class="product-brand">{{ product.brand }}</div>
+                <div v-if="product.brand" class="product-brand">{{ product.brand.name || product.brand }}</div>
 
                 <!-- Product Name -->
                 <h5 class="product-title" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>

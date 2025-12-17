@@ -152,10 +152,10 @@
                     <div class="item-title">{{ product.name }}</div>
                     <div class="item-pricing">
                       <template v-if="hasDiscount(product)">
-                        <span class="price-old">{{ formatPrice(product.minPrice) }}</span>
-                        <span class="price-sale">{{ formatPrice(getSpecialPrice(product)) }}</span>
+                        <span class="price-old">{{ formatPrice(getOriginalPrice(product)) }}</span>
+                        <span class="price-sale">{{ formatPrice(getSellingPrice(product)) }}</span>
                       </template>
-                      <span v-else class="price-regular">{{ formatPrice(product.minPrice) }}</span>
+                      <span v-else class="price-regular">{{ formatPrice(getSellingPrice(product)) }}</span>
                     </div>
                   </div>
                 </router-link>
@@ -226,12 +226,34 @@ const formatPrice = (value) => {
 }
 
 const hasDiscount = (product) => {
-  return product.variants?.some(v => v.specialPrice !== null)
+  // Kiểm tra nếu có variant nào có giá bán (sellingPrice) khác giá gốc (price)
+  return product.variants?.some(v => v.sellingPrice && v.sellingPrice < v.price)
 }
 
-const getSpecialPrice = (product) => {
-  const variantWithDiscount = product.variants?.find(v => v.specialPrice !== null)
-  return variantWithDiscount?.specialPrice || product.minPrice
+const getSellingPrice = (product) => {
+  // Lấy giá bán thấp nhất từ các variants
+  if (!product.variants || product.variants.length === 0) {
+    return product.minPrice || 0
+  }
+
+  const sellingPrices = product.variants
+    .map(v => v.sellingPrice || v.price)
+    .filter(price => price !== null && price !== undefined)
+
+  return sellingPrices.length > 0 ? Math.min(...sellingPrices) : product.minPrice || 0
+}
+
+const getOriginalPrice = (product) => {
+  // Lấy giá gốc thấp nhất từ các variants (để hiển thị giá gạch ngang)
+  if (!product.variants || product.variants.length === 0) {
+    return product.minPrice || 0
+  }
+
+  const prices = product.variants
+    .map(v => v.price)
+    .filter(price => price !== null && price !== undefined)
+
+  return prices.length > 0 ? Math.min(...prices) : product.minPrice || 0
 }
 
 const chunkProducts = (products, size) => {

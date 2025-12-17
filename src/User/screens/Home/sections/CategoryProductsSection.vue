@@ -21,7 +21,7 @@
           <ProductCard
             v-for="product in categoryData.products"
             :key="product.id"
-            :product="transformProduct(product)"
+            :product="product"
           />
         </div>
       </div>
@@ -32,7 +32,6 @@
 <script setup>
 import { defineProps } from 'vue'
 import ProductCard from '../ProductCard.vue'
-import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils'
 
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -41,27 +40,6 @@ const props = defineProps({
     required: true
   }
 })
-
-// Transform API product to match ProductCard format
-const transformProduct = (apiProduct) => {
-  // Calculate discount using utility function
-  const discount = calculateProductDiscount(apiProduct)
-
-  // Get best selling price if available
-  const bestSellingPrice = getBestSellingPrice(apiProduct)
-  const originalPrice = bestSellingPrice ? apiProduct.minPrice : null
-
-  return {
-    id: apiProduct.id,
-    name: apiProduct.name,
-    image: apiProduct.thumbnail?.url || apiProduct.thumbnail,
-    price: bestSellingPrice || apiProduct.minPrice,
-    originalPrice: originalPrice,
-    discount: discount,
-    isNew: !!(apiProduct.newFrom || apiProduct.newTo),
-    isOutOfStock: !apiProduct.inStock,
-  }
-}
 </script>
 
 <style scoped>
