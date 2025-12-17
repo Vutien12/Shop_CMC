@@ -346,17 +346,23 @@ export default {
                 console.log('Fetching report with params:', params);
 
                 const response = await getReports(params);
+                console.log('Report response:', response);
 
-                if (response.code === 200 && response.result) {
-                    reportData.value = response.result.content || [];
-                    pagination.value.totalPages = response.result.totalPages || 0;
-                    pagination.value.totalElements = response.result.totalElements || 0;
+                if (response && response.data) {
+                    const apiResponse = response.data;
 
-                    if (reportData.value.length === 0) {
-                        notification.info('Thông báo', 'Không có dữ liệu phù hợp với bộ lọc');
+                    if (apiResponse.code === 200 && apiResponse.result) {
+                        reportData.value = apiResponse.result.content || [];
+                        pagination.value.totalPages = apiResponse.result.totalPages || 0;
+                        pagination.value.totalElements = apiResponse.result.totalElements || 0;
+
+                        // Don't show notification for empty data, just display the empty state
+                    } else {
+                        notification.error('Lỗi!', 'Không thể tải dữ liệu báo cáo');
+                        reportData.value = [];
                     }
                 } else {
-                    notification.error('Lỗi!', 'Không thể tải dữ liệu báo cáo');
+                    notification.error('Lỗi!', 'Phản hồi không hợp lệ từ server');
                     reportData.value = [];
                 }
             } catch (error) {
