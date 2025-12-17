@@ -105,9 +105,9 @@
                 required
                 :class="{ 'error': fieldErrors.password }"
               />
-              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
+              <!-- <button type="button" class="toggle-password" @click="showPassword = !showPassword">
                 <font-awesome-icon :icon="['fas', showPassword ? 'eye-slash' : 'eye']" />
-              </button>
+              </button> -->
             </div>
             <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
           </div>
@@ -127,9 +127,9 @@
                 required
                 :class="{ 'error': fieldErrors.password }"
               />
-              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
+              <!-- <button type="button" class="toggle-password" @click="showPassword = !showPassword">
                 <font-awesome-icon :icon="['fas', showPassword ? 'eye-slash' : 'eye']" />
-              </button>
+              </button> -->
             </div>
             <p v-if="fieldErrors.password" class="field-error">{{ fieldErrors.password }}</p>
           </div>

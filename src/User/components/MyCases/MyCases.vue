@@ -19,13 +19,13 @@
               <i class="fa-solid fa-cart-shopping"></i>
               <span>My Orders</span>
             </router-link>
-            <router-link to="/my-cases" class="nav-item">
-              <i class="fa-solid fa-rotate-left"></i>
-              <span>My Cases</span>
-            </router-link>
             <router-link to="/wishlist" @mouseenter="prefetch('/wishlist')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-heart"></i>
               <span>My Wishlist</span>
+            </router-link>
+            <router-link to="/my-cases" class="nav-item">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>My Cases</span>
             </router-link>
             <router-link to="/addresses" @mouseenter="prefetch('/addresses')" @mouseleave="cancel" class="nav-item">
               <i class="fa-regular fa-address-book"></i>
@@ -72,8 +72,8 @@
             <!-- Empty State -->
             <div v-else-if="!cases.length" class="empty-state">
               <i class="fa-solid fa-rotate-left" style="font-size: 48px; color: #ccc;"></i>
-              <p>Bạn chưa có yêu cầu nào</p>
-              <router-link to="/orders" class="btn-primary">Xem đơn hàng</router-link>
+              <p>You don't have any requests yet</p>
+              <router-link to="/orders" class="btn-primary">View Orders</router-link>
             </div>
 
             <!-- Cases Table -->
