@@ -698,7 +698,7 @@ export default {
 }
 
 .profile-banner {
-  height: 30px;
+  height: 80px;
   position: relative;
   overflow: hidden;
 }
@@ -706,9 +706,7 @@ export default {
 .banner-gradient {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  animation: gradientShift 15s ease infinite;
-  background-size: 200% 200%;
+  background: #000000;
 }
 
 @keyframes gradientShift {
@@ -734,7 +732,7 @@ export default {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -755,7 +753,7 @@ export default {
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   opacity: 0.2;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -823,7 +821,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   color: white;
   border: none;
   border-radius: 10px;
@@ -831,13 +829,14 @@ export default {
   font-size: 15px;
   font-weight: 600;
   transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   margin-top: 12px;
 }
 
 .btn-edit-profile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: #333333;
 }
 
 .btn-edit-profile i {
@@ -878,6 +877,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #000000 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -919,7 +919,7 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -928,7 +928,7 @@ export default {
 
 .info-icon i {
   font-size: 18px;
-  color: #667eea;
+  color: #000000;
 }
 
 .info-content {
@@ -987,21 +987,21 @@ export default {
 }
 
 .badge-admin {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   color: white;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .badge-user {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #333333;
   color: white;
-  box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .badge-manager {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: #666666;
   color: white;
-  box-shadow: 0 2px 8px rgba(250, 112, 154, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .badge-default {
@@ -1018,20 +1018,21 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+  background: #f8f9fa;
   border-radius: 12px;
   margin-bottom: 16px;
+  border: 1px solid #e9ecef;
 }
 
 .security-icon {
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
 }
 
@@ -1062,7 +1063,7 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: #000000;
   color: white;
   border: none;
   border-radius: 8px;
@@ -1070,20 +1071,21 @@ export default {
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
 .btn-security-action:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(250, 112, 154, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  background: #333333;
 }
 
 .security-tips {
   padding: 16px;
   background: #f8f9fa;
   border-radius: 10px;
-  border-left: 4px solid #fa709a;
+  border-left: 4px solid #000000;
 }
 
 .security-tip {
@@ -1096,7 +1098,7 @@ export default {
 }
 
 .security-tip i {
-  color: #fa709a;
+  color: #000000;
   font-size: 16px;
 }
 
@@ -1276,12 +1278,12 @@ export default {
 }
 
 .btn-save {
-  background: #3498db;
+  background: #000000;
   color: white;
 }
 
 .btn-save:hover:not(:disabled) {
-  background: #2980b9;
+  background: #333333;
 }
 
 .btn-save:disabled {

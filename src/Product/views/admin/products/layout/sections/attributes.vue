@@ -26,7 +26,8 @@
                             <tr v-for="(attribute, index) in form.attributes" :key="index">
                                 <td class="text-center">
                                     <span class="drag-handle">
-                                        <i class="fa fa-arrows"></i>
+                                        <i class="fa fa-ellipsis-v" style="color: #000000;"></i>
+                                        <i class="fa fa-ellipsis-v" style="color: #000000; margin-left: 1px;"></i>
                                     </span>
                                 </td>
 
@@ -76,9 +77,9 @@
                                             {{ trans('product::products.attributes.values') }}
                                         </label>
 
-                                        <div class="attribute-values-selector">
+                                        <div class="attribute-values-selector" @mouseenter="activeDropdownIndex = index" @mouseleave="activeDropdownIndex = null">
                                             <!-- Display selected values as tags -->
-                                            <div class="selected-values-display" @click="toggleValuesDropdown(index)">
+                                            <div class="selected-values-display" @mouseenter="activeDropdownIndex = index">
                                                 <div v-if="attribute.attributeValues && attribute.attributeValues.length > 0" class="values-tags">
                                                     <span
                                                         v-for="selectedValue in attribute.attributeValues"
@@ -105,6 +106,7 @@
                                             <div
                                                 v-if="activeDropdownIndex === index"
                                                 class="values-dropdown"
+                                                @mouseenter="activeDropdownIndex = index"
                                             >
                                                 <div
                                                     v-if="!attribute.attributeId"
@@ -377,10 +379,6 @@ export default {
             await this.loadAttributeValues(attribute.attributeId);
         },
 
-        toggleValuesDropdown(index) {
-            this.activeDropdownIndex = this.activeDropdownIndex === index ? null : index;
-        },
-
         handleClickOutside(event) {
             const wrapper = this.$el.querySelector('#product-attributes-wrapper');
             if (wrapper && !wrapper.contains(event.target)) {
@@ -478,7 +476,7 @@ export default {
 
 /* Table Styles */
 .table-responsive {
-    overflow-x: auto;
+    overflow-x: visible;
 }
 
 .options.table {
@@ -610,9 +608,6 @@ export default {
     border: 1px solid #d2d6de;
     border-radius: 3px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    margin-top: 2px;
-    max-height: 250px;
-    overflow-y: auto;
 }
 
 .no-values-message {
