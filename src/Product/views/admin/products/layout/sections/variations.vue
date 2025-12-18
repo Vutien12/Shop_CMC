@@ -520,7 +520,7 @@ export default {
         removeVariationImage(variationIndex, variationUid, valueIndex, valueUid) {
             const variation = this.form.variations[variationIndex];
             const value = variation.values[valueIndex];
-            
+
             // Xóa image
             value.image = { id: null, path: '' };
         },
@@ -563,20 +563,29 @@ export default {
                     // Map theo type của variation
                     const variationType = selectedVariation.type?.toLowerCase();
                     if (variationType === 'color') {
-                        newValue.color = value.value || value.color || ''; // Để rỗng để hiển thị checkerboard
+                        // Với type Color, value.value chứa mã màu hex
+                        newValue.color = value.value || value.color || '#000000';
+                        newValue.value = value.value || value.color || '#000000';
                     } else if (variationType === 'image') {
-                        // Đảm bảo luôn có object image với cấu trúc đúng
+                        // Với type Image, cần map từ value.image.url sang path
                         if (value.image && typeof value.image === 'object') {
-                            newValue.image = { 
-                                id: value.image.id || null, 
-                                path: value.image.path || '' 
+                            newValue.image = {
+                                id: value.image.id || null,
+                                path: value.image.url || value.image.path || ''
+                            };
+                        } else if (value.value) {
+                            // Fallback nếu value được lưu ở value.value
+                            newValue.image = {
+                                id: null,
+                                path: value.value
                             };
                         } else {
-                            newValue.image = { 
-                                id: null, 
-                                path: value.value || value.image || '' 
+                            newValue.image = {
+                                id: null,
+                                path: ''
                             };
                         }
+                        newValue.value = value.value || '';
                     } else {
                         // For text or other types, store value
                         newValue.value = value.value || '';

@@ -4,22 +4,54 @@
     <Loading v-if="isLoading" text="Loading product..." />
 
     <div v-else-if="product" class="product-container">
+      <!-- Breadcrumb -->
+      <div class="breadcrumb-wrapper">
+        <nav class="breadcrumb">
+          <router-link to="/" class="breadcrumb-item">Home</router-link>
+          <span class="breadcrumb-separator">›</span>
+          <router-link to="/product" class="breadcrumb-item">Shop</router-link>
+          <span class="breadcrumb-separator">›</span>
+          <span class="breadcrumb-item active">{{ product.name }}</span>
+        </nav>
+      </div>
+
       <div class="product-content">
         <!-- Images -->
         <div class="product-images">
           <div class="main-image">
             <img :src="displayImages[selectedImage]" :alt="product.name" />
           </div>
-          <div v-if="displayImages.length > 1" class="thumbnail-images">
+          <div v-if="displayImages.length >= 1" class="thumbnail-container">
             <button
-              v-for="(image, i) in displayImages"
-              :key="i"
-              class="thumbnail"
-              :class="{ active: selectedImage === i }"
+              v-if="canScrollLeft"
+              class="thumbnail-nav thumbnail-nav-left"
+              @click="scrollThumbnails('left')"
               type="button"
-              @click="selectImage(i)"
             >
-              <img :src="image" :alt="`Thumbnail ${i + 1}`" />
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="thumbnail-images" ref="thumbnailScroll">
+              <button
+                v-for="(image, i) in displayImages"
+                :key="i"
+                class="thumbnail"
+                :class="{ active: selectedImage === i }"
+                type="button"
+                @click="selectImage(i)"
+              >
+                <img :src="image" :alt="`Thumbnail ${i + 1}`" />
+              </button>
+              <div v-if="displayImages.length > 5" class="thumbnail-more">
+                +{{ displayImages.length - 5 }}
+              </div>
+            </div>
+            <button
+              v-if="canScrollRight"
+              class="thumbnail-nav thumbnail-nav-right"
+              @click="scrollThumbnails('right')"
+              type="button"
+            >
+              <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
         </div>
@@ -95,6 +127,32 @@
                 :title="value.label"
               >
                 <span class="color-swatch" :style="{ backgroundColor: value.value }"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Image Variation -->
+          <div v-if="imageVariation" class="variation-section image-block">
+            <div class="variation-label">
+              {{ imageVariation.name }}:
+              <span v-if="selectedImageVariation" class="selected-value">{{ selectedImageVariation }}</span>
+            </div>
+            <div class="variation-options image-options">
+              <button
+                v-for="value in imageVariation.variationValues"
+                :key="value.id"
+                class="image-option"
+                :class="{ active: selectedImageVariation === value.label, disabled: !isImageAvailable(value) }"
+                :disabled="!isImageAvailable(value)"
+                @click="selectImageVariation(value)"
+                :title="value.label"
+              >
+                <img
+                  :src="value.image?.url || value.value || placeholderImage"
+                  :alt="value.label"
+                  class="image-thumbnail"
+                />
+                <span class="image-label">{{ value.label }}</span>
               </button>
             </div>
           </div>
@@ -232,15 +290,23 @@
             </div>
           </div>
 
+          <hr class="divider" />
+
           <!-- Quantity + Add to Cart -->
           <div class="purchase-section">
             <div class="quantity-and-cart">
               <div class="quantity-selector">
-                <label for="qty-input">Quantity</label>
                 <div class="quantity-controls">
-                  <button @click="changeQuantity(-1)" class="qty-btn" type="button">-</button>
-                  <input id="qty-input" v-model.number="quantity" type="number" min="1" class="qty-input" />
-                  <button @click="changeQuantity(1)" class="qty-btn" type="button">+</button>
+                  <label for="qty-input">Quantity</label>
+                  <input id="qty-input" v-model.number="quantity" type="number" min="1" class="qty-input" readonly />
+                  <div class="qty-buttons">
+                    <button @click="changeQuantity(1)" class="qty-btn qty-btn-up" type="button">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button @click="changeQuantity(-1)" class="qty-btn qty-btn-down" type="button">
+                      <i class="fa-solid fa-minus"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <button
@@ -249,7 +315,7 @@
                 @click="addToCart"
                 :disabled="!selectedVariant || isSubmitting"
               >
-                <span>{{ isSubmitting ? 'Adding…' : 'Add to Cart' }}</span>
+                {{ isSubmitting ? 'Adding...' : 'Add to Cart' }}
               </button>
             </div>
           </div>
@@ -288,6 +354,59 @@
             <button @click="shareProduct('tumblr')" class="share-btn" type="button">
               <i class="fa-brands fa-tumblr"></i>
             </button>
+          </div>
+        </div>
+
+        <!-- Features Sidebar -->
+        <div class="features-sidebar">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fa-solid fa-headset"></i>
+            </div>
+            <div class="feature-content">
+              <div class="feature-title">24/7 SUPPORT</div>
+              <div class="feature-desc">Support every time</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fa-solid fa-credit-card"></i>
+            </div>
+            <div class="feature-content">
+              <div class="feature-title">ACCEPT PAYMENT</div>
+              <div class="feature-desc">Visa, Paypal, Master</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="feature-content">
+              <div class="feature-title">SECURED PAYMENT</div>
+              <div class="feature-desc">100% secured</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fa-solid fa-truck-fast"></i>
+            </div>
+            <div class="feature-content">
+              <div class="feature-title">FREE SHIPPING</div>
+              <div class="feature-desc">Order over $100</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fa-solid fa-rotate-left"></i>
+            </div>
+            <div class="feature-content">
+              <div class="feature-title">30 DAYS RETURN</div>
+              <div class="feature-desc">30 days guarantee</div>
+            </div>
           </div>
         </div>
       </div>
@@ -428,12 +547,18 @@ export default {
       optionErrors: {},
       selectedVariant: null,
       colorVariation: null,
+      imageVariation: null,
       otherVariations: [],
       selectedColor: null,
+      selectedImageVariation: null,
+      placeholderImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23ddd" width="80" height="80"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="12" dy="40" dx="15"%3ENo Image%3C/text%3E%3C/svg%3E',
 
       // Images
       mediaImages: [],
-      placeholderImage: 'https://via.placeholder.com/500x500?text=No+Image',
+
+      // Thumbnail scroll navigation
+      canScrollLeft: false,
+      canScrollRight: false,
 
       // Lookup
       variantLookup: {},
@@ -526,8 +651,14 @@ export default {
         this.optionErrors[opt.id] = false
       })
 
+      // Normalize variation types to uppercase for consistent matching
+      this.variations.forEach(v => {
+        if (v.type) v.type = v.type.toUpperCase()
+      })
+
       this.colorVariation = this.variations.find(v => v.type === 'COLOR' || /color/i.test(v.name))
-      this.otherVariations = this.variations.filter(v => v !== this.colorVariation)
+      this.imageVariation = this.variations.find(v => v.type === 'IMAGE' || /image/i.test(v.name))
+      this.otherVariations = this.variations.filter(v => v !== this.colorVariation && v !== this.imageVariation)
 
       const galleryUrls = (data.gallery || []).map(item => {
         if (typeof item === 'object' && item.url) {
@@ -564,6 +695,16 @@ export default {
 
       this.buildVariantLookup(variants)
       this.initializeSelections()
+
+      // Update thumbnail scroll buttons after images loaded
+      this.$nextTick(() => {
+        this.updateScrollButtons()
+        // Add scroll listener
+        const container = this.$refs.thumbnailScroll
+        if (container) {
+          container.addEventListener('scroll', () => this.updateScrollButtons())
+        }
+      })
     },
 
     buildVariantLookup(variants) {
@@ -621,6 +762,7 @@ export default {
             value: val
           }
           if (variation === this.colorVariation) this.selectedColor = val.label
+          if (variation === this.imageVariation) this.selectedImageVariation = val.label
         }
       })
       this.updateVariantFromSelection()
@@ -632,6 +774,15 @@ export default {
         value: value
       }
       this.selectedColor = value.label
+      this.updateVariantFromSelection()
+    },
+
+    selectImageVariation(value) {
+      this.selectedVariations[this.imageVariation.id] = {
+        variation: this.imageVariation,
+        value: value
+      }
+      this.selectedImageVariation = value.label
       this.updateVariantFromSelection()
     },
 
@@ -660,6 +811,18 @@ export default {
     isColorAvailable(value) {
       const testKey = this.variations
         .map(v => v.id === this.colorVariation.id ? `v${v.id}_val${value.id}` :
+          this.selectedVariations[v.id]?.value?.id ? `v${v.id}_val${this.selectedVariations[v.id].value.id}` : '')
+        .filter(Boolean)
+        .join('::')
+      const variant = this.variantLookup[testKey]
+      if (!variant || variant.isActive === false) return false
+      return true
+    },
+
+    isImageAvailable(value) {
+      if (!this.imageVariation) return true
+      const testKey = this.variations
+        .map(v => v.id === this.imageVariation.id ? `v${v.id}_val${value.id}` :
           this.selectedVariations[v.id]?.value?.id ? `v${v.id}_val${this.selectedVariations[v.id].value.id}` : '')
         .filter(Boolean)
         .join('::')
@@ -918,6 +1081,25 @@ export default {
     // UI Helpers
     selectImage(i) { this.selectedImage = i },
     changeQuantity(delta) { this.quantity = Math.max(1, this.quantity + delta) },
+
+    scrollThumbnails(direction) {
+      const container = this.$refs.thumbnailScroll
+      if (!container) return
+      const scrollAmount = 150
+      if (direction === 'left') {
+        container.scrollLeft -= scrollAmount
+      } else {
+        container.scrollLeft += scrollAmount
+      }
+      this.$nextTick(() => this.updateScrollButtons())
+    },
+
+    updateScrollButtons() {
+      const container = this.$refs.thumbnailScroll
+      if (!container) return
+      this.canScrollLeft = container.scrollLeft > 0
+      this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 5)
+    },
     setActiveTab(tab) { this.activeTab = tab },
     toggleDescription() { this.showFullDescription = !this.showFullDescription },
     shareProduct() { },
@@ -1141,4 +1323,93 @@ export default {
   margin: 0;
   font-size: 14px;
 }
+
+/* Image Variation Styling */
+.variation-section.image-block {
+  margin-bottom: 1.5rem;
+}
+
+.image-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.image-option {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  background: #fff;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-option:hover:not(.disabled) {
+  border-color: #007bff;
+}
+
+.image-option.active {
+  border-color: #007bff;
+  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.3);
+}
+
+.image-option.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.image-option .image-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-option .image-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-option.active .image-label {
+  background: rgba(0, 123, 255, 0.9);
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+  .image-options {
+    gap: 6px;
+  }
+
+  .image-option {
+    width: 45px;
+    height: 45px;
+  }
+
+  .image-option .image-label {
+    font-size: 8px;
+    padding: 1px 2px;
+  }
+}
+
+
 </style>

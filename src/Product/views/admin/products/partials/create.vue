@@ -358,6 +358,7 @@ export default {
     },
 
     async loadProductData() {
+      this.isLoadingData = true;
       try {
         const response = await getProductForEdit(this.productId);
         const product = response.result;
@@ -402,33 +403,51 @@ export default {
 
         // Transform variations
         if (product.variations && product.variations.length > 0) {
-          this.form.variations = product.variations.map(variation => ({
-            uid: this.generateUid(), // Generate uid for template rendering
-            id: variation.id, // Preserve ID for backend
-            name: variation.name,
-            type: variation.type || 'text',
-            isGlobal: variation.isGlobal || false,
-            originalVariation: variation.isGlobal ? JSON.parse(JSON.stringify(variation)) : null, // Lưu bản gốc cho global variation
-            is_open: false, // Default to collapsed
-            position: 0,
-            values: (variation.variationValues || []).map(value => {
-              const valueObj = {
-                id: value.id, // Preserve ID for update
-                uid: this.generateUid(),
-                label: value.label,
-                value: value.value
-              };
+          this.form.variations = product.variations.map(variation => {
+            const normalizedType = (variation.type || 'text').toLowerCase();
 
-              // Set type-specific fields
-              if (variation.type?.toLowerCase() === 'color') {
-                valueObj.color = value.value;
-              } else if (variation.type?.toLowerCase() === 'image') {
-                valueObj.image = { id: null, path: value.value || '' };
-              }
+            return {
+              uid: this.generateUid(), // Generate uid for template rendering
+              id: variation.id, // Preserve ID for backend
+              name: variation.name,
+              type: normalizedType, // Normalize type to lowercase
+              isGlobal: variation.isGlobal || false,
+              originalVariation: variation.isGlobal ? JSON.parse(JSON.stringify(variation)) : null, // Lưu bản gốc cho global variation
+              is_open: false, // Default to collapsed
+              position: 0,
+              values: (variation.variationValues || []).map(value => {
+                const valueObj = {
+                  id: value.id, // Preserve ID for update
+                  uid: this.generateUid(),
+                  label: value.label,
+                  value: value.value
+                };
 
-              return valueObj;
-            })
-          }));
+                // Set type-specific fields based on variation type
+                if (normalizedType === 'color') {
+                  // For color type, value.value contains the color hex code
+                  valueObj.color = value.value || '#000000';
+                } else if (normalizedType === 'image') {
+                  // For image type, value.image or value.value contains the image URL
+                  if (value.image) {
+                    valueObj.image = {
+                      id: value.image.id || null,
+                      path: value.image.url || value.image.path || value.image
+                    };
+                  } else if (value.value) {
+                    valueObj.image = {
+                      id: null,
+                      path: value.value
+                    };
+                  } else {
+                    valueObj.image = { id: null, path: '' };
+                  }
+                }
+
+                return valueObj;
+              })
+            };
+          });
         }
 
         // Transform variants
@@ -516,6 +535,8 @@ export default {
         if (this.notification) {
           this.notification.error('Lỗi!', 'Không thể tải dữ liệu sản phẩm: ' + error.message);
         }
+      } finally {
+        this.isLoadingData = false;
       }
     },
 
