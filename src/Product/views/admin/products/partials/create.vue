@@ -577,10 +577,10 @@ export default {
         // Get the product ID
         const productId = this.productId || response.result?.id;
 
-        // ONLY handle image operations in EDIT mode
-        if (this.isEditMode && productId) {
-          // Delete pending files
-          if (this.pendingDeleteFiles.length > 0) {
+        // Handle file operations for both CREATE and EDIT modes
+        if (productId) {
+          // Delete pending files (only in EDIT mode)
+          if (this.isEditMode && this.pendingDeleteFiles.length > 0) {
             console.log('Deleting pending files:', this.pendingDeleteFiles);
             for (const fileId of this.pendingDeleteFiles) {
               try {
@@ -593,7 +593,7 @@ export default {
             this.pendingDeleteFiles = [];
           }
 
-          // Attach NEW files (only files added during this edit session)
+          // Attach NEW files (for both CREATE and EDIT modes)
           if (this.pendingAttachFiles.length > 0) {
             console.log('Attaching new files:', this.pendingAttachFiles);
             for (const fileInfo of this.pendingAttachFiles) {
@@ -612,7 +612,6 @@ export default {
             this.pendingAttachFiles = [];
           }
         }
-        // In CREATE mode: do NOT attach images manually - backend handles it
 
         // Handle success
         if (this.notification) {
@@ -1159,26 +1158,22 @@ export default {
       if (this.currentImageTarget === 'thumbnail') {
         this.form.thumbnail = newImage;
 
-        // Track for attachment in edit mode only
-        if (this.isEditMode) {
-          this.pendingAttachFiles.push({
-            fileId: media.id,
-            zone: 'THUMBNAIL'
-          });
-        }
+        // Track for attachment in both CREATE and EDIT mode
+        this.pendingAttachFiles.push({
+          fileId: media.id,
+          zone: 'THUMBNAIL'
+        });
       } else if (this.currentImageTarget === 'gallery') {
         if (!this.form.gallery) {
           this.form.gallery = [];
         }
         this.form.gallery.push(newImage);
 
-        // Track for attachment in edit mode only
-        if (this.isEditMode) {
-          this.pendingAttachFiles.push({
-            fileId: media.id,
-            zone: 'GALLERY'
-          });
-        }
+        // Track for attachment in both CREATE and EDIT mode
+        this.pendingAttachFiles.push({
+          fileId: media.id,
+          zone: 'GALLERY'
+        });
       } else if (this.currentImageTarget === 'variation' && this.currentVariationImageData) {
         // Handle variation value image selection
         const { variationIndex, valueIndex } = this.currentVariationImageData;
@@ -1200,15 +1195,16 @@ export default {
 
     async removeThumbnailHandler() {
       if (this.form.thumbnail && this.form.thumbnail.id) {
+        // Track for deletion only in EDIT mode (file already attached to entity)
         if (this.isEditMode) {
           console.log('[Parent] Tracking thumbnail for deletion on save:', this.form.thumbnail.id);
           this.pendingDeleteFiles.push(this.form.thumbnail.id);
-
-          // Remove from pending attach list if it was just added
-          this.pendingAttachFiles = this.pendingAttachFiles.filter(
-            f => f.fileId !== this.form.thumbnail.id
-          );
         }
+
+        // Remove from pending attach list (for both CREATE and EDIT modes)
+        this.pendingAttachFiles = this.pendingAttachFiles.filter(
+          f => f.fileId !== this.form.thumbnail.id
+        );
       }
 
       this.form.thumbnail = null;
@@ -1226,15 +1222,16 @@ export default {
         const galleryItem = this.form.gallery[galleryIndex];
 
         if (galleryItem.id) {
+          // Track for deletion only in EDIT mode (file already attached to entity)
           if (this.isEditMode) {
             console.log('[Parent] Tracking gallery item for deletion on save:', galleryItem.id);
             this.pendingDeleteFiles.push(galleryItem.id);
-
-            // Remove from pending attach list if it was just added
-            this.pendingAttachFiles = this.pendingAttachFiles.filter(
-              f => f.fileId !== galleryItem.id
-            );
           }
+
+          // Remove from pending attach list (for both CREATE and EDIT modes)
+          this.pendingAttachFiles = this.pendingAttachFiles.filter(
+            f => f.fileId !== galleryItem.id
+          );
         }
 
         const newGallery = [...this.form.gallery];
