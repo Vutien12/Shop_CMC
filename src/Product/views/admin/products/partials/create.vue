@@ -553,6 +553,14 @@ export default {
           content: this.form.description
         });
 
+        // Debug: Check files before submit
+        console.log('Files before submit:', {
+          thumbnail: this.form.thumbnail,
+          gallery: this.form.gallery,
+          pendingAttachFiles: this.pendingAttachFiles,
+          pendingDeleteFiles: this.pendingDeleteFiles
+        });
+
         // Ensure variants are generated
         if (this.form.variants.length === 0) {
           this.generateVariants();
@@ -743,7 +751,7 @@ export default {
       );
 
       // Transform form data từ format Vue sang format API backend
-      return {
+      const transformedData = {
         name: this.form.name || '',
         slug: this.form.slug || '',
         thumbnail: this.form.thumbnail ? this.form.thumbnail.path : null,
@@ -778,6 +786,15 @@ export default {
         price: price,
         sellingPrice: sellingPrice,
       };
+
+      console.log('Transform form data - New From/To:', {
+        rawNewFrom: this.form.new_from,
+        rawNewTo: this.form.new_to,
+        formattedNewFrom: transformedData.newFrom,
+        formattedNewTo: transformedData.newTo
+      });
+
+      return transformedData;
     },
 
     transformVariations() {
@@ -1149,6 +1166,8 @@ export default {
     },
 
     handleImageSelect(media) {
+      console.log('[handleImageSelect] Media selected:', media, 'Target:', this.currentImageTarget);
+
       const newImage = {
         id: media.id,
         path: media.path,
@@ -1156,13 +1175,27 @@ export default {
       };
 
       if (this.currentImageTarget === 'thumbnail') {
+        // Remove old thumbnail from pendingAttachFiles if exists
+        if (this.form.thumbnail && this.form.thumbnail.id) {
+          this.pendingAttachFiles = this.pendingAttachFiles.filter(
+            f => !(f.zone === 'THUMBNAIL')
+          );
+        }
+
         this.form.thumbnail = newImage;
 
         // Track for attachment in both CREATE and EDIT mode
-        this.pendingAttachFiles.push({
-          fileId: media.id,
-          zone: 'THUMBNAIL'
-        });
+        // Check if not already in pending list
+        const alreadyPending = this.pendingAttachFiles.some(
+          f => f.fileId === media.id && f.zone === 'THUMBNAIL'
+        );
+        if (!alreadyPending) {
+          this.pendingAttachFiles.push({
+            fileId: media.id,
+            zone: 'THUMBNAIL'
+          });
+          console.log('[handleImageSelect] Added thumbnail to pendingAttachFiles:', media.id);
+        }
       } else if (this.currentImageTarget === 'gallery') {
         if (!this.form.gallery) {
           this.form.gallery = [];
@@ -1170,10 +1203,17 @@ export default {
         this.form.gallery.push(newImage);
 
         // Track for attachment in both CREATE and EDIT mode
-        this.pendingAttachFiles.push({
-          fileId: media.id,
-          zone: 'GALLERY'
-        });
+        // Check if not already in pending list
+        const alreadyPending = this.pendingAttachFiles.some(
+          f => f.fileId === media.id && f.zone === 'GALLERY'
+        );
+        if (!alreadyPending) {
+          this.pendingAttachFiles.push({
+            fileId: media.id,
+            zone: 'GALLERY'
+          });
+          console.log('[handleImageSelect] Added gallery image to pendingAttachFiles:', media.id);
+        }
       } else if (this.currentImageTarget === 'variation' && this.currentVariationImageData) {
         // Handle variation value image selection
         const { variationIndex, valueIndex } = this.currentVariationImageData;
@@ -1189,6 +1229,7 @@ export default {
         console.log('Updated variation value image:', value);
       }
 
+      console.log('[handleImageSelect] Current pendingAttachFiles:', this.pendingAttachFiles);
       this.syncMediaArray();
       this.closeFileManager();
     },
