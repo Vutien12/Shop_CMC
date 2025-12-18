@@ -321,18 +321,24 @@
 
           <div v-if="activeTab === 'specification'" class="tab-panel">
             <h3>Specification</h3>
-            <ul>
-              <li><strong>Product Name:</strong> {{ product.name }}</li>
-              <li v-if="product.brand"><strong>Brand:</strong> {{ product.brand.name || product.brand }}</li>
-              <li><strong>SKU:</strong> {{ product.sku }}</li>
-              <li v-if="product.categories?.length"><strong>Category:</strong> {{ getCategoriesString(product.categories) }}</li>
-              <li><strong>Stock Status:</strong> {{ product.inStock ? 'In Stock' : 'Out of Stock' }}</li>
-              <li><strong>Available Quantity:</strong> {{ product.qty }}</li>
-              <li><strong>Current Price:</strong> {{ formatPrice(currentPrice) }}</li>
-              <li v-if="currentOriginalPrice"><strong>Original Price:</strong> {{ formatPrice(currentOriginalPrice) }}</li>
-              <li v-if="selectedVariant"><strong>Current Variant:</strong> {{ selectedVariant.name }}</li>
-              <li v-if="selectedVariant"><strong>Variant SKU:</strong> {{ selectedVariant.sku }}</li>
-            </ul>
+            <div v-if="product.attributes && product.attributes.length > 0" class="attributes-table-wrapper">
+              <table class="attributes-table">
+                <tbody>
+                  <tr v-for="attribute in product.attributes" :key="attribute.id">
+                    <td class="attribute-name">{{ attribute.attributeName || attribute.name }}</td>
+                    <td class="attribute-value">
+                      <span v-if="attribute.attributeValues && attribute.attributeValues.length > 0">
+                        {{ attribute.attributeValues.map(v => v.value).join(', ') }}
+                      </span>
+                      <span v-else>—</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="no-attributes">
+              <p>No specifications available for this product.</p>
+            </div>
           </div>
 
           <div v-if="activeTab === 'reviews'" class="tab-panel">
@@ -548,6 +554,7 @@ export default {
         brand: data.brand,
         categories: data.categories || [],
         tags: data.tags || [],
+        attributes: data.attributes || [],
         variants,
         basePrice: variants[0]?.sellingPrice || data.minPrice || 0,
         baseOriginalPrice: variants[0]?.price || null,
@@ -1081,5 +1088,57 @@ export default {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: #e00;
+}
+
+/* Attributes Table Styling */
+.attributes-table-wrapper {
+  margin-top: 20px;
+}
+
+.attributes-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.attributes-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.attributes-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.attributes-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.attributes-table .attribute-name {
+  font-weight: 500;
+  color: #495057;
+  width: 200px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.attributes-table .attribute-value {
+  color: #212529;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.no-attributes {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.no-attributes p {
+  margin: 0;
+  font-size: 14px;
 }
 </style>
