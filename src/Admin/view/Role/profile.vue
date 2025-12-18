@@ -174,7 +174,7 @@
               <i class="fa fa-times"></i>
             </button>
           </div>
-          
+
           <div class="modal-body">
             <form @submit.prevent="saveProfile">
               <div class="form-group">
@@ -223,8 +223,10 @@
                   id="phone"
                   v-model="editForm.phone"
                   class="form-control"
+                  :class="{ 'is-invalid': editErrors.phone }"
                   placeholder="Nhập số điện thoại"
                 />
+                <span v-if="editErrors.phone" class="error-message">{{ editErrors.phone }}</span>
               </div>
 
               <div class="modal-footer">
@@ -252,7 +254,7 @@
               <i class="fa fa-times"></i>
             </button>
           </div>
-          
+
           <div class="modal-body">
             <form @submit.prevent="changePassword">
               <div class="form-group">
@@ -348,8 +350,7 @@
 </template>
 
 <script>
-import { getCurrentUser } from '@/api/profileApi';
-import { updateUser } from '@/api/userApi';
+import { getMyInfo, updateProfile, changePassword } from '@/api/accountApi';
 
 export default {
   name: 'ProfilePage',
@@ -364,9 +365,10 @@ export default {
         email: '',
         phone: '',
         role: '',
-        createdAt: null
+        createdAt: null,
+        defaultAddress: null
       },
-      
+
       showEditModal: false,
       editForm: {
         firstName: '',
@@ -375,7 +377,7 @@ export default {
         phone: ''
       },
       editErrors: {},
-      
+
       showPasswordModal: false,
       passwordForm: {
         currentPassword: '',
@@ -386,7 +388,7 @@ export default {
       showCurrentPassword: false,
       showNewPassword: false,
       showConfirmPassword: false,
-      
+
       toast: {
         show: false,
         message: '',
@@ -394,7 +396,7 @@ export default {
       }
     };
   },
-  
+
   computed: {
     profileFirstLetter() {
       if (this.userData?.firstName) {
@@ -403,22 +405,19 @@ export default {
       return 'U';
     }
   },
-  
+
   async mounted() {
     await this.loadUserData();
   },
-  
+
   methods: {
     async loadUserData() {
       this.isLoading = true;
       try {
-        const response = await getCurrentUser();
-        let userData = response.result || response.data || response;
-        
-        if (Array.isArray(userData) && userData.length > 0) {
-          userData = userData[0];
-        }
-        
+        const response = await getMyInfo();
+        // Response structure: { data: { code, message, result } }
+        const userData = response.data?.result || response.data || response;
+
         this.userData = {
           id: userData.id,
           firstName: userData.firstName || '',
@@ -426,16 +425,24 @@ export default {
           email: userData.email || '',
           phone: userData.phone || '',
           role: userData.role || '',
-          createdAt: userData.createdAt
+          createdAt: userData.createdAt,
+          defaultAddress: userData.defaultAddress || null
         };
+
+        console.log('Loaded user data:', this.userData);
       } catch (error) {
         console.error('Failed to load user:', error);
         this.showToast('Không thể tải thông tin người dùng', 'error');
+
+        // Nếu lỗi 401, redirect về login
+        if (error.response?.status === 401) {
+          this.$router.push('/login');
+        }
       } finally {
         this.isLoading = false;
       }
     },
-    
+
     openEditModal() {
       this.editForm = {
         firstName: this.userData.firstName,
@@ -446,7 +453,7 @@ export default {
       this.editErrors = {};
       this.showEditModal = true;
     },
-    
+
     closeEditModal() {
       this.showEditModal = false;
       this.editForm = {
@@ -457,21 +464,21 @@ export default {
       };
       this.editErrors = {};
     },
-    
+
     validateEditForm() {
       this.editErrors = {};
       let isValid = true;
-      
+
       if (!this.editForm.firstName.trim()) {
         this.editErrors.firstName = 'Họ không được để trống';
         isValid = false;
       }
-      
+
       if (!this.editForm.lastName.trim()) {
         this.editErrors.lastName = 'Tên không được để trống';
         isValid = false;
       }
-      
+
       if (!this.editForm.email.trim()) {
         this.editErrors.email = 'Email không được để trống';
         isValid = false;
@@ -479,16 +486,18 @@ export default {
         this.editErrors.email = 'Email không hợp lệ';
         isValid = false;
       }
-      
+
       return isValid;
     },
-    
+
     async saveProfile() {
       if (!this.validateEditForm()) {
         return;
       }
-      
+
       this.isSaving = true;
+      this.editErrors = {};
+
       try {
         const updateData = {
           firstName: this.editForm.firstName.trim(),
@@ -496,24 +505,33 @@ export default {
           email: this.editForm.email.trim(),
           phone: this.editForm.phone.trim()
         };
-        
-        await updateUser(this.userData.id, updateData);
-        
+
+        await updateProfile(updateData);
+
+        // Cập nhật lại userData sau khi save thành công
         this.userData.firstName = updateData.firstName;
         this.userData.lastName = updateData.lastName;
         this.userData.email = updateData.email;
         this.userData.phone = updateData.phone;
-        
+
         this.showToast('Cập nhật thông tin thành công', 'success');
         this.closeEditModal();
       } catch (error) {
         console.error('Failed to update profile:', error);
-        this.showToast('Cập nhật thông tin thất bại', 'error');
+
+        // Xử lý lỗi validation 400
+        if (error.response?.status === 400 && error.response?.data?.result) {
+          this.editErrors = { ...error.response.data.result };
+          this.showToast('Vui lòng kiểm tra lại thông tin', 'error');
+        } else {
+          const message = error.response?.data?.message || 'Cập nhật thông tin thất bại';
+          this.showToast(message, 'error');
+        }
       } finally {
         this.isSaving = false;
       }
     },
-    
+
     openPasswordModal() {
       this.passwordForm = {
         currentPassword: '',
@@ -526,7 +544,7 @@ export default {
       this.showConfirmPassword = false;
       this.showPasswordModal = true;
     },
-    
+
     closePasswordModal() {
       this.showPasswordModal = false;
       this.passwordForm = {
@@ -536,16 +554,16 @@ export default {
       };
       this.passwordErrors = {};
     },
-    
+
     validatePasswordForm() {
       this.passwordErrors = {};
       let isValid = true;
-      
+
       if (!this.passwordForm.currentPassword) {
         this.passwordErrors.currentPassword = 'Mật khẩu hiện tại không được để trống';
         isValid = false;
       }
-      
+
       if (!this.passwordForm.newPassword) {
         this.passwordErrors.newPassword = 'Mật khẩu mới không được để trống';
         isValid = false;
@@ -553,7 +571,7 @@ export default {
         this.passwordErrors.newPassword = 'Mật khẩu phải có ít nhất 8 ký tự';
         isValid = false;
       }
-      
+
       if (!this.passwordForm.confirmPassword) {
         this.passwordErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
         isValid = false;
@@ -561,29 +579,51 @@ export default {
         this.passwordErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
         isValid = false;
       }
-      
+
       return isValid;
     },
-    
+
     async changePassword() {
       if (!this.validatePasswordForm()) {
         return;
       }
-      
+
       this.isSaving = true;
+      this.passwordErrors = {};
+
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await changePassword({
+          oldPassword: this.passwordForm.currentPassword,
+          newPassword: this.passwordForm.newPassword
+        });
+
         this.showToast('Đổi mật khẩu thành công', 'success');
         this.closePasswordModal();
       } catch (error) {
         console.error('Failed to change password:', error);
-        this.showToast('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại', 'error');
+
+        // Xử lý lỗi validation 400
+        if (error.response?.status === 400 && error.response?.data?.result) {
+          const backendErrors = error.response.data.result;
+
+          // Map field name từ backend sang frontend
+          // Backend: oldPassword, newPassword
+          // Frontend: currentPassword, newPassword
+          this.passwordErrors = {
+            currentPassword: backendErrors.oldPassword,
+            newPassword: backendErrors.newPassword
+          };
+
+          this.showToast('Vui lòng kiểm tra lại thông tin', 'error');
+        } else {
+          const message = error.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại';
+          this.showToast(message, 'error');
+        }
       } finally {
         this.isSaving = false;
       }
     },
-    
+
     getRoleBadgeClass(role) {
       const roleMap = {
         'ADMIN': 'badge-admin',
@@ -592,7 +632,7 @@ export default {
       };
       return roleMap[role] || 'badge-default';
     },
-    
+
     formatDate(date) {
       if (!date) return 'Chưa có';
       return new Date(date).toLocaleDateString('vi-VN', {
@@ -603,14 +643,14 @@ export default {
         minute: '2-digit'
       });
     },
-    
+
     showToast(message, type = 'success') {
       this.toast = {
         show: true,
         message,
         type
       };
-      
+
       setTimeout(() => {
         this.toast.show = false;
       }, 3000);
@@ -1372,67 +1412,67 @@ export default {
   .profile-page {
     padding: 16px;
   }
-  
+
   .page-title {
     font-size: 24px;
   }
-  
+
   .profile-header-content {
     flex-direction: column;
     align-items: center;
     text-align: center;
     padding: 0 20px 24px;
   }
-  
+
   .profile-avatar-container {
     margin-top: -60px;
   }
-  
+
   .profile-avatar {
     width: 100px;
     height: 100px;
   }
-  
+
   .avatar-letter {
     font-size: 40px;
   }
-  
+
   .profile-name {
     font-size: 24px;
   }
-  
+
   .btn-edit-profile {
     width: 100%;
     justify-content: center;
   }
-  
+
   .info-cards-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .info-card-header {
     padding: 20px;
   }
-  
+
   .info-card-body {
     padding: 20px;
   }
-  
+
   .security-feature {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .btn-security-action {
     width: 100%;
     justify-content: center;
   }
-  
+
   .modal-container {
     max-width: 100%;
     margin: 0 16px;
   }
-  
+
   .toast {
     right: 16px;
     left: 16px;

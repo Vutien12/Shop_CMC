@@ -24,6 +24,12 @@ const OPTIONAL_JWT_ENDPOINTS = [
   { path: '/reviews/**', methods: ['GET'] },
 ]
 
+const PROTECTED_USER_ENDPOINTS = [
+  { path: '/users/my-info', methods: ['GET'] },
+  { path: '/users/profile', methods: ['PUT'] },
+  { path: '/users/change-password', methods: ['POST'] },
+]
+
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
   withCredentials: true,
@@ -78,16 +84,31 @@ function isOptionalJwtEndpoint(url, method) {
   return false
 }
 
-// Request interceptor: add Authorization only when endpoint is not public (and token exists)
+function isProtectedUserEndpoint(url, method) {
+  const reqPath = normalizeUrlForMatch(url)
+  const reqMethod = (method || 'GET').toUpperCase()
+
+  for (const rule of PROTECTED_USER_ENDPOINTS) {
+    if (matchesRule(rule.path, reqPath)) {
+      if (rule.methods.includes('ALL')) return true
+      if (rule.methods.map(m => m.toUpperCase()).includes(reqMethod)) return true
+    }
+  }
+  return false
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
+  if (!token) return config
+
   const url = config.url || ''
   const method = (config.method || 'GET').toUpperCase()
 
-  const sendOptionalJwt = token && isOptionalJwtEndpoint(url, method)
-  const sendTokenForNonPublic = !isPublicEndpoint(url, method) && token
+  const isOptional = isOptionalJwtEndpoint(url, method)
+  const isNonPublic = !isPublicEndpoint(url, method)
+  const isProtectedUser = isProtectedUserEndpoint(url, method)
 
-  if (sendOptionalJwt || sendTokenForNonPublic) {
+  if (isOptional || isNonPublic || isProtectedUser) {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -104,7 +125,7 @@ api.interceptors.response.use(
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url?.includes('/auth/refresh') &&
-      !isPublicEndpoint(originalRequest.url, originalRequest.method) &&
+      !isPublicEndpoint(originalRequest.url, originalRequest.method) && // Chỉ refresh cho non-public
       localStorage.getItem('accessToken')
     ) {
       originalRequest._retry = true
@@ -113,7 +134,6 @@ api.interceptors.response.use(
         const { accessToken } = res.data.result
 
         localStorage.setItem('accessToken', accessToken)
-        originalRequest.headers = originalRequest.headers || {}
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
 
         return api(originalRequest)
@@ -126,7 +146,6 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error)
-  },
+  }
 )
-
 export default api
