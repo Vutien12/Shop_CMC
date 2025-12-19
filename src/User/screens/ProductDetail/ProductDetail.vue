@@ -656,8 +656,26 @@ export default {
         if (v.type) v.type = v.type.toUpperCase()
       })
 
-      this.colorVariation = this.variations.find(v => v.type === 'COLOR' || /color/i.test(v.name))
-      this.imageVariation = this.variations.find(v => v.type === 'IMAGE' || /image/i.test(v.name))
+      // Determine color and image variations. Use explicit type matches first, then fallback to name regex.
+      let colorCandidate = this.variations.find(v => v.type === 'COLOR') || this.variations.find(v => /color/i.test(v.name))
+      let imageCandidate = this.variations.find(v => v.type === 'IMAGE') || this.variations.find(v => /image/i.test(v.name))
+
+      // If both candidates point to the same variation, resolve by preferring explicit type matches.
+      if (colorCandidate && imageCandidate && colorCandidate === imageCandidate) {
+        // If the variation's type is IMAGE (explicit), prefer it as imageVariation and drop colorVariation
+        if (colorCandidate.type === 'IMAGE') {
+          colorCandidate = null
+        } else if (colorCandidate.type === 'COLOR') {
+          // prefer color if explicit
+          imageCandidate = null
+        } else {
+          // ambiguous: default to treating it as colorVariation and do not render imageVariation to avoid duplicate
+          imageCandidate = null
+        }
+      }
+
+      this.colorVariation = colorCandidate || null
+      this.imageVariation = imageCandidate || null
       this.otherVariations = this.variations.filter(v => v !== this.colorVariation && v !== this.imageVariation)
 
       const galleryUrls = (data.gallery || []).map(item => {
