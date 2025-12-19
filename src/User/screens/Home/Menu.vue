@@ -692,6 +692,94 @@ export default {
 </script>
 
 <style scoped>
+/* Features Section */
+.features {
+  padding: 40px 0;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.features-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+  padding: 0 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.feature-item:last-child {
+  border-right: none;
+}
+
+.feature-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #0068e1;
+}
+
+.feature-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.feature-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.feature-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .features {
+    padding: 30px 0;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .feature-item {
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .feature-item:last-child {
+    border-bottom: none;
+  }
+
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
+
 /* Products Section */
 .products-section {
   margin-top: 30px;
