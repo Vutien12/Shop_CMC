@@ -205,11 +205,24 @@ onMounted(() => {
 
 <style scoped>
 .content {
-    padding: 20px;
+    background: #f9fafb;
+    min-height: calc(100vh - 60px);
+    padding: 24px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
 }
 
 .grid {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .row {
@@ -233,10 +246,33 @@ onMounted(() => {
     width: 41.666667%;
 }
 
+/* Responsive */
+@media (max-width: 992px) {
+    .content {
+        padding: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+}
+
 @media (max-width: 768px) {
+    .content {
+        padding: 16px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
     .col-md-7,
     .col-md-5 {
         width: 100%;
+    }
+
+    .grid {
+        margin-bottom: 20px;
     }
 }
 
@@ -248,39 +284,118 @@ onMounted(() => {
 
 /* Loading overlay */
 .dashboard-loading-overlay {
-  position: absolute;
-  inset: 0 0 0 0;
-  background: rgba(255,255,255,0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 40;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 }
-.loader { display:flex; flex-direction:column; align-items:center; gap:10px }
+
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
 .spinner {
-  width: 48px; height: 48px; border-radius: 50%;
-  border: 4px solid rgba(0,0,0,0.08); border-top-color: #2563eb;
-  animation: spin 1s linear infinite;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 4px solid #e5e7eb;
+    border-top-color: #0068e1;
+    animation: spin 0.8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg) } }
-.loading-text { color:#333; font-weight:600 }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 14px;
+}
 
 /* Skeletons */
-.stat-skeleton { width: calc(25% - 20px); margin-left:10px; margin-right:10px; }
-.stat-skeleton .skeleton-rect { background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6); height:76px; border-radius:8px; animation: shimmer 1.2s linear infinite; }
-.stat-skeleton .skeleton-large { height:86px }
+.stat-skeleton {
+    width: calc(25% - 20px);
+    margin-left: 10px;
+    margin-right: 10px;
+}
 
-.panel-skeleton { background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite; margin-bottom:16px }
-.chart-skeleton { height: 320px }
-.list-skeleton { height: 220px }
-.small-skeleton { height: 160px; margin-bottom:12px }
+.stat-skeleton .skeleton-rect {
+    background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6);
+    height: 120px;
+    border-radius: 8px;
+    animation: shimmer 1.5s ease-in-out infinite;
+    background-size: 200% 100%;
+}
+
+.panel-skeleton {
+    background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6);
+    border-radius: 8px;
+    animation: shimmer 1.5s ease-in-out infinite;
+    margin-bottom: 20px;
+    background-size: 200% 100%;
+}
+
+.chart-skeleton {
+    height: 360px;
+}
+
+.list-skeleton {
+    height: 280px;
+}
+
+.small-skeleton {
+    height: 320px;
+}
 
 @keyframes shimmer {
-  0% { background-position: -200px 0 }
-  100% { background-position: calc(200px + 100%) 0 }
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
-.skeleton-rect, .panel-skeleton { background-size: 200px 100%; }
 
-/* make skeletons responsive like stat cards */
-@media (max-width: 768px) { .stat-skeleton { width: 100%; margin: 8px 0 } }
+/* Responsive skeletons */
+@media (max-width: 1200px) {
+    .stat-skeleton {
+        width: calc(50% - 20px);
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-skeleton {
+        width: 100%;
+        margin: 0 0 16px 0;
+    }
+
+    .stat-skeleton .skeleton-rect {
+        height: 100px;
+    }
+
+    .chart-skeleton {
+        height: 300px;
+    }
+
+    .list-skeleton {
+        height: 240px;
+    }
+
+    .small-skeleton {
+        height: 280px;
+    }
+}
 </style>

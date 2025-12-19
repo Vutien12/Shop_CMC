@@ -176,8 +176,8 @@
                         <button
                           @click="openReviewModal(product)"
                           class="action-btn review-btn"
-                          :class="{ 'reviewed': product.review }"
-                          :disabled="!canReview"
+                          :class="{ 'reviewed': product.review, 'disabled': !canReviewProduct(product) }"
+                          :disabled="!canReviewProduct(product)"
                           :title="getReviewButtonTitle(product)"
                         >
                           <i :class="product.review ? 'fa-solid fa-edit' : 'fa-solid fa-pen'"></i>
@@ -427,14 +427,41 @@ const getStatusClass = (status) => {
   return classes[status] || 'status-default'
 }
 
+// Check if product can be reviewed
+const canReviewProduct = (product) => {
+  // Cannot review if order is not completed
+  if (!canReview.value) return false
+
+  // Cannot review if product no longer exists (productId is null)
+  if (!product.productId) return false
+
+  // For variant products, check if variant still exists
+  // If there are variations but variantId is null, product was deleted
+  if (product.variations && product.variations.length > 0 && !product.productVariantId) {
+    return false
+  }
+
+  return true
+}
 
 const getReviewButtonTitle = (product) => {
+  // Check if product/variant still exists first
+  if (!product.productId) {
+    return 'This product is no longer available'
+  }
+
+  if (product.variations && product.variations.length > 0 && !product.productVariantId) {
+    return 'This product variant is no longer available'
+  }
+
   if (!canReview.value) {
     return 'Only delivered orders can be reviewed'
   }
+
   if (product.review) {
     return 'Edit your review'
   }
+
   return 'Write a review'
 }
 
