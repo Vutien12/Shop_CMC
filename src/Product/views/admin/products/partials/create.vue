@@ -1024,19 +1024,15 @@ export default {
 
       // Create or update variants
       const existingVariants = this.form.variants;
-      this.form.variants = combinations.map(combo => {
+      this.form.variants = combinations.map((combo, variantIndex) => {
     const uid = this.generateVariantUid(combo);
-    // Sinh SKU duy nhất bằng tên sản phẩm, tên variation, tên value, index thực sự trong variation.values (theo uid)
-    const skuBase = (this.form.name || 'SKU').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const skuParts = combo.map((c, idx) => {
-        const variation = this.form.variations[idx];
-        const varName = variation ? (variation.name || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : 'VAR';
-        const valLabel = (c.label || c.value || 'X').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        // Tìm index thực sự của value trong variation.values bằng uid
-        let realIndex = variation.values.findIndex(v => v.uid === c.uid);
-        return varName + '-' + valLabel + '-' + realIndex;
-    });
-    const autoSku = skuBase + '-' + skuParts.join('-');
+    let autoSku;
+    if (combinations.length === 1) {
+        autoSku = this.form.sku || 'SKU-001';
+    } else {
+        const baseSku = this.form.sku || 'SKU';
+        autoSku = `${baseSku}-V${variantIndex + 1}`;
+    }
     const nameParts = combo.map(c => {
         const label = (c.label || '').trim();
         const value = (c.value || '').trim();
