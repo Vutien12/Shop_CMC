@@ -46,6 +46,11 @@
   flex: 0 0 220px;
   min-width: 220px;
   max-width: 220px;
+
+  /* Force equal height for cards in the scroller */
+  height: 360px;
+  display: flex;
+  align-items: stretch;
 }
 
 /* ProductCard Component Styles (from Home.css) */
@@ -85,6 +90,10 @@
   font-weight: 600;
   text-align: center;
   min-width: 60px;
+  white-space: nowrap; /* prevent badge text wrapping */
+  max-width: 90px; /* limit width to avoid tall badges */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pd-related-products .badge.out-of-stock {
@@ -155,6 +164,7 @@
   gap: 2px;
   flex: 1;
   min-width: 0;
+  min-height: 44px; /* reserve consistent height for price area */
 }
 
 .pd-related-products .current-price {
@@ -234,6 +244,7 @@
     flex: 0 0 220px;
     min-width: 220px;
     max-width: 220px;
+    height: 360px;
   }
 }
 
@@ -250,6 +261,7 @@
     flex: 0 0 200px;
     min-width: 200px;
     max-width: 200px;
+    height: 340px;
   }
 
   .pd-related-products__scroll {
@@ -272,6 +284,7 @@
     flex: 0 0 200px;
     min-width: 200px;
     max-width: 200px;
+    height: 340px;
   }
 
   .pd-related-products__scroll {
@@ -294,6 +307,7 @@
     flex: 0 0 180px;
     min-width: 180px;
     max-width: 180px;
+    height: 320px;
   }
 
   .pd-related-products__scroll {
@@ -323,6 +337,7 @@
     padding: 10px !important;
     min-width: unset;
     max-width: unset;
+    height: auto !important;
   }
 
   .pd-related-products__grid .product-image1 {
@@ -350,4 +365,3 @@
     height: 18px !important;
   }
 }
-

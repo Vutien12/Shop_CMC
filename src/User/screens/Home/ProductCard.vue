@@ -154,3 +154,113 @@ const handleImageError = (e) => {
   e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'
 }
 </script>
+
+<style scoped>
+.product-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 340px; /* ensures uniform card height in a grid/row */
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  padding: 8px;
+  position: relative; /* required for absolute-positioned badges */
+}
+
+.product-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.product-card .product-image1 {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.product-card .product-image1 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 4px 4px 4px;
+  flex: 1 1 auto; /* allow info area to expand so footer sticks to bottom */
+}
+
+.product-name {
+  font-size: 14px;
+  line-height: 1.25;
+  margin: 0;
+  color: #222;
+  /* clamp to 2 lines to avoid very tall titles */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.5em; /* reserve space for 2 lines */
+}
+
+.product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto; /* push footer to bottom of card */
+}
+
+.price-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px; /* reserve space so price area doesn't change card height */
+  justify-content: center;
+}
+
+.original-price {
+  color: #868e96;
+  text-decoration: line-through;
+  font-size: 12px;
+}
+
+.current-price {
+  font-weight: 700;
+  color: #111;
+  font-size: 15px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure card fills the container height when used in related-products scroller */
+.pd-related-product-card {
+  height: 100%;
+}
+</style>
