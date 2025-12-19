@@ -96,9 +96,28 @@
                   <div class="product-text">
                     <div class="product-name">{{ item.productName }}</div>
                     <div class="variant-name">{{ item.variantName }}</div>
-                    <div v-if="item.options.length > 0" class="options-text">
+                    <div v-if="item.variations && item.variations.length > 0" class="variations-text">
+                      <span v-for="variation in item.variations" :key="variation.id" class="variation-tag">
+                        <span class="variation-label">{{ variation.variationName }}:</span>
+                        <template v-if="variation.type === 'IMAGE'">
+                          <img :src="variation.value" :alt="variation.variationName" class="variation-image" />
+                        </template>
+                        <template v-else-if="variation.type === 'COLOR'">
+                          <span class="variation-color-wrapper">
+                            <span class="variation-color" :style="{ backgroundColor: variation.value }"></span>
+                          </span>
+                        </template>
+                        <template v-else>
+                          <span class="variation-value">{{ variation.value }}</span>
+                        </template>
+                      </span>
+                    </div>
+                    <div v-if="item.options && item.options.length > 0" class="options-text">
                       <span v-for="opt in item.options" :key="opt.id" class="option-tag">
                         {{ opt.optionName }}: {{ opt.valueLabel }}
+                        <template v-if="opt.price && opt.price > 0">
+                          (+{{ formatPrice(opt.price) }})
+                        </template>
                       </span>
                     </div>
                   </div>

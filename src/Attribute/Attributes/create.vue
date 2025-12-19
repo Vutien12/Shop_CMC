@@ -262,7 +262,7 @@ export default {
             categories: [],
             is_filterable: false,
             values: [
-                { value: '' }
+                { id: null, value: '' }
             ]
         });
 
@@ -377,7 +377,7 @@ export default {
     }
 
     const addNewValue = () => {
-      form.values.push({ value: '' })
+      form.values.push({ id: null, value: '' })
     }
 
     const removeValue = (index) => {
@@ -423,13 +423,14 @@ export default {
 
                 form.is_filterable = data.filterable || false;
 
-                // Map attribute values
+                // Map attribute values - preserve id for updates
                 if (data.attributeValues && data.attributeValues.length > 0) {
                     form.values = data.attributeValues.map(v => ({
+                        id: v.id || null,
                         value: v.value || ''
                     }));
                 } else {
-                    form.values = [{ value: '' }];
+                    form.values = [{ id: null, value: '' }];
                 }
 
                 console.log('Form after loading:', {
@@ -471,7 +472,14 @@ export default {
                     isGlobal: false,
                     attributeValues: form.values
                         .filter(v => v.value.trim() !== '')
-                        .map(v => ({ value: v.value }))
+                        .map(v => {
+                            const valueObj = { value: v.value };
+                            // Include id if it exists (for update operations)
+                            if (v.id) {
+                                valueObj.id = v.id;
+                            }
+                            return valueObj;
+                        })
                 };
 
         if (isEditMode.value) {

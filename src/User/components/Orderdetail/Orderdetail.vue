@@ -144,7 +144,26 @@
                           <div class="product-name">{{ product.productName }}</div>
                           <div v-if="product.variations && product.variations.length" class="product-variations">
                             <span v-for="variation in product.variations" :key="variation.id" class="variation-tag">
-                              {{ variation.variationName }}: {{ getVariationLabel(variation) }}
+                              <span class="variation-label">{{ variation.variationName }}:</span>
+                              <template v-if="variation.type === 'IMAGE'">
+                                <img :src="variation.value" :alt="variation.variationName" class="variation-image" />
+                              </template>
+                              <template v-else-if="variation.type === 'COLOR'">
+                                <span class="variation-color-wrapper">
+                                  <span class="variation-color" :style="{ backgroundColor: variation.value }"></span>
+                                </span>
+                              </template>
+                              <template v-else>
+                                <span class="variation-value">{{ variation.value }}</span>
+                              </template>
+                            </span>
+                          </div>
+                          <div v-if="product.options && product.options.length" class="product-options">
+                            <span v-for="option in product.options" :key="option.id" class="option-tag">
+                              {{ option.optionName }}: {{ option.valueLabel }}
+                              <template v-if="option.price && option.price > 0">
+                                (+{{ formatPrice(option.price) }})
+                              </template>
                             </span>
                           </div>
                         </div>
@@ -408,12 +427,6 @@ const getStatusClass = (status) => {
   return classes[status] || 'status-default'
 }
 
-const getVariationLabel = (variation) => {
-  if (variation.variationValues && variation.variationValues.length > 0) {
-    return variation.variationValues[0].label
-  }
-  return variation.value
-}
 
 const getReviewButtonTitle = (product) => {
   if (!canReview.value) {

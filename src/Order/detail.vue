@@ -231,12 +231,26 @@
                         <a href="#" @click.prevent="goToProduct(item.productId)">
                           {{ item.name }}
                         </a>
-                        <div v-if="item.variations" class="item-options">
-                          <small>{{ item.variations }}</small>
+                        <div v-if="item.variations" class="item-variations">
+                          <small v-for="variation in item.variations" :key="variation.id" class="variation-item">
+                            <span class="variation-label">{{ variation.name }}:</span>
+                            <template v-if="variation.type === 'IMAGE'">
+                              <img :src="variation.value" :alt="variation.name" class="variation-image" />
+                            </template>
+                            <template v-else-if="variation.type === 'COLOR'">
+                              <span class="variation-color" :style="{ backgroundColor: variation.value }"></span>
+                            </template>
+                            <template v-else>
+                              <span class="variation-value">{{ variation.value }}</span>
+                            </template>
+                          </small>
                         </div>
                         <div v-if="item.options" class="item-options">
                           <small v-for="(option, index) in item.options" :key="index">
                             {{ option.name }}: {{ option.value }}
+                            <template v-if="option.price && option.price > 0">
+                              (+{{ formatPrice(option.price) }})
+                            </template>
                           </small>
                         </div>
                       </td>
@@ -450,15 +464,20 @@ const loadOrderData = async () => {
 
     // Order items - map orderProducts array
     order.items = (data.orderProducts || []).map(item => {
-      // Format variations if they exist
-      const variations = (item.variations || []).map(v =>
-        v.variationValues?.[0]?.label || v.value || ''
-      ).filter(Boolean).join(' - ');
+      // Keep variations as array with full metadata for proper display
+      const variations = (item.variations || []).map(v => ({
+        id: v.id,
+        name: v.variationName,
+        type: v.type,
+        value: v.value // Snapshot value at order time
+      }));
 
-      // Format options if they exist
+      // Format options - use snapshot valueLabel and price
       const options = (item.options || []).map(opt => ({
-        name: opt.name || opt.optionName,
-        value: opt.value || opt.optionValue || ''
+        name: opt.optionName,
+        value: opt.valueLabel, // Snapshot value at order time
+        price: opt.price,
+        priceType: opt.priceType
       }));
 
       return {
@@ -470,7 +489,7 @@ const loadOrderData = async () => {
         unitPrice: parseFloat(item.unitPrice) || 0,
         quantity: item.qty || 1,
         lineTotal: parseFloat(item.lineTotal) || 0,
-        variations: variations,
+        variations: variations.length > 0 ? variations : null,
         options: options.length > 0 ? options : null
       };
     });
@@ -987,6 +1006,51 @@ label {
   display: inline-block;
   max-width: 100%;
   overflow-wrap: break-word;
+}
+
+.item-variations {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-variations .variation-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.item-variations .variation-label {
+  font-weight: 500;
+}
+
+.item-variations .variation-image {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+.item-variations .variation-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  vertical-align: middle;
+}
+
+.item-variations .variation-value {
+  font-weight: 400;
 }
 
 .item-options {
