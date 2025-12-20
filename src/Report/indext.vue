@@ -179,6 +179,7 @@ import { ref, computed } from 'vue';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import { getReports } from '@/api/reportApi.js';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 
 export default {
     name: 'ReportIndex',
@@ -187,7 +188,7 @@ export default {
     },
     setup() {
         const notification = useNotification();
-        const loading = ref(false);
+        const { isLoading: loading, withLoading } = useLoading();
 
         const filters = ref({
             type: 'COUPON',
@@ -292,14 +293,14 @@ export default {
         };
 
         const fetchReportData = async () => {
-            loading.value = true;
-            try {
-                // Build API params
-                const params = {
-                    reportType: filters.value.type,
-                    page: pagination.value.currentPage - 1,
-                    size: pagination.value.pageSize
-                };
+            await withLoading(async () => {
+                try {
+                    // Build API params
+                    const params = {
+                        reportType: filters.value.type,
+                        page: pagination.value.currentPage - 1,
+                        size: pagination.value.pageSize
+                    };
 
                 // Add date filters
                 if (filters.value.from) {
@@ -365,13 +366,12 @@ export default {
                     notification.error('Lỗi!', 'Phản hồi không hợp lệ từ server');
                     reportData.value = [];
                 }
-            } catch (error) {
+                } catch (error) {
                 console.error('Error fetching report:', error);
                 notification.error('Lỗi!', 'Không thể tải báo cáo: ' + (error.message || 'Lỗi không xác định'));
                 reportData.value = [];
-            } finally {
-                loading.value = false;
             }
+            });
         };
 
         const handleFilter = () => {

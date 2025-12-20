@@ -8,6 +8,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.options.create' }"
         create-button-text="Create Option"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -28,6 +29,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchOptions, deleteOption, deleteManyOptions } from '@/api/optionApi.js';
 
@@ -39,6 +41,7 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const options = ref([]);
 
         const columns = [
@@ -50,9 +53,10 @@ export default {
         ];
 
         const loadOptions = async () => {
-            try {
-                // Use search endpoint so backend's ModelAttribute binding receives isGlobal
-                const response = await searchOptions({ page: 0, size: 100, isGlobal: true });
+            await withLoading(async () => {
+                try {
+                    // Use search endpoint so backend's ModelAttribute binding receives isGlobal
+                    const response = await searchOptions({ page: 0, size: 100, isGlobal: true });
                 if (response.code === 200) {
                     const items = response.result?.content ?? response.result ?? [];
                     options.value = items.map(opt => ({
@@ -63,9 +67,10 @@ export default {
                         updated_at: opt.updatedAt || opt.createdAt
                     }));
                 }
-            } catch (error) {
+                } catch (error) {
                 console.error('Error loading options:', error);
             }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -123,6 +128,7 @@ export default {
         return {
             options,
             columns,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

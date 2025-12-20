@@ -22,7 +22,12 @@
                             <a href="#" @click.prevent="collapseAll">Collapse All</a> |
                             <a href="#" @click.prevent="expandAll">Expand All</a>
                         </div>
-                        <div ref="categoryTree"></div>
+                        <div class="tree-container" style="position: relative; min-height: 200px;">
+                            <div v-if="isLoading" class="tree-loading">
+                                <i class="fa fa-spinner fa-spin"></i> Loading categories...
+                            </div>
+                            <div v-show="!isLoading" ref="categoryTree"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -105,6 +110,7 @@ import $ from 'jquery';
 import 'jstree';
 import 'jstree/dist/themes/default/style.min.css';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import ImageUploader from '@/Category/components/ImageUploader.vue';
 import { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory, attachFileToCategory } from '@/api/categoryApi';
@@ -118,9 +124,9 @@ export default {
     },
     setup() {
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading(true);
         const categoryTree = ref(null);
         const selectedNode = ref(null);
-        const loading = ref(false);
         const saving = ref(false);
         const categories = ref([]);
         const activeTab = ref('general');
@@ -167,26 +173,25 @@ export default {
         };
 
         const loadCategories = async () => {
-            try {
-                loading.value = true;
-                const response = await getCategories();
+            await withLoading(async () => {
+                try {
+                    const response = await getCategories();
 
-                if (response.code === 200) {
-                    categories.value = response.result;
-                    const treeData = buildTree(response.result);
+                    if (response.code === 200) {
+                        categories.value = response.result;
+                        const treeData = buildTree(response.result);
 
-                    // Destroy and reinitialize tree
-                    if (categoryTree.value) {
-                        $(categoryTree.value).jstree('destroy');
+                        // Destroy and reinitialize tree
+                        if (categoryTree.value) {
+                            $(categoryTree.value).jstree('destroy');
+                        }
+                        initializeTree(treeData);
                     }
-                    initializeTree(treeData);
+                } catch (error) {
+                    console.error('Failed to load categories:', error);
+                    notification.error('Lỗi!', 'Không thể tải danh sách danh mục');
                 }
-            } catch (error) {
-                console.error('Failed to load categories:', error);
-                notification.error('Lỗi!', 'Không thể tải danh sách danh mục');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const initializeTree = (treeData) => {
@@ -385,7 +390,7 @@ export default {
         return {
             categoryTree,
             selectedNode,
-            loading,
+            isLoading,
             saving,
             activeTab,
             form,
@@ -462,4 +467,24 @@ export default {
 .m-b-10 { margin-bottom: 10px; }
 .m-b-10 a { color: #337ab7; text-decoration: none; }
 .m-b-10 a:hover { text-decoration: underline; }
+
+.tree-container {
+    position: relative;
+    min-height: 200px;
+}
 </style>
+
+.tree-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.tree-loading i {
+    margin-right: 8px;
+    font-size: 18px;
+}

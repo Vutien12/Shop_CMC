@@ -905,36 +905,60 @@ export default {
 .product-badges {
   position: absolute;
   top: 10px;
-  left: 10px;
+  margin-right:130px;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  align-items: flex-start;
 }
 
-.badge {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.badge.out-of-stock {
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-  color: white;
-}
-
+/* Sale Badge with Fire Effect - Match Product.vue */
 .badge.discount {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  font-weight: 700;
   color: white;
+  background: linear-gradient(135deg, #ff0000 0%, #ff6b00 50%, #ff0000 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 107, 0, 0.4);
+  animation: fire-glow 1.5s ease-in-out infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  display: inline-block;
+  line-height: 1.2;
 }
 
+@keyframes fire-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 107, 0, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 25px rgba(255, 107, 0, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+/* New Badge - Green */
 .badge.new {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
   color: white;
+  background-color: #10b981;
+  border-radius: 4px;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+/* Out of Stock Badge - Red */
+.badge.out-of-stock {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background-color: #ef4444;
+  border-radius: 4px;
+  display: inline-block;
+  line-height: 1.2;
 }
 
 /* Product Image */

@@ -5,6 +5,7 @@
         :breadcrumbs="[{ label: 'Refund' }]"
         :data="cancellations"
         :columns="columns"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -84,6 +85,7 @@
 <script>
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import {
     searchOrderCases,
@@ -97,11 +99,11 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const { isLoading, withLoading } = useLoading();
         const cancellations = ref([]);
         const filterType = ref('');
         const filterStatus = ref('');
         const searchQuery = ref('');
-        const loading = ref(false);
         const currentPage = ref(0);
         const pageSize = ref(10);
         const totalElements = ref(0);
@@ -118,45 +120,43 @@ export default {
         ];
 
         const loadCancellations = async () => {
-            try {
-                loading.value = true;
+            await withLoading(async () => {
+                try {
+                    // Always use searchOrderCases for consistency
+                    const searchParams = {
+                        page: currentPage.value,
+                        size: pageSize.value,
+                        sort: 'createdAt,desc'
+                    };
 
-                // Always use searchOrderCases for consistency
-                const searchParams = {
-                    page: currentPage.value,
-                    size: pageSize.value,
-                    sort: 'createdAt,desc'
-                };
+                    if (filterType.value) searchParams.type = filterType.value;
+                    if (filterStatus.value) searchParams.status = filterStatus.value;
+                    if (searchQuery.value) searchParams.search = searchQuery.value;
 
-                if (filterType.value) searchParams.type = filterType.value;
-                if (filterStatus.value) searchParams.status = filterStatus.value;
-                if (searchQuery.value) searchParams.search = searchQuery.value;
+                    const response = await searchOrderCases(searchParams);
+                    console.log('Search order cases response:', response);
 
-                const response = await searchOrderCases(searchParams);
-                console.log('Search order cases response:', response);
-
-                // Support both code 200 and 1000
-                if (response.code === 1000 || response.code === 200) {
-                    // Handle paginated response
-                    if (response.result.content) {
-                        cancellations.value = response.result.content;
-                        totalElements.value = response.result.totalElements || 0;
-                    } else if (Array.isArray(response.result)) {
-                        // Handle array response
-                        cancellations.value = response.result;
-                        totalElements.value = response.result.length;
-                    } else {
-                        cancellations.value = [];
-                        totalElements.value = 0;
+                    // Support both code 200 and 1000
+                    if (response.code === 1000 || response.code === 200) {
+                        // Handle paginated response
+                        if (response.result.content) {
+                            cancellations.value = response.result.content;
+                            totalElements.value = response.result.totalElements || 0;
+                        } else if (Array.isArray(response.result)) {
+                            // Handle array response
+                            cancellations.value = response.result;
+                            totalElements.value = response.result.length;
+                        } else {
+                            cancellations.value = [];
+                            totalElements.value = 0;
+                        }
+                        console.log('Loaded cases:', cancellations.value);
                     }
-                    console.log('Loaded cases:', cancellations.value);
+                } catch (error) {
+                    console.error('Error loading order cases:', error);
+                    alert('Failed to load order cases. Please try again.');
                 }
-            } catch (error) {
-                console.error('Error loading order cases:', error);
-                alert('Failed to load order cases. Please try again.');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         // Watch for filter changes
@@ -176,15 +176,12 @@ export default {
             }
 
             try {
-                loading.value = true;
                 await batchDeleteOrderCases(selectedIds);
                 await loadCancellations();
                 alert('Item(s) deleted successfully!');
             } catch (error) {
                 console.error('Error deleting items:', error);
                 alert('Error deleting item(s). Please try again.');
-            } finally {
-                loading.value = false;
             }
         };
 
@@ -277,7 +274,7 @@ export default {
             filterType,
             filterStatus,
             searchQuery,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate,

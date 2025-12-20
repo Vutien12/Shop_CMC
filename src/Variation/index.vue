@@ -6,6 +6,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.variations.create' }"
         create-button-text="Create Variation"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -26,6 +27,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchVariations, deleteVariation, deleteManyVariations } from '@/api/variationApi';
 
@@ -37,8 +39,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const variations = ref([]);
-        const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
@@ -49,31 +51,30 @@ export default {
         ];
 
         const loadVariations = async () => {
-            try {
-                loading.value = true;
-                // Use searchVariations so the backend's /search mapping receives ModelAttribute fields like isGlobal
-                // Spring pageable is 0-based — request page 0 for the first page
-                const response = await searchVariations({ page: 0, size: 100, isGlobal: true });
+            await withLoading(async () => {
+                try {
+                    // Use searchVariations so the backend's /search mapping receives ModelAttribute fields like isGlobal
+                    // Spring pageable is 0-based — request page 0 for the first page
+                    const response = await searchVariations({ page: 0, size: 100, isGlobal: true });
 
-                if (response.code === 200) {
-                    // Backend may return a Page object: result.content contains items
-                    const items = response.result?.content ?? response.result ?? [];
-                    // Map API response to component format
-                    variations.value = items.map(variation => ({
-                        id: variation.id,
-                        name: variation.name,
-                        type: variation.type,
-                        values_count: variation.variationValues?.length || 0,
-                        updated_at: variation.createdAt || variation.updatedAt,
-                        isGlobal: variation.isGlobal
-                    }));
+                    if (response.code === 200) {
+                        // Backend may return a Page object: result.content contains items
+                        const items = response.result?.content ?? response.result ?? [];
+                        // Map API response to component format
+                        variations.value = items.map(variation => ({
+                            id: variation.id,
+                            name: variation.name,
+                            type: variation.type,
+                            values_count: variation.variationValues?.length || 0,
+                            updated_at: variation.createdAt || variation.updatedAt,
+                            isGlobal: variation.isGlobal
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Failed to load variations:', error);
+                    notification.error('Lỗi!', 'Không thể tải danh sách biến thể');
                 }
-            } catch (error) {
-                console.error('Failed to load variations:', error);
-                notification.error('Lỗi!', 'Không thể tải danh sách biến thể');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -88,8 +89,6 @@ export default {
             
             if (confirmed) {
                 try {
-                    loading.value = true;
-
                     if (selectedIds.length === 1) {
                         await deleteVariation(selectedIds[0]);
                     } else {
@@ -102,8 +101,6 @@ export default {
                 } catch (error) {
                     console.error('Failed to delete variations:', error);
                     notification.error('Lỗi!', 'Không thể xóa biến thể');
-                } finally {
-                    loading.value = false;
                 }
             }
         };
@@ -134,7 +131,7 @@ export default {
         return {
             variations,
             columns,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

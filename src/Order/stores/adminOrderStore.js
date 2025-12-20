@@ -30,6 +30,8 @@ export const useAdminOrderStore = defineStore('adminOrder', () => {
     }
 
     isLoading.value = true;
+    const startTime = Date.now();
+    
     try {
       const res = await searchOrders(page, size);
       const data = res.data.result;
@@ -62,6 +64,13 @@ export const useAdminOrderStore = defineStore('adminOrder', () => {
       pageSize.value = size;
       lastFetched.value = { key: cacheKey, ts: now };
       loadedPages.value.add(cacheKey);
+
+      // Ensure minimum 1 second loading time
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 1000 - elapsedTime);
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
 
       return { orders: formatted, totalPages: data.totalPages, totalElements: data.totalElements };
     } catch (error) {

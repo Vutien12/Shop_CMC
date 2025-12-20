@@ -1,5 +1,12 @@
 <template>
     <div class="flashsale-create-wrapper">
+        <PageBreadcrumb 
+            :title="isEditMode ? 'Edit Flash Sale' : 'Create Flash Sale'"
+            :breadcrumbs="[
+                { label: 'Flash Sales', route: { name: 'admin.flashsales.index' } },
+                { label: isEditMode ? 'Edit' : 'Create' }
+            ]"
+        />
         <div class="accordion-content clearfix">
             <!-- Sidebar -->
             <div class="col-lg-3 col-md-4">
@@ -14,7 +21,7 @@
 
                             <div id="flash_sale_information" class="panel-collapse collapse in">
                                 <div class="panel-body">
-                                    <ul class="accordion-tab nav nav-tabs">
+                                    <ul class="accordion-tab">
                                         <li :class="{ active: activeTab === 'general' }">
                                             <a href="#general" @click.prevent="activeTab = 'general'">General</a>
                                         </li>
@@ -329,6 +336,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import {
     getFlashSale,
     createFlashSale,
@@ -340,6 +348,9 @@ import {
 
 export default {
     name: 'FlashSaleCreate',
+    components: {
+        PageBreadcrumb
+    },
     setup() {
         const router = useRouter();
         const route = useRoute();
@@ -681,37 +692,57 @@ export default {
 }
 
 .panel-body {
-    padding: 15px;
+    padding: 0;
 }
 
 .accordion-tab {
     list-style: none;
-    padding: 0;
     margin: 0;
-    border-bottom: 2px solid #ddd;
+    padding: 0;
+    border: none;
+    display: block;
 }
 
 .accordion-tab li {
-    display: inline-block;
+    border-bottom: 1px solid #f0f0f0;
+    display: block;
+    width: 100%;
+}
+
+.accordion-tab li:last-child {
+    border-bottom: none;
 }
 
 .accordion-tab li a {
     display: block;
-    padding: 10px 20px;
+    padding: 12px 20px;
     color: #666;
     text-decoration: none;
-    border: 1px solid transparent;
-    border-bottom: none;
-    margin-bottom: -2px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
     cursor: pointer;
 }
 
+.accordion-tab li:first-child a {
+    border-top-left-radius: 4px;
+}
+
+.accordion-tab li:last-child a {
+    border-bottom-left-radius: 4px;
+}
+
+.accordion-tab li a:hover {
+    background: #f9f9f9;
+    color: #333;
+}
+
 .accordion-tab li.active a {
-    color: #2563eb;
     background: #fff;
-    border-color: #ddd;
-    border-bottom-color: #fff;
-    font-weight: 600;
+    color: #0071a1;
+    border-left-color: #0071a1;
+    font-weight: 500;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
 }
 
 .accordion-box-content {

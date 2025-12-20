@@ -9,6 +9,7 @@
         :create-route="{ name: 'admin.brands.create' }"
         create-button-text="Create Brand"
         :row-clickable="true"
+        :loading="isLoading"
         @delete="handleDelete"
         @row-click="handleRowClick"
     >
@@ -40,6 +41,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getBrands, deleteBrand, deleteManyBrands } from '@/api/brandApi';
 
@@ -51,8 +53,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading(true);
         const brands = ref([]);
-        const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
@@ -62,25 +64,24 @@ export default {
         ];
 
         const loadBrands = async () => {
-            try {
-                loading.value = true;
-                const response = await getBrands();
+            await withLoading(async () => {
+                try {
+                    const response = await getBrands();
 
-                if (response.code === 200) {
-                    brands.value = response.result.map(brand => ({
-                        id: brand.id,
-                        name: brand.name,
-                        logo: brand.fileLogo?.url || null,
-                        updated_at: brand.createdAt,
-                        isActive: brand.isActive
-                    }));
+                    if (response.code === 200) {
+                        brands.value = response.result.map(brand => ({
+                            id: brand.id,
+                            name: brand.name,
+                            logo: brand.fileLogo?.url || null,
+                            updated_at: brand.createdAt,
+                            isActive: brand.isActive
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Failed to load brands:', error);
+                    notification.error('Error!', 'Failed to load brands');
                 }
-            } catch (error) {
-                console.error('Failed to load brands:', error);
-                notification.error('Error!', 'Failed to load brands');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -94,24 +95,22 @@ export default {
             );
 
             if (confirmed) {
-                try {
-                    loading.value = true;
+                await withLoading(async () => {
+                    try {
+                        if (selectedIds.length === 1) {
+                            await deleteBrand(selectedIds[0]);
+                        } else {
+                            await deleteManyBrands(selectedIds);
+                        }
 
-                    if (selectedIds.length === 1) {
-                        await deleteBrand(selectedIds[0]);
-                    } else {
-                        await deleteManyBrands(selectedIds);
+                        // Reload brands after deletion
+                        await loadBrands();
+                        notification.success('Success!', 'Brands deleted successfully');
+                    } catch (error) {
+                        console.error('Failed to delete brands:', error);
+                        notification.error('Error!', 'Failed to delete brands');
                     }
-
-                    // Reload brands after deletion
-                    await loadBrands();
-                    notification.success('Success!', 'Brands deleted successfully');
-                } catch (error) {
-                    console.error('Failed to delete brands:', error);
-                    notification.error('Error!', 'Failed to delete brands');
-                } finally {
-                    loading.value = false;
-                }
+                });
             }
         };
 
@@ -141,7 +140,7 @@ export default {
         return {
             brands,
             columns,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate
