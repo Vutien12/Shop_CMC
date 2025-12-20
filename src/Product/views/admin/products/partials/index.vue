@@ -6,6 +6,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.products.create' }"
         create-button-text="Create Product"
+        :loading="isLoading"
         :row-clickable="true"
         :pagination="paginationData"
         :server-side="true"
@@ -70,6 +71,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchProducts, deleteProduct } from '@/api/productApi';
 
@@ -81,6 +83,7 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const products = ref([]);
 
         // Pagination state
@@ -111,9 +114,10 @@ export default {
         ];
 
         const loadProducts = async () => {
-            try {
-                // Gọi API search products với các tham số phân trang
-                const params = {
+            await withLoading(async () => {
+                try {
+                    // Gọi API search products với các tham số phân trang
+                    const params = {
                     page: currentPage.value,
                     size: pageSize.value,
                     sortBy: sortBy.value,
@@ -175,6 +179,7 @@ export default {
                     totalPages: 0
                 };
             }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -265,6 +270,7 @@ export default {
             products,
             columns,
             paginationData,
+            isLoading,
             handleRowClick,
             handleDelete,
             handlePageChange,

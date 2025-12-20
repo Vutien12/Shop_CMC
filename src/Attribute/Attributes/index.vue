@@ -8,6 +8,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.attributes.create' }"
         create-button-text="Create Attribute"
+        :loading="isLoading"
         :row-clickable="true"
         :server-side="true"
         :pagination="pagination"
@@ -36,6 +37,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchAttributes, deleteAttribute, deleteManyAttributes } from '@/api/attributeApi.js';
 
@@ -47,8 +49,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading(true);
         const attributes = ref([]);
-        const loading = ref(false);
 
         // Search and pagination state
         const searchQuery = ref('');
@@ -70,58 +72,57 @@ export default {
         ];
 
         const loadAttributes = async () => {
-            loading.value = true;
-            try {
-                const params = {
-                    page: pagination.value.currentPage - 1, // API uses 0-based page
-                    size: pagination.value.pageSize,
-                    sortBy: sortBy.value,
-                    direction: sortDirection.value
-                };
+            await withLoading(async () => {
+                try {
+                    const params = {
+                        page: pagination.value.currentPage - 1, // API uses 0-based page
+                        size: pagination.value.pageSize,
+                        sortBy: sortBy.value,
+                        direction: sortDirection.value
+                    };
 
-                // Add search keyword if exists
-                if (searchQuery.value) {
-                    params.keyword = searchQuery.value;
+                    // Add search keyword if exists
+                    if (searchQuery.value) {
+                        params.keyword = searchQuery.value;
+                    }
+
+                    console.log('Loading attributes with params:', params);
+                    const response = await searchAttributes(params);
+                    console.log('Attributes response:', response);
+
+                    // searchAttributes already returns response.data
+                    // Response structure: { code: 200, message: "Success", result: { content: [...], ... } }
+                    const result = response.result;
+
+                    if (result?.content) {
+                        // Paginated response
+                        attributes.value = result.content.map(attr => ({
+                            id: attr.id,
+                            name: attr.name,
+                            attributeSet: attr.attributeSet?.name || 'N/A',
+                            filterable: attr.filterable || false,
+                            createdAt: attr.createdAt
+                        }));
+
+                        pagination.value.totalElements = result.totalElements || 0;
+                        pagination.value.totalPages = result.totalPages || 0;
+                    } else if (Array.isArray(result)) {
+                        // Non-paginated response (array directly)
+                        attributes.value = result.map(attr => ({
+                            id: attr.id,
+                            name: attr.name,
+                            attributeSet: attr.attributeSet?.name || 'N/A',
+                            filterable: attr.filterable || false,
+                            createdAt: attr.createdAt
+                        }));
+                    } else {
+                        attributes.value = [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load attributes:', error);
+                    notification.error('Lỗi!', 'Không thể tải danh sách attributes');
                 }
-
-                console.log('Loading attributes with params:', params);
-                const response = await searchAttributes(params);
-                console.log('Attributes response:', response);
-
-                // searchAttributes already returns response.data
-                // Response structure: { code: 200, message: "Success", result: { content: [...], ... } }
-                const result = response.result;
-
-                if (result?.content) {
-                    // Paginated response
-                    attributes.value = result.content.map(attr => ({
-                        id: attr.id,
-                        name: attr.name,
-                        attributeSet: attr.attributeSet?.name || 'N/A',
-                        filterable: attr.filterable || false,
-                        createdAt: attr.createdAt
-                    }));
-
-                    pagination.value.totalElements = result.totalElements || 0;
-                    pagination.value.totalPages = result.totalPages || 0;
-                } else if (Array.isArray(result)) {
-                    // Non-paginated response (array directly)
-                    attributes.value = result.map(attr => ({
-                        id: attr.id,
-                        name: attr.name,
-                        attributeSet: attr.attributeSet?.name || 'N/A',
-                        filterable: attr.filterable || false,
-                        createdAt: attr.createdAt
-                    }));
-                } else {
-                    attributes.value = [];
-                }
-            } catch (error) {
-                console.error('Failed to load attributes:', error);
-                notification.error('Lỗi!', 'Không thể tải danh sách attributes');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleSearch = (query) => {
@@ -158,24 +159,22 @@ export default {
             );
 
             if (confirmed) {
-                try {
-                    loading.value = true;
+                await withLoading(async () => {
+                    try {
+                        if (selectedIds.length === 1) {
+                            await deleteAttribute(selectedIds[0]);
+                        } else {
+                            await deleteManyAttributes(selectedIds);
+                        }
 
-                    if (selectedIds.length === 1) {
-                        await deleteAttribute(selectedIds[0]);
-                    } else {
-                        await deleteManyAttributes(selectedIds);
+                        // Reload the list
+                        await loadAttributes();
+                        notification.success('Thành công!', 'Đã xóa attributes thành công');
+                    } catch (error) {
+                        console.error('Failed to delete attributes:', error);
+                        notification.error('Lỗi!', 'Không thể xóa attributes');
                     }
-
-                    // Reload the list
-                    await loadAttributes();
-                    notification.success('Thành công!', 'Đã xóa attributes thành công');
-                } catch (error) {
-                    console.error('Failed to delete attributes:', error);
-                    notification.error('Lỗi!', 'Không thể xóa attributes');
-                } finally {
-                    loading.value = false;
-                }
+                });
             }
         };
 
@@ -205,7 +204,7 @@ export default {
         return {
             attributes,
             columns,
-            loading,
+            isLoading,
             pagination,
             handleRowClick,
             handleDelete,

@@ -5,6 +5,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.flashsales.create' }"
         create-button-text="Create Flash Sale"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -24,6 +25,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getAllFlashSales, deleteFlashSale } from '@/api/flashsaleApi.js';
 
@@ -34,6 +36,7 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const { isLoading, withLoading } = useLoading();
         const flashSales = ref([]);
 
         const columns = [
@@ -46,15 +49,17 @@ export default {
         ];
 
         const loadFlashSales = async () => {
-            try {
-                const response = await getAllFlashSales();
-                if (response && response.code === 200) {
-                    flashSales.value = response.result || [];
+            await withLoading(async () => {
+                try {
+                    const response = await getAllFlashSales();
+                    if (response && response.code === 200) {
+                        flashSales.value = response.result || [];
+                    }
+                } catch (error) {
+                    console.error('Error loading flash sales:', error);
+                    alert('Error loading flash sales. Please try again.');
                 }
-            } catch (error) {
-                console.error('Error loading flash sales:', error);
-                alert('Error loading flash sales. Please try again.');
-            }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -107,6 +112,7 @@ export default {
         return {
             flashSales,
             columns,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

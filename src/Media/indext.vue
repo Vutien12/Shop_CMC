@@ -193,6 +193,7 @@
 import { ref, computed, onMounted } from 'vue';
 import PageBreadcrumb from '@/Admin/view/components/PageBreadcrumb.vue';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import { uploadFile, searchFiles, deleteFiles } from '@/api/fileApi';
 import { DEFAULT_PAGE_SIZE } from '@/Config/search';
 
@@ -203,6 +204,7 @@ export default {
     },
     setup() {
         const notification = useNotification();
+        const { isLoading: loading, withLoading } = useLoading();
         const fileInput = ref(null);
         const selectedItems = ref([]);
         const selectAll = ref(false);
@@ -211,7 +213,6 @@ export default {
         const currentPage = ref(0);
         const mediaFiles = ref([]);
         const totalElements = ref(0);
-        const loading = ref(false);
         const uploading = ref(false);
         const uploadProgress = ref(0);
         const sortField = ref('createdAt');
@@ -231,32 +232,31 @@ export default {
 
         // Load files from API
         const loadFiles = async () => {
-            try {
-                loading.value = true;
-                const params = {
-                    page: currentPage.value,
-                    size: perPage.value,
-                    sortBy: sortField.value,
-                    direction: sortOrder.value.toUpperCase()
-                };
+            await withLoading(async () => {
+                try {
+                    const params = {
+                        page: currentPage.value,
+                        size: perPage.value,
+                        sortBy: sortField.value,
+                        direction: sortOrder.value.toUpperCase()
+                    };
 
-                // Add filename parameter if searching
-                if (searchQuery.value && searchQuery.value.trim()) {
-                    params.filename = searchQuery.value.trim();
+                    // Add filename parameter if searching
+                    if (searchQuery.value && searchQuery.value.trim()) {
+                        params.filename = searchQuery.value.trim();
+                    }
+
+                    const response = await searchFiles(params);
+
+                    if (response.code === 200 && response.result) {
+                        mediaFiles.value = response.result.content;
+                        totalElements.value = response.result.totalElements;
+                    }
+                } catch (error) {
+                    console.error('Failed to load files:', error);
+                    notification.error('Error!', 'Failed to load files. Please try again.');
                 }
-
-                const response = await searchFiles(params);
-
-                if (response.code === 200 && response.result) {
-                    mediaFiles.value = response.result.content;
-                    totalElements.value = response.result.totalElements;
-                }
-            } catch (error) {
-                console.error('Failed to load files:', error);
-                notification.error('Error!', 'Failed to load files. Please try again.');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const filteredMedia = computed(() => {

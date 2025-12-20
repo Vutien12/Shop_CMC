@@ -3,6 +3,7 @@
         title="Users"
         :data="users"
         :columns="columns"
+        :loading="isLoading"
         :row-clickable="true"
         :create-route="{ name: 'admin.users.create' }"
         create-button-text="Create User"
@@ -32,6 +33,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getUsers, deleteUser, deleteManyUsers } from '@/api/userApi';
 
@@ -43,8 +45,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const users = ref([]);
-        const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
@@ -55,32 +57,31 @@ export default {
         ];
 
         const loadUsers = async () => {
-            try {
-                loading.value = true;
-                console.log('Token:', localStorage.getItem('accessToken'));
-                console.log('Loading users...');
+            await withLoading(async () => {
+                try {
+                    console.log('Token:', localStorage.getItem('accessToken'));
+                    console.log('Loading users...');
 
-                const response = await getUsers();
-                console.log('Users response:', response);
+                    const response = await getUsers();
+                    console.log('Users response:', response);
 
-                if (response.code === 200) {
-                    // Map API response to component format
-                    users.value = response.result.map(user => ({
-                        id: user.id,
-                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A',
-                        email: user.email,
-                        role: user.role || 'USER',
-                        updated_at: user.defaultAddress?.updatedAt || user.createdAt || null
-                    }));
-                    console.log('Mapped users:', users.value);
+                    if (response.code === 200) {
+                        // Map API response to component format
+                        users.value = response.result.map(user => ({
+                            id: user.id,
+                            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A',
+                            email: user.email,
+                            role: user.role || 'USER',
+                            updated_at: user.defaultAddress?.updatedAt || user.createdAt || null
+                        }));
+                        console.log('Mapped users:', users.value);
+                    }
+                } catch (error) {
+                    console.error('Failed to load users:', error);
+                    console.error('Error response:', error.response);
+                    notification.error('Error!', 'Failed to load users. Please try again.');
                 }
-            } catch (error) {
-                console.error('Failed to load users:', error);
-                console.error('Error response:', error.response);
-                notification.error('Error!', 'Failed to load users. Please try again.');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -95,8 +96,6 @@ export default {
 
             if (confirmed) {
                 try {
-                    loading.value = true;
-
                     if (selectedIds.length === 1) {
                         await deleteUser(selectedIds[0]);
                     } else {
@@ -109,8 +108,6 @@ export default {
                 } catch (error) {
                     console.error('Failed to delete users:', error);
                     notification.error('Error!', 'Failed to delete users. Please try again.');
-                } finally {
-                    loading.value = false;
                 }
             }
         };
@@ -142,7 +139,7 @@ export default {
         return {
             users,
             columns,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

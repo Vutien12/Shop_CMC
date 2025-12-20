@@ -120,8 +120,8 @@
                   <!-- Product Badges -->
                   <div class="product-badges">
                     <span v-if="!product.inStock" class="badge out-of-stock">Out of Stock</span>
-                    <span v-else-if="product.minPrice < product.maxPrice" class="badge discount">Sale</span>
-                    <span v-else-if="product.newFrom || product.newTo" class="badge new">New</span>
+                    <span v-else-if="product.discount" class="badge discount">{{ product.discount }}</span>
+                    <span v-else-if="product.isNew" class="badge new">New</span>
                   </div>
 
                   <!-- Product Image -->
@@ -303,8 +303,8 @@
                   <!-- Product Badges -->
                   <div class="product-badges">
                     <span v-if="!product.inStock" class="badge out-of-stock">Out of Stock</span>
-                    <span v-else-if="product.minPrice < product.maxPrice" class="badge discount">Sale</span>
-                    <span v-else-if="product.newFrom || product.newTo" class="badge new">New</span>
+                    <span v-else-if="product.discount" class="badge discount">{{ product.discount }}</span>
+                    <span v-else-if="product.isNew" class="badge new">New</span>
                   </div>
 
                   <!-- Product Image -->
@@ -394,6 +394,7 @@ import { searchProducts, getNewArrivals, getSpecialProducts, getFeaturedProducts
 import { getCategories } from '@/api/categoryApi'
 import { getBrands } from '@/api/brandApi'
 import { getActiveFlashSales } from '@/api/flashsaleApi'
+import { calculateProductDiscount } from '@/Utils/discountUtils'
 
 import Menu from './Menu.vue'
 import BestDealsSection from './sections/BestDealsSection.vue'
@@ -507,6 +508,13 @@ const selectProductTab = (tab) => {
 // Navigate to product detail
 const navigateToProductDetail = (productId) => {
   window.location.href = `/productdetail/${productId}`
+}
+
+// Check if product is new
+const isProductNew = (newFrom, newTo) => {
+  if (!newFrom || !newTo) return false
+  const today = new Date().toISOString().split('T')[0]
+  return today >= newFrom && today <= newTo
 }
 
 // Format price helper
@@ -706,7 +714,9 @@ const fetchNewArrivals = async () => {
     if (response.code === 200) {
       newArrivals.value = response.result.map(product => ({
         ...product,
-        thumbnail: product.thumbnail?.url || product.thumbnail
+        thumbnail: product.thumbnail?.url || product.thumbnail,
+        discount: calculateProductDiscount(product),
+        isNew: isProductNew(product.newFrom, product.newTo)
       }))
     }
   } catch (error) {
@@ -721,7 +731,9 @@ const fetchSpecialProducts = async () => {
     if (response.code === 200) {
       specialProducts.value = response.result.map(product => ({
         ...product,
-        thumbnail: product.thumbnail?.url || product.thumbnail
+        thumbnail: product.thumbnail?.url || product.thumbnail,
+        discount: calculateProductDiscount(product),
+        isNew: isProductNew(product.newFrom, product.newTo)
       }))
     }
   } catch (error) {
@@ -736,7 +748,9 @@ const fetchFeaturedProducts = async () => {
     if (response.code === 200) {
       featuredProducts.value = response.result.map(product => ({
         ...product,
-        thumbnail: product.thumbnail?.url || product.thumbnail
+        thumbnail: product.thumbnail?.url || product.thumbnail,
+        discount: calculateProductDiscount(product),
+        isNew: isProductNew(product.newFrom, product.newTo)
       }))
     }
   } catch (error) {
@@ -768,7 +782,9 @@ const fetchProductsByCategoryName = async (categoryName, limit = 12) => {
     if (response.code === 200) {
       return response.result.content.map(product => ({
         ...product,
-        thumbnail: product.thumbnail?.url || product.thumbnail
+        thumbnail: product.thumbnail?.url || product.thumbnail,
+        discount: calculateProductDiscount(product),
+        isNew: isProductNew(product.newFrom, product.newTo)
       }))
     }
     return []
@@ -1165,36 +1181,47 @@ const fetchProductsByCategories = async () => {
 .product-badges {
   position: absolute;
   top: 10px;
-  left: 10px;
+  margin-right: 130px;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .badge {
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 2px 5px;
+  border-radius: 3px;
   font-size: 10px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: white;
+  display: inline-block;
+  line-height: 1.2;
 }
 
 .badge.new {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-  color: #ffffff;
+  background-color: #10b981;
 }
 
 .badge.discount {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #ff0000 0%, #ff6b00 50%, #ff0000 100%);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 107, 0, 0.4);
+  animation: fire-glow 1.5s ease-in-out infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes fire-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 107, 0, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 25px rgba(255, 107, 0, 0.6);
+    transform: scale(1.05);
+  }
 }
 
 .badge.out-of-stock {
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-  color: #ffffff;
+  background-color: #ef4444;
 }
 
 .product-image-wrapper {

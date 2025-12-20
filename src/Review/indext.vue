@@ -4,6 +4,7 @@
         :breadcrumbs="[{ label: 'Reviews' }]"
         :data="reviews"
         :columns="columns"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -50,6 +51,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchReviews } from '@/api/reviewApi';
 
@@ -60,8 +62,8 @@ export default {
     },
     setup() {
         const router = useRouter();
+        const { isLoading, withLoading } = useLoading();
         const reviews = ref([]);
-        const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '80px' },
@@ -75,38 +77,36 @@ export default {
         ];
 
         const loadReviews = async () => {
-            loading.value = true;
+            await withLoading(async () => {
+                try {
+                    const response = await searchReviews({
+                        page: 0,
+                        size: 50
+                    });
 
-            try {
-                const response = await searchReviews({
-                    page: 0,
-                    size: 50
-                });
+                    console.log('Reviews response:', response);
 
-                console.log('Reviews response:', response);
+                    if (response && response.code === 200 && response.result) {
+                        const reviewList = response.result.content || [];
 
-                if (response && response.code === 200 && response.result) {
-                    const reviewList = response.result.content || [];
+                        reviews.value = reviewList.map(review => ({
+                            id: review.id,
+                            product: review.productName || 'N/A',
+                            variant: review.variantName || 'N/A',
+                            reviewer_name: review.userFullName || 'Anonymous',
+                            rating: review.rating || 0,
+                            title: review.title || '',
+                            status: !review.isHidden, // isHidden = false means Visible
+                            date: review.createdAt || review.updatedAt
+                        }));
 
-                    reviews.value = reviewList.map(review => ({
-                        id: review.id,
-                        product: review.productName || 'N/A',
-                        variant: review.variantName || 'N/A',
-                        reviewer_name: review.userFullName || 'Anonymous',
-                        rating: review.rating || 0,
-                        title: review.title || '',
-                        status: !review.isHidden, // isHidden = false means Visible
-                        date: review.createdAt || review.updatedAt
-                    }));
-
-                    console.log('Mapped reviews:', reviews.value);
+                        console.log('Mapped reviews:', reviews.value);
+                    }
+                } catch (error) {
+                    console.error('Failed to load reviews:', error);
+                    reviews.value = [];
                 }
-            } catch (error) {
-                console.error('Failed to load reviews:', error);
-                reviews.value = [];
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -116,8 +116,6 @@ export default {
         const handleDelete = async (selectedIds) => {
             if (confirm(`Are you sure you want to delete ${selectedIds.length} review(s)?`)) {
                 try {
-                    loading.value = true;
-
                     // Delete reviews - adjust API endpoint as needed
                     for (const id of selectedIds) {
                         // await deleteReview(id);
@@ -129,8 +127,6 @@ export default {
                 } catch (error) {
                     console.error('Failed to delete reviews:', error);
                     alert('Failed to delete reviews. Please try again.');
-                } finally {
-                    loading.value = false;
                 }
             }
         };
@@ -162,7 +158,7 @@ export default {
         return {
             reviews,
             columns,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

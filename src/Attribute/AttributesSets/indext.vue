@@ -8,6 +8,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.attribute-sets.create' }"
         create-button-text="Create Attribute Set"
+        :loading="isLoading"
         :row-clickable="true"
         :server-side="true"
         :pagination="pagination"
@@ -29,6 +30,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchAttributeSets, deleteAttributeSet, deleteManyAttributeSets } from '@/api/attributeSetApi.js';
 
@@ -40,8 +42,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading(true);
         const attributeSets = ref([]);
-        const loading = ref(false);
 
         // Search and pagination state
         const searchQuery = ref('');
@@ -61,47 +63,46 @@ export default {
         ];
 
         const loadAttributeSets = async () => {
-            loading.value = true;
-            try {
-                const params = {
-                    page: pagination.value.currentPage - 1,
-                    size: pagination.value.pageSize,
-                    sortBy: sortBy.value,
-                    direction: sortDirection.value
-                };
+            await withLoading(async () => {
+                try {
+                    const params = {
+                        page: pagination.value.currentPage - 1,
+                        size: pagination.value.pageSize,
+                        sortBy: sortBy.value,
+                        direction: sortDirection.value
+                    };
 
-                if (searchQuery.value) {
-                    params.keyword = searchQuery.value;
+                    if (searchQuery.value) {
+                        params.keyword = searchQuery.value;
+                    }
+
+                    const response = await searchAttributeSets(params);
+                    // searchAttributeSets already returns response.data
+                    const result = response.result;
+
+                    if (result?.content) {
+                        attributeSets.value = result.content.map(set => ({
+                            id: set.id,
+                            name: set.name,
+                            createdAt: set.createdAt
+                        }));
+
+                        pagination.value.totalElements = result.totalElements || 0;
+                        pagination.value.totalPages = result.totalPages || 0;
+                    } else if (Array.isArray(result)) {
+                        attributeSets.value = result.map(set => ({
+                            id: set.id,
+                            name: set.name,
+                            createdAt: set.createdAt
+                        }));
+                    } else {
+                        attributeSets.value = [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load attribute sets:', error);
+                    notification.error('Lỗi!', 'Không thể tải danh sách attribute sets');
                 }
-
-                const response = await searchAttributeSets(params);
-                // searchAttributeSets already returns response.data
-                const result = response.result;
-
-                if (result?.content) {
-                    attributeSets.value = result.content.map(set => ({
-                        id: set.id,
-                        name: set.name,
-                        createdAt: set.createdAt
-                    }));
-
-                    pagination.value.totalElements = result.totalElements || 0;
-                    pagination.value.totalPages = result.totalPages || 0;
-                } else if (Array.isArray(result)) {
-                    attributeSets.value = result.map(set => ({
-                        id: set.id,
-                        name: set.name,
-                        createdAt: set.createdAt
-                    }));
-                } else {
-                    attributeSets.value = [];
-                }
-            } catch (error) {
-                console.error('Failed to load attribute sets:', error);
-                notification.error('Lỗi!', 'Không thể tải danh sách attribute sets');
-            } finally {
-                loading.value = false;
-            }
+            });
         };
 
         const handleSearch = (query) => {
@@ -138,24 +139,22 @@ export default {
             );
 
             if (confirmed) {
-                try {
-                    loading.value = true;
+                await withLoading(async () => {
+                    try {
+                        if (selectedIds.length === 1) {
+                            await deleteAttributeSet(selectedIds[0]);
+                        } else {
+                            await deleteManyAttributeSets(selectedIds);
+                        }
 
-                    if (selectedIds.length === 1) {
-                        await deleteAttributeSet(selectedIds[0]);
-                    } else {
-                        await deleteManyAttributeSets(selectedIds);
+                        // Reload the list
+                        await loadAttributeSets();
+                        notification.success('Thành công!', 'Đã xóa attribute sets thành công');
+                    } catch (error) {
+                        console.error('Failed to delete attribute sets:', error);
+                        notification.error('Lỗi!', 'Không thể xóa attribute sets');
                     }
-
-                    // Reload the list
-                    await loadAttributeSets();
-                    notification.success('Thành công!', 'Đã xóa attribute sets thành công');
-                } catch (error) {
-                    console.error('Failed to delete attribute sets:', error);
-                    notification.error('Lỗi!', 'Không thể xóa attribute sets');
-                } finally {
-                    loading.value = false;
-                }
+                });
             }
         };
 
@@ -185,7 +184,7 @@ export default {
         return {
             attributeSets,
             columns,
-            loading,
+            isLoading,
             pagination,
             handleRowClick,
             handleDelete,

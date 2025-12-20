@@ -8,6 +8,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.blogs.create' }"
         create-button-text="Create Blog"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -48,6 +49,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { searchBlogs, deleteManyBlogs } from '@/api/blogApi.js';
 
@@ -59,8 +61,8 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const blogs = ref([]);
-        const loading = ref(false);
 
         const columns = [
             { key: 'id', label: 'ID', sortable: true, width: '60px' },
@@ -72,31 +74,30 @@ export default {
         ];
 
         const loadBlogs = async () => {
-            loading.value = true;
-            try {
-                const response = await searchBlogs({
-                    page: 0,
-                    size: 100,
-                    sortBy: 'createdAt',
-                    direction: 'DESC'
-                });
+            await withLoading(async () => {
+                try {
+                    const response = await searchBlogs({
+                        page: 0,
+                        size: 100,
+                        sortBy: 'createdAt',
+                        direction: 'DESC'
+                    });
 
-                // Map API response to table format
-                const result = response.data.result;
-                blogs.value = (result.content || result).map(blog => ({
-                    id: blog.id,
-                    thumbnail: blog.thumbnail?.url || null,
-                    title: blog.title,
-                    author: blog.authorName || 'Unknown',
-                    isPublished: blog.isPublished,
-                    createdAt: blog.createdAt
-                }));
-            } catch (error) {
-                console.error('Error loading blogs:', error);
-                notification.error('Error', 'Failed to load blogs: ' + (error.response?.data?.message || error.message));
-            } finally {
-                loading.value = false;
-            }
+                    // Map API response to table format
+                    const result = response.data.result;
+                    blogs.value = (result.content || result).map(blog => ({
+                        id: blog.id,
+                        thumbnail: blog.thumbnail?.url || null,
+                        title: blog.title,
+                        author: blog.authorName || 'Unknown',
+                        isPublished: blog.isPublished,
+                        createdAt: blog.createdAt
+                    }));
+                } catch (error) {
+                    console.error('Error loading blogs:', error);
+                    notification.error('Error', 'Failed to load blogs: ' + (error.response?.data?.message || error.message));
+                }
+            });
         };
 
         const handleRowClick = (row) => {
@@ -113,18 +114,17 @@ export default {
                 return;
             }
 
-            loading.value = true;
-            try {
-                await deleteManyBlogs(selectedIds);
-                notification.success('Success', 'Blogs deleted successfully');
-                // Reload the list
-                await loadBlogs();
-            } catch (error) {
-                console.error('Error deleting blogs:', error);
-                notification.error('Error', 'Failed to delete blogs: ' + (error.response?.data?.message || error.message));
-            } finally {
-                loading.value = false;
-            }
+            await withLoading(async () => {
+                try {
+                    await deleteManyBlogs(selectedIds);
+                    notification.success('Success', 'Blogs deleted successfully');
+                    // Reload the list
+                    await loadBlogs();
+                } catch (error) {
+                    console.error('Error deleting blogs:', error);
+                    notification.error('Error', 'Failed to delete blogs: ' + (error.response?.data?.message || error.message));
+                }
+            });
         };
 
         const formatDate = (date) => {
@@ -153,7 +153,7 @@ export default {
         return {
             blogs,
             columns,
-            loading,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate

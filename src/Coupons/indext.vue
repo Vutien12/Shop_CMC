@@ -8,6 +8,7 @@
         :columns="columns"
         :create-route="{ name: 'admin.coupons.create' }"
         create-button-text="Create Coupon"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"
@@ -38,6 +39,7 @@
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from '@/Admin/composables/useNotification.js';
+import { useLoading } from '@/Admin/composables/useLoading.js';
 import DataTable from '@/Admin/view/components/DataTable.vue';
 import { getCoupons, deleteCoupon, deleteCoupons } from '@/api/couponsApi';
 
@@ -49,6 +51,7 @@ export default {
     setup() {
         const router = useRouter();
         const notification = useNotification();
+        const { isLoading, withLoading } = useLoading();
         const coupons = ref([]);
 
         const columns = [
@@ -61,27 +64,29 @@ export default {
         ];
 
         const loadCoupons = async () => {
-            try {
-                const response = await getCoupons();
-                console.log('API Response:', response);
+            await withLoading(async () => {
+                try {
+                    const response = await getCoupons();
+                    console.log('API Response:', response);
 
-                // Handle different response structures
-                const data = Array.isArray(response) ? response : (response.data || response.result || []);
+                    // Handle different response structures
+                    const data = Array.isArray(response) ? response : (response.data || response.result || []);
 
-                coupons.value = data.map(coupon => ({
-                    id: coupon.id,
-                    description: coupon.description,
-                    code: coupon.code,
-                    discountValue: coupon.discountValue,
-                    discountType: coupon.discountType,
-                    isActive: coupon.isActive,
-                    createdAt: coupon.createdAt
-                }));
-            } catch (error) {
-                console.error('Failed to load coupons:', error);
-                // Fallback to empty array if API fails
-                coupons.value = [];
-            }
+                    coupons.value = data.map(coupon => ({
+                        id: coupon.id,
+                        description: coupon.description,
+                        code: coupon.code,
+                        discountValue: coupon.discountValue,
+                        discountType: coupon.discountType,
+                        isActive: coupon.isActive,
+                        createdAt: coupon.createdAt
+                    }));
+                } catch (error) {
+                    console.error('Failed to load coupons:', error);
+                    // Fallback to empty array if API fails
+                    coupons.value = [];
+                }
+            });
         };
 
         const route = useRoute()
@@ -178,6 +183,7 @@ export default {
         return {
             coupons,
             columns,
+            isLoading,
             handleRowClick,
             handleDelete,
             formatDate,

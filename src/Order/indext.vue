@@ -6,6 +6,7 @@
         :columns="columns"
         :create-route="null"
         create-button-text="Create Order"
+        :loading="isLoading"
         :row-clickable="true"
         @delete="handleDelete"
         @row-click="handleRowClick"

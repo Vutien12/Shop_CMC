@@ -64,7 +64,9 @@
             </div>
 
             <!-- Table -->
-            <div class="table-wrapper">
+            <div class="table-wrapper" style="position: relative;">
+                <!-- Loading Overlay -->
+                <LoadingDots v-if="loading" :isLoading="true" message="Loading data..." />
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -191,11 +193,13 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import PageBreadcrumb from './PageBreadcrumb.vue';
+import LoadingDots from '@/Admin/components/LoadingDots.vue';
 
 export default {
     name: 'DataTable',
     components: {
-        PageBreadcrumb
+        PageBreadcrumb,
+        LoadingDots
     },
     props: {
         title: {
@@ -268,6 +272,10 @@ export default {
             type: Object,
             default: null
             // Format: { currentPage: 1, pageSize: 20, totalElements: 100, totalPages: 5 }
+        },
+        loading: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['delete', 'sort', 'search', 'page-change', 'per-page-change', 'row-click'],
