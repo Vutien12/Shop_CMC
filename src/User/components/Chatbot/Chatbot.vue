@@ -64,7 +64,7 @@ const messages = ref([])
 
 // WebSocket state
 const models = ['gemini-2.5-flash', 'command-a-03-2025', 'open-router']
-const selectedModel = ref(models[2])
+const selectedModel = ref(models[0])
 const wsRef = ref(null)
 const connectionStatus = ref('offline')
 const reconnectTimer = ref(null)
