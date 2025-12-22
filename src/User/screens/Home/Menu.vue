@@ -75,14 +75,39 @@
       </aside>
 
       <section class="hero-section">
-        <div class="hero-slide">
-          <div class="hero-content">
-            <h1 class="hero-title">DJI MAVIC PRO</h1>
-            <p class="hero-subtitle">
-              The creative's shop for flying cameras and flight controllers
-            </p>
+        <div class="hero-carousel">
+          <!-- Slides -->
+          <div
+            v-for="(slide, index) in heroSlides"
+            :key="index"
+            class="hero-slide"
+            :class="{ active: currentSlide === index }"
+            :style="{ backgroundImage: `url(${slide})` }"
+          >
           </div>
-          <div class="hero-image"></div>
+
+          <!-- Navigation Arrows - Show on hover -->
+          <button class="hero-arrow hero-arrow-left" @click="prevSlide" aria-label="Previous slide">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="hero-arrow hero-arrow-right" @click="nextSlide" aria-label="Next slide">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          <!-- Navigation Dots -->
+          <div class="hero-dots">
+            <span
+              v-for="(slide, index) in heroSlides"
+              :key="index"
+              class="dot"
+              :class="{ active: currentSlide === index }"
+              @click="goToSlide(index)"
+            ></span>
+          </div>
         </div>
       </section>
 
@@ -294,6 +319,15 @@ export default {
       canScrollRight: false,
       currentDotIndex: 0,
       scrollDots: 0,
+      // Hero carousel
+      heroSlides: [
+        'https://clickbuy.com.vn/uploads/media/838-Uhfbo.png',
+        'https://clickbuy.com.vn/uploads/media/807-DzQDE.png',
+        'https://clickbuy.com.vn/uploads/media/813-coqcT.png',
+        "https://clickbuy.com.vn/uploads/media/812-vhevy.png"
+      ],
+      currentSlide: 0,
+      autoPlayInterval: null,
     }
   },
   computed: {
@@ -649,6 +683,42 @@ export default {
         this.handleProductsScroll()
       })
     },
+
+    // Hero carousel methods
+    nextSlide() {
+      this.currentSlide = (this.currentSlide + 1) % this.heroSlides.length
+      this.resetAutoPlay()
+    },
+
+    prevSlide() {
+      this.currentSlide = (this.currentSlide - 1 + this.heroSlides.length) % this.heroSlides.length
+      this.resetAutoPlay()
+    },
+
+    goToSlide(index) {
+      this.currentSlide = index
+      this.resetAutoPlay()
+    },
+
+    startAutoPlay() {
+      this.autoPlayInterval = setInterval(() => {
+        this.nextSlide()
+      }, 4000)
+    },
+
+    resetAutoPlay() {
+      if (this.autoPlayInterval) {
+        clearInterval(this.autoPlayInterval)
+      }
+      this.startAutoPlay()
+    },
+
+    stopAutoPlay() {
+      if (this.autoPlayInterval) {
+        clearInterval(this.autoPlayInterval)
+        this.autoPlayInterval = null
+      }
+    },
   },
   async mounted() {
     // Initialize features
@@ -687,6 +757,14 @@ export default {
       this.activeCategory = this.showcaseCategories[0].id
       await this.loadProducts(this.activeCategory)
     }
+
+    // Start hero carousel auto-play
+    this.startAutoPlay()
+  },
+
+  beforeUnmount() {
+    // Clean up auto-play interval
+    this.stopAutoPlay()
   },
 }
 </script>
@@ -701,12 +779,12 @@ export default {
 }
 
 .features-grid {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0;
-  padding: 0 20px;
+  padding: 0;
 }
 
 .feature-item {
@@ -730,6 +808,25 @@ export default {
   justify-content: center;
   font-size: 24px;
   color: #0068e1;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.feature-icon::before,
+.feature-icon::after {
+  content: none !important;
+  display: none !important;
+}
+
+.feature-icon svg,
+.feature-icon .svg-inline--fa {
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
 }
 
 .feature-content {
@@ -1492,6 +1589,123 @@ export default {
 
   .scroll-indicators .dot.active {
     width: 18px;
+  }
+}
+
+/* Hero Carousel Styles */
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 540px;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  pointer-events: none;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Navigation Arrows */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  padding: 16px;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.3s ease;
+  border-radius: 4px;
+}
+
+.hero-carousel:hover .hero-arrow {
+  opacity: 1;
+}
+
+.hero-arrow:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.hero-arrow-left {
+  left: 20px;
+}
+
+.hero-arrow-right {
+  right: 20px;
+}
+
+.hero-arrow svg {
+  display: block;
+}
+
+/* Navigation Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.hero-dots .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.hero-dots .dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.hero-dots .dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-carousel {
+    height: 300px;
+  }
+
+  .hero-arrow {
+    padding: 12px;
+  }
+
+  .hero-arrow-left {
+    left: 10px;
+  }
+
+  .hero-arrow-right {
+    right: 10px;
+  }
+
+  .hero-dots .dot {
+    width: 10px;
+    height: 10px;
   }
 }
 </style>

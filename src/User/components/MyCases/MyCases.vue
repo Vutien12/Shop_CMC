@@ -2,12 +2,7 @@
   <div class="account-wrapper">
     <Header />
 
-    <transition name="fade" mode="out-in">
-      <div v-if="isLoading" class="loading-wrapper">
-        <Loading />
-      </div>
-
-      <div v-else class="account-page">
+    <div class="account-page">
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <nav class="sidebar-nav">
@@ -58,7 +53,12 @@
             </div>
 
             <!-- Skeleton -->
-            <div v-if="casesLoading" class="skeleton-table">
+            <div v-if="casesLoading">
+              <div class="loading-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading cases...</p>
+              </div>
+              <div class="skeleton-table">
               <div class="skeleton-row" v-for="n in 5" :key="n">
                 <div class="skeleton-cell"></div>
                 <div class="skeleton-cell"></div>
@@ -67,6 +67,7 @@
                 <div class="skeleton-cell short"></div>
                 <div class="skeleton-cell action"></div>
               </div>
+            </div>
             </div>
 
             <!-- Empty State -->
@@ -108,7 +109,6 @@
           </section>
         </main>
       </div>
-    </transition>
 
     <Footer />
     <Chatbot />
@@ -120,7 +120,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
-import Loading from '@/User/components/Loading/Loading.vue';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue';
 import { useAuth } from '@/User/components/useAuth.js';
 import { getMyOrderCases } from '@/api/orderCaseApi.js';
@@ -130,7 +129,6 @@ const { prefetch, cancel } = usePrefetch();
 const router = useRouter();
 const { handleLogout: authLogout } = useAuth();
 
-const isLoading = ref(true);
 const casesLoading = ref(false);
 const cases = ref([]);
 
@@ -223,14 +221,34 @@ const getStatusClass = (status) => {
 };
 
 onMounted(async () => {
+  casesLoading.value = true;
   await loadCases();
-  isLoading.value = false;
+  casesLoading.value = false;
 });
 </script>
 
 <style scoped>
 /* Import base styles */
 @import '@/User/components/MyOrder/MyOrder.css';
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+}
+.loading-spinner i {
+  font-size: 48px;
+  color: #0066FF;
+}
+.loading-spinner p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
 
 /* Cases Section - Same as Orders Section */
 .cases-section {

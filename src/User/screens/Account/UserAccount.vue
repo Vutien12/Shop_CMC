@@ -2,12 +2,7 @@
   <div class="account-wrapper">
     <Header />
 
-    <!-- Transition chính -->
-    <transition name="fade" mode="out-in">
-      <div v-if="isLoading">
-        <Loading />
-      </div>
-      <div v-else class="account-page">
+    <div class="account-page">
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <nav class="sidebar-nav">
@@ -59,7 +54,12 @@
               </div>
 
               <!-- Skeleton -->
-              <div v-if="ordersLoading" class="skeleton-table">
+              <div v-if="ordersLoading">
+                <div class="loading-spinner">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Loading orders...</p>
+                </div>
+                <div class="skeleton-table">
                 <div class="skeleton-row" v-for="n in 3" :key="n">
                   <div class="skeleton-cell"></div>
                   <div class="skeleton-cell"></div>
@@ -68,6 +68,7 @@
                   <div class="skeleton-cell short"></div>
                   <div class="skeleton-cell action"></div>
                 </div>
+              </div>
               </div>
 
               <!-- Empty State -->
@@ -122,7 +123,12 @@
               </div>
 
               <!-- Skeleton Info -->
-              <div v-if="infoLoading" class="skeleton-info">
+              <div v-if="infoLoading">
+                <div class="loading-spinner">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Loading account info...</p>
+                </div>
+                <div class="skeleton-info">
                 <div class="info-card">
                   <div class="skeleton-line long"></div>
                   <div class="skeleton-line"></div>
@@ -133,6 +139,7 @@
                   <div class="skeleton-line long"></div>
                   <div class="skeleton-line long"></div>
                 </div>
+              </div>
               </div>
 
               <!-- Real Info -->
@@ -152,7 +159,6 @@
           </div>
         </main>
       </div>
-    </transition>
 
     <Footer />
     <Chatbot />
@@ -165,7 +171,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
-import Loading from '@/User/components/Loading/Loading.vue';
 import { useAccountStore } from '@/User/stores/accountStore.js';
 import { useAuth } from '@/User/components/useAuth.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
@@ -181,7 +186,6 @@ const accountStore = useAccountStore();
 const { prefetch, cancel } = usePrefetch();
 
 // State
-const isLoading = ref(true);
 const recentOrders = ref([]);
 const userInfo = ref({});
 const ordersLoading = ref(false);
@@ -232,6 +236,13 @@ const handleLogout = async () => {
 
 // Initial load (cache)
 onMounted(async () => {
+  // Check if data is already cached
+  if (recentOrders.value.length > 0 && userInfo.value.name) {
+    return;
+  }
+  
+  ordersLoading.value = true;
+  infoLoading.value = true;
   try {
     // For dashboard: load both user info and orders
     const data = await accountStore.fetchData(false, true);
@@ -243,9 +254,8 @@ onMounted(async () => {
       await handleLogout();
     }
   } finally {
-    setTimeout(() => {
-      isLoading.value = false;
-    }, 600);
+    ordersLoading.value = false;
+    infoLoading.value = false;
   }
 });
 </script>
@@ -256,6 +266,25 @@ onMounted(async () => {
 /* === TRANSITION === */
 .fade-enter-active, .fade-leave-active { transition: all 0.5s ease; }
 .fade-enter-from { opacity: 0; transform: translateY(10px); }
+
+/* === LOADING SPINNER === */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+}
+.loading-spinner i {
+  font-size: 48px;
+  color: #0066FF;
+}
+.loading-spinner p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
 
 
 /* === SKELETON === */

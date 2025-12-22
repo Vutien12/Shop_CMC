@@ -80,7 +80,6 @@ a {
 /* Header Main */
 /* ------------------- */
 .header-main {
-  background-color: #fff;
   padding: 20px 0;
   box-shadow: none;
   position: sticky;
@@ -313,14 +312,13 @@ a {
 /* Navigation Bar */
 /* ------------------- */
 .navigation-bar {
-  background-color: #fff;
   position: sticky;
   top: 0;
   z-index: 998;
   transition: all 0.3s ease;
   padding: 0;
   box-sizing: border-box;
-  border-bottom: 1px solid #e5e5e5;
+  border: 1px solid #e5e5e5;
 }
 
 .navigation-bar .container {

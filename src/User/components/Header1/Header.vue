@@ -350,7 +350,8 @@ export default {
 }
 
 .navigation-bar {
-  width: 85%; /* Existing width */
+  width: 96%; /* Existing width */
   z-index: 1000; /* Ensure it's below close-menu-btn */
+  border-radius: 8px; 
 }
 </style>

@@ -331,19 +331,72 @@ html, body {
   height: 540px;
 }
 
+/* Hero Slide with 3 Auto-changing Backgrounds */
 .hero-slide {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 40px;
   min-height: 540px;
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/yAaq3dHTWLOlac12ioxGgVrZ3xtrIhKnL5r3roIl.png);
-  background-size: cover;
+  overflow: hidden;
+  background-image: url();
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
 
+/* Layer 1 - Second image */
+.hero-slide::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url();
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: fadeSlide1 12s infinite;
+  opacity: 0;
+  z-index: 1;
+}
+
+/* Layer 2 - Third image */
+.hero-slide::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url();
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: fadeSlide2 12s infinite;
+  opacity: 0;
+  z-index: 1;
+}
+
+@keyframes fadeSlide1 {
+  0% { opacity: 0; }
+  33.33% { opacity: 1; }
+  66.66% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes fadeSlide2 {
+  0% { opacity: 0; }
+  33.33% { opacity: 0; }
+  66.66% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .hero-content {
   color: rgb(59, 59, 59);
+  position: relative;
+  z-index: 2;
 }
 
 .hero-title {
@@ -455,7 +508,7 @@ html, body {
 }
 
 .leather-bags {
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/5siKhRlEDQFmbiJRwCNBW3rDsbG7m1r2PibvtNeF.png);
+  background-image: url(https://clickbuy.com.vn/uploads/media/676-fsShC.png);
   color: white;
   background-size: cover;
   background-position: center;
@@ -3771,7 +3824,7 @@ html, body {
   align-items: center;
   padding: 40px;
   min-height: 540px;
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/yAaq3dHTWLOlac12ioxGgVrZ3xtrIhKnL5r3roIl.png);
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -3831,7 +3884,7 @@ html, body {
 }
 
 .leather-bags {
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/5siKhRlEDQFmbiJRwCNBW3rDsbG7m1r2PibvtNeF.png);
+  background-image: url(https://clickbuy.com.vn/uploads/media/676-fsShC.png);
   color: white;
   background-size: cover;
   background-position: center;
@@ -3839,9 +3892,9 @@ html, body {
 }
 
 .iphone-card {
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/yl6rNkswnKQzh7mouQ0HpagRLwBpnq3Mt9LZMRak.png);
+  background-image: url(	https://clickbuy.com.vn/uploads/media/776-uDxCX.png);
   color: white;
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }

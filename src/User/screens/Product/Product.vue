@@ -222,46 +222,52 @@
           </div>
         </div>
 
-        <!-- Loading -->
-        <Loading v-if="isLoading" text="Loading products..." />
-
         <!-- Products Grid -->
-        <div v-else class="products-grid">
-          <div v-for="p in products" :key="p.id" class="product-card">
-            <div class="product-card-inner">
-              <div class="product-badge-row">
-                <span v-if="p.discount" class="sale-badge">{{ p.discount }}</span>
-                <span v-else-if="p.badge" :class="['badge', p.badgeColor]">{{ p.badge }}</span>
-                <!-- wishlist button removed from product list: wishlist is variant-specific and should be managed on the Product Detail page -->
-              </div>
+        <div class="products-grid">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="products-loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Loading products...</p>
+          </div>
 
-              <div class="product-image" @click="goToProductDetail(p.id)" style="cursor: pointer;">
-                <img :src="p.image" :alt="p.name" />
-              </div>
+          <!-- Products -->
+          <template v-else>
+            <div v-for="p in products" :key="p.id" class="product-card">
+              <div class="product-card-inner">
+                <div class="product-badge-row">
+                  <span v-if="p.discount" class="sale-badge">{{ p.discount }}</span>
+                  <span v-else-if="p.badge" :class="['badge', p.badgeColor]">{{ p.badge }}</span>
+                  <!-- wishlist button removed from product list: wishlist is variant-specific and should be managed on the Product Detail page -->
+                </div>
 
-              <h3 class="product-name" @click="goToProductDetail(p.id)" style="cursor: pointer;">
-                {{ p.name }}
-              </h3>
-              <!--
-              <div class="rating">
-                <span v-for="i in 5" :key="i" class="star">★</span>
-                <span class="review-count">0 Review</span>
-              </div>
-               -->
-              <div class="product-footer">
-                <div class="price-group">
+                <div class="product-image" @click="goToProductDetail(p.id)" style="cursor: pointer;">
+                  <img :src="p.image" :alt="p.name" />
+                </div>
+
+                <h3 class="product-name" @click="goToProductDetail(p.id)" style="cursor: pointer;">
+                  {{ p.name }}
+                </h3>
+                <!--
+                <div class="rating">
+                  <span v-for="i in 5" :key="i" class="star">★</span>
+                  <span class="review-count">0 Review</span>
+                </div>
+                 -->
+                <div class="product-footer">
                   <div class="price-group">
-                    <span class="price-range">
-                      {{ formatPrice(p.price) }}
-                      <template v-if="p.maxPrice > p.price">
-                        - {{ formatPrice(p.maxPrice) }}
-                      </template>
-                    </span>
+                    <div class="price-group">
+                      <span class="price-range">
+                        {{ formatPrice(p.price) }}
+                        <template v-if="p.maxPrice > p.price">
+                          - {{ formatPrice(p.maxPrice) }}
+                        </template>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
         </div>
 
         <!-- Phân trang -->
@@ -301,7 +307,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
-import Loading from '@/User/components/Loading/Loading.vue';
 import { useProductStore } from '@/User/stores/productStore.js';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import BottomNavBar from '@/User/components/BottomNavBar.vue'

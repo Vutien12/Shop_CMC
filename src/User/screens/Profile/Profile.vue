@@ -2,13 +2,7 @@
   <div class="account-wrapper">
     <Header />
 
-    <!-- Transition toàn trang -->
-    <transition name="fade" mode="out-in">
-      <div v-if="isLoading" class="loading-wrapper">
-        <Loading />
-      </div>
-
-      <div v-else class="account-page">
+    <div class="account-page">
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <nav class="sidebar-nav">
@@ -54,6 +48,10 @@
 
               <!-- Skeleton -->
               <div v-if="profileLoading" class="skeleton-form">
+                <div class="loading-spinner">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Loading profile...</p>
+                </div>
                 <div class="skeleton-card">
                   <div class="skeleton-line title"></div>
                   <div class="form-row">
@@ -188,7 +186,6 @@
           </div>
         </main>
       </div>
-    </transition>
 
     <Footer />
     <Chatbot />
@@ -201,7 +198,6 @@ import { ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
-import Loading from '@/User/components/Loading/Loading.vue';
 import { useProfileStore } from '@/User/stores/profileStore.js';
 import { useAuth } from '@/User/components/useAuth.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
@@ -218,7 +214,6 @@ const profileStore = useProfileStore();
 const { prefetch, cancel } = usePrefetch();
 
 // State
-const isLoading = ref(true);
 const profileLoading = ref(false);
 const infoForm = ref({ email: '', phone: '', firstName: '', lastName: '' });
 const passForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -315,23 +310,23 @@ const handleLogout = async () => {
 
 // Initial load
 onMounted(async () => {
+  const cached = profileStore.profile;
+  if (cached) {
+    infoForm.value = { ...cached };
+    return;
+  }
+  
+  profileLoading.value = true;
   try {
-    const cached = profileStore.profile;
-    if (cached) {
-      infoForm.value = { ...cached };
-    } else {
-      const data = await profileStore.fetchProfile();
-      infoForm.value = { ...data };
-    }
+    const data = await profileStore.fetchProfile();
+    infoForm.value = { ...data };
   } catch (error) {
     if (error.response?.status === 401) {
       toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {
-    setTimeout(() => {
-      isLoading.value = false;
-    }, 600);
+    profileLoading.value = false;
   }
 });
 </script>
@@ -409,6 +404,23 @@ onMounted(async () => {
 
 /* Skeleton Form */
 .skeleton-form { pointer-events: none; }
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+}
+.loading-spinner i {
+  font-size: 48px;
+  color: #0066FF;
+}
+.loading-spinner p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
 .skeleton-card {
   padding: 24px;
   border: 1px solid #eee;

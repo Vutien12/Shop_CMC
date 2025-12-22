@@ -2,13 +2,7 @@
   <div class="account-wrapper">
     <Header />
 
-    <!-- Loading toàn trang -->
-    <transition name="fade" mode="out-in">
-      <div v-if="isLoading" class="loading-wrapper">
-        <Loading />
-      </div>
-
-      <div v-else class="account-page">
+    <div class="account-page">
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <nav class="sidebar-nav">
@@ -61,7 +55,12 @@
               </div>
 
               <!-- Skeleton -->
-              <div v-if="wishlistLoading" class="skeleton-table">
+              <div v-if="wishlistLoading">
+                <div class="loading-spinner">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Loading wishlist...</p>
+                </div>
+                <div class="skeleton-table">
                 <div class="skeleton-row" v-for="n in 5" :key="n">
                   <div class="skeleton-cell img"></div>
                   <div class="skeleton-cell"></div>
@@ -69,6 +68,7 @@
                   <div class="skeleton-cell short"></div>
                   <div class="skeleton-cell action"></div>
                 </div>
+              </div>
               </div>
 
               <!-- Empty State -->
@@ -171,7 +171,6 @@
           </div>
         </main>
       </div>
-    </transition>
 
     <Footer />
     <Chatbot />
@@ -184,7 +183,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
-import Loading from '@/User/components/Loading/Loading.vue';
 import { useWishlistStore } from '@/User/stores/wishlistStore.js';
 import { useAuth } from '@/User/components/useAuth.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
@@ -201,7 +199,6 @@ const wishlistStore = useWishlistStore();
 const { prefetch, cancel } = usePrefetch();
 
 // State
-const isLoading = ref(true);
 const wishlistItems = ref([]);
 const totalPages = ref(0);
 const currentPage = ref(0);
@@ -368,24 +365,26 @@ const getCartTooltip = (status) => {
 
 // Initial load
 onMounted(async () => {
+  const cached = wishlistStore.items.length > 0;
+  if (cached) {
+    wishlistItems.value = wishlistStore.items;
+    totalPages.value = wishlistStore.totalPages;
+    currentPage.value = wishlistStore.currentPage;
+    return;
+  }
+  
+  wishlistLoading.value = true;
   try {
-    const cached = wishlistStore.items.length > 0;
-    if (cached) {
-      wishlistItems.value = wishlistStore.items;
-      totalPages.value = wishlistStore.totalPages;
-      currentPage.value = wishlistStore.currentPage;
-    } else {
-      const data = await wishlistStore.fetchWishlist();
-      wishlistItems.value = data.items;
-      totalPages.value = data.totalPages;
-    }
+    const data = await wishlistStore.fetchWishlist();
+    wishlistItems.value = data.items;
+    totalPages.value = data.totalPages;
   } catch (error) {
     if (error.response?.status === 401) {
       toast('Session expired.', 'error');
       await handleLogout();
     }
   } finally {
-    setTimeout(() => { isLoading.value = false; }, 600);
+    wishlistLoading.value = false;
   }
 });
 </script>
@@ -764,6 +763,25 @@ onMounted(async () => {
 .fade-enter-from { opacity: 0; transform: translateY(10px); }
 
 .loading-wrapper { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 15px;
+}
+.loading-spinner i {
+  font-size: 48px;
+  color: #0066FF;
+}
+.loading-spinner p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
 
 /* Skeleton */
 .skeleton-table { pointer-events: none; }

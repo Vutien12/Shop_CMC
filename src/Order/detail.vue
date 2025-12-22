@@ -1,5 +1,6 @@
 <template>
   <PageBreadcrumb
+    class="no-print"
     :title="`Order #${order.id || '...'}`"
     :breadcrumbs="[
       { label: 'Orders', route: { name: 'admin.orders.index' } },
@@ -16,6 +17,26 @@
 
   <section class="content" v-else>
     <div class="order-wrapper box">
+      <!-- Invoice Header - Only visible in print -->
+      <div class="invoice-header print-only">
+        <div class="invoice-header-left">
+          <h1 class="company-name">CMC Shop</h1>
+          <p class="company-tagline">Order Invoice</p>
+        </div>
+        <div class="invoice-header-right">
+          <div class="invoice-info">
+            <div class="invoice-info-item">
+              <span class="info-label">Order ID:</span>
+              <span class="info-value">#{{ order.id }}</span>
+            </div>
+            <div class="invoice-info-item">
+              <span class="info-label">Date:</span>
+              <span class="info-value">{{ order.date }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Order Information -->
       <div class="order-information-wrapper">
         <div class="order-information-buttons">
@@ -49,7 +70,7 @@
                       <td>Order Date</td>
                       <td>{{ order.date }}</td>
                     </tr>
-                    <tr>
+                    <tr class="print-hide-order-status">
                       <td>Order Status</td>
                       <td>
                         <div class="row">
@@ -596,7 +617,112 @@ const saveAndExit = async () => {
 
 // Print order
 const printOrder = () => {
-  window.print();
+  // Get the order content
+  const orderContent = document.querySelector('.order-wrapper');
+  if (!orderContent) return;
+  
+  const clonedContent = orderContent.cloneNode(true);
+  
+  // Remove unwanted elements
+  clonedContent.querySelectorAll('.order-information-buttons, .page-form-footer, button, .status-error-message, .status-note, .print-hide-order-status').forEach(el => el.remove());
+  
+  // Show invoice header
+  const invoiceHeader = clonedContent.querySelector('.invoice-header');
+  if (invoiceHeader) {
+    invoiceHeader.style.display = 'flex';
+  }
+  
+  // Create print window
+  const printWindow = window.open('', '_blank');
+  
+  const styles = `
+    @page { margin: 15mm; size: A4; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; padding: 20px; background: white; line-height: 1.5; }
+    
+    .invoice-header { display: flex !important; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #ddd; }
+    .company-name { font-size: 28px; font-weight: bold; color: #333; margin: 0; }
+    .company-tagline { display: none; }
+    .invoice-header-right { text-align: right; }
+    .invoice-info-item { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 5px; font-size: 13px; }
+    .info-label { color: #666; }
+    .info-value { font-weight: bold; color: #333; }
+    
+    .order-information-wrapper,
+    .address-information-wrapper,
+    .items-ordered-wrapper,
+    .order-totals-wrapper {
+      margin-bottom: 25px;
+    }
+    
+    .section-title { display: none; }
+    h5 { font-size: 14px; font-weight: bold; margin: 20px 0 12px 0; color: #333; }
+    h5 i { display: none; }
+    
+    .row { display: flex; flex-wrap: wrap; margin: 0 -12px; }
+    .col-md-6 { flex: 0 0 50%; max-width: 50%; padding: 0 12px; }
+    .col-md-12 { flex: 0 0 100%; max-width: 100%; padding: 0 12px; }
+    
+    .table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; }
+    .table td, .table th { padding: 10px 8px; text-align: left; vertical-align: top; color: #333; }
+    .table td { border-bottom: none; }
+    .table th { background-color: #f9f9f9; font-weight: bold; border-bottom: 2px solid #ddd; padding: 12px 8px; }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .table td:first-child { font-weight: 500; color: #666; width: 40%; }
+    .table a { color: #333; text-decoration: none; font-weight: 500; }
+    
+    .address-content { line-height: 1.7; color: #555; padding: 0; background: transparent; border-left: none; margin-top: 8px; border-radius: 0; }
+    
+    .item-variations { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .variation-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #e3f2fd; color: #1976d2; border-radius: 4px; font-size: 11px; }
+    .variation-label { font-weight: 600; }
+    .variation-image { width: 22px; height: 22px; object-fit: cover; border-radius: 3px; border: 1px solid #ddd; }
+    .variation-color { display: inline-block; width: 18px; height: 18px; border-radius: 3px; border: 1px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    
+    .item-options { margin-top: 6px; }
+    .item-options small { display: block; color: #999; margin-top: 3px; font-size: 11px; }
+    
+    .order-totals-wrapper { margin-top: 25px; }
+    .order-totals-container { display: flex; justify-content: flex-end; }
+    .order-totals { width: 350px; }
+    .order-totals .table { border: none; }
+    .order-totals .table td { padding: 10px 0; border: none; }
+    .order-totals .table td:first-child { text-align: left; font-weight: normal; color: #555; width: 60%; }
+    .order-totals .table td:last-child { text-align: right; font-weight: normal; color: #333; width: 40%; }
+    .order-totals .table tr:last-child { border-top: 1px solid #d0d0d0; }
+    .order-totals .table tr:last-child td { font-size: 15px; font-weight: bold; padding-top: 14px; color: #333; }
+    
+    .text-right { text-align: right; }
+    .text-muted { color: #999; font-size: 11px; }
+    code { background: #f5f5f5; padding: 3px 6px; border-radius: 3px; font-size: 11px; font-family: 'Courier New', monospace; color: #333; }
+    
+    @media print {
+      body { padding: 0; }
+      .order-information-wrapper,
+      .address-information-wrapper,
+      .items-ordered-wrapper,
+      .order-totals-wrapper {
+        page-break-inside: avoid;
+      }
+    }
+  `;
+
+  printWindow.document.write('<!DOCTYPE html>');
+  printWindow.document.write('<html>');
+  printWindow.document.write('<head>');
+  printWindow.document.write('<meta charset="UTF-8">');
+  printWindow.document.write('<title>Invoice #' + order.id + ' - CMC Shop</title>');
+  printWindow.document.write('<style>' + styles + '</style>');
+  printWindow.document.write('</head>');
+  printWindow.document.write('<body>');
+  printWindow.document.write(clonedContent.innerHTML);
+  printWindow.document.write('<' + 'script>');
+  printWindow.document.write('window.onload = function() { setTimeout(function() { window.print(); }, 250); };');
+  printWindow.document.write('</' + 'script>');
+  printWindow.document.write('</body>');
+  printWindow.document.write('</html>');
+  
+  printWindow.document.close();
 };
 
 // Send email
@@ -697,6 +823,15 @@ onMounted(async () => {
   padding-bottom: 0;
   margin-bottom: 20px;
   overflow: visible;
+}
+
+/* Invoice Header - Hidden by default, only shown in print */
+.invoice-header {
+  display: none;
+}
+
+.print-only {
+  display: none;
 }
 
 
@@ -957,6 +1092,32 @@ label {
   color: #333;
 }
 
+/* Items Ordered table column widths */
+.items-ordered .table th:nth-child(1),
+.items-ordered .table td:nth-child(1) {
+  width: 40%;
+}
+
+.items-ordered .table th:nth-child(2),
+.items-ordered .table td:nth-child(2) {
+  width: 15%;
+}
+
+.items-ordered .table th:nth-child(3),
+.items-ordered .table td:nth-child(3) {
+  width: 15%;
+}
+
+.items-ordered .table th:nth-child(4),
+.items-ordered .table td:nth-child(4) {
+  width: 15%;
+}
+
+.items-ordered .table th:nth-child(5),
+.items-ordered .table td:nth-child(5) {
+  width: 15%;
+}
+
 .transactions-wrapper .table tbody tr {
   border-bottom: 1px solid #f4f4f4;
 }
@@ -1064,13 +1225,13 @@ label {
 }
 
 .items-ordered .table a {
-  color: #0071dc;
+  color: #333;
   text-decoration: none;
   font-weight: 500;
 }
 
 .items-ordered .table a:hover {
-  color: #005bb5;
+  color: #000;
   text-decoration: underline;
 }
 
@@ -1128,7 +1289,7 @@ label {
 .order-totals .table tr:last-child td {
   font-size: 18px;
   padding: 18px 24px;
-  color: #0071dc;
+  color: #333;
   font-weight: 600;
 }
 
@@ -1250,6 +1411,7 @@ label {
 
 @media (max-width: 768px) {
   .page-form-footer {
+    left: 0;
     flex-direction: column-reverse;
     gap: 10px;
   }
@@ -1265,130 +1427,277 @@ label {
 }
 
 @media print {
+  /* Remove browser default headers and footers */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  body {
-    background: white;
+  html, body {
+    background: white !important;
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     color: #333;
+    line-height: 1.4;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Hide all page headers, navbars, sidebars and browser controls */
+  header,
+  nav,
+  aside,
+  .header,
+  .navbar,
+  .sidebar,
+  .main-header,
+  .main-sidebar,
+  .control-sidebar,
+  .print-header,
+  .print-footer,
+  .no-print,
+  button,
+  input[type="button"],
+  select,
+  .content-wrapper > *:not(.content),
+  .wrapper > *:not(.content-wrapper):not(.content),
+  .main-wrapper > *:not(.content),
+  body > *:not(.content):not(style):not(script) {
+    display: none !important;
+    visibility: hidden !important;
   }
 
   .content {
     background: white;
-    padding: 0;
-    margin: 0;
+    padding: 20mm !important;
+    margin: 0 !important;
     min-height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
+  /* Hide unnecessary elements */
+  .no-print,
   .content-header,
   .breadcrumb,
+  .page-breadcrumb,
+  nav[aria-label="breadcrumb"],
+  .breadcrumb-container,
   .order-information-buttons,
   .page-form-footer,
-  .btn {
+  .btn,
+  .transactions-wrapper,
+  .status-error-message,
+  .status-note,
+  [class*="breadcrumb"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Show invoice header and print-only elements in print */
+  .print-only,
+  .invoice-header {
+    display: flex !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .invoice-header {
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .company-name {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    margin: 0 !important;
+  }
+
+  .company-tagline {
+    display: none;
+  }
+
+  .invoice-header-right {
+    text-align: right;
+  }
+
+  .invoice-info-item {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 3px;
+  }
+
+  .invoice-info-item .info-label {
+    font-weight: normal;
+    color: #666;
+  }
+
+  .invoice-info-item .info-value {
+    font-weight: bold;
+    color: #333;
   }
 
   .order-wrapper {
     background: white;
-    padding: 0;
-    margin: 0;
+    padding: 0 !important;
+    margin: 0 !important;
     overflow: visible;
     box-shadow: none;
     border: none;
+    border-radius: 0;
   }
 
   .order-information-wrapper,
-  .transactions-wrapper,
   .address-information-wrapper,
   .items-ordered-wrapper,
   .order-totals-wrapper {
     margin-bottom: 15px;
     background: white;
-    padding: 0;
+    padding: 0 !important;
     border: none;
     box-shadow: none;
     page-break-inside: avoid;
+    border-bottom: none !important;
   }
 
   .section-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin: 15px 0 10px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #333;
-    color: #000;
+    display: none !important;
+  }
+
+  .section-icon {
+    display: none;
   }
 
   h5 {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
-    margin: 10px 0 8px 0;
-    color: #000;
+    margin: 8px 0 5px 0;
+    color: #333;
+    text-transform: none;
+  }
+
+  h5 i {
+    display: none;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+  }
+
+  .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0 10px;
   }
 
   .table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 10px;
-    font-size: 11px;
+    margin-bottom: 8px;
+    font-size: 10px;
   }
 
   .table td,
   .table th {
-    padding: 8px;
-    border: 1px solid #333;
+    padding: 5px 3px;
+    border: none;
     text-align: left;
     vertical-align: top;
   }
 
   .table th {
-    background-color: #f0f0f0;
+    background-color: transparent;
     font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    font-size: 10px;
+    padding: 6px 3px;
   }
 
-  .table tbody tr:nth-child(even) {
-    background-color: #fafafa;
+  .table tbody tr {
+    background-color: transparent !important;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .table tbody tr:hover {
+    background-color: transparent !important;
+  }
+
+  .table tbody tr:last-child {
+    border-bottom: none;
   }
 
   .table td:first-child {
-    width: 30%;
-    font-weight: bold;
+    width: auto;
+    font-weight: normal;
+    color: #666;
+    text-transform: none;
+    font-size: 10px;
+  }
+
+  .order-information-wrapper .table td:first-child {
+    width: 35%;
   }
 
   .address-content {
-    line-height: 1.6;
+    line-height: 1.5;
     border-left: none;
     background: white;
     padding: 0;
-    margin-top: 5px;
+    margin-top: 3px;
+    border-radius: 0;
+    font-size: 10px;
+    color: #333;
   }
 
+  .item-variations,
   .item-options {
-    margin-top: 3px;
+    margin-top: 2px;
   }
 
   .item-options small {
     display: block;
     color: #666;
-    margin-top: 2px;
-    font-size: 10px;
+    margin-top: 1px;
+    font-size: 9px;
+  }
+
+  .item-variations .variation-item {
+    font-size: 9px;
+    padding: 2px 4px;
   }
 
   .order-totals-container {
     display: block;
     text-align: right;
     padding: 0;
+    margin-top: 10px;
   }
 
   .order-totals {
-    width: 50%;
+    width: 35%;
     background: white;
-    border: 1px solid #333;
+    border: none;
     border-radius: 0;
     box-shadow: none;
     margin-left: auto;
@@ -1399,20 +1708,32 @@ label {
   }
 
   .order-totals .table td {
-    padding: 10px;
-    border: 1px solid #ddd;
+    padding: 5px 3px;
+    border: none;
+    font-size: 10px;
+  }
+
+  .order-totals .table td:first-child {
+    text-align: left;
+    color: #666;
+  }
+
+  .order-totals .table td:last-child {
+    text-align: right;
+    color: #333;
   }
 
   .order-totals .table tr:last-child {
-    background-color: #f0f0f0;
-    border-top: 2px solid #333;
+    background-color: transparent;
+    border-top: 1px solid #333;
   }
 
   .order-totals .table tr:last-child td {
-    font-size: 12px;
-    padding: 10px;
+    font-size: 11px;
+    padding: 8px 3px;
     font-weight: bold;
-    border: 1px solid #333;
+    border: none;
+    color: #333;
   }
 
   .text-muted {
@@ -1423,25 +1744,20 @@ label {
     background: transparent;
     padding: 0;
     border-radius: 0;
-    font-size: 11px;
+    font-size: 9px;
     word-break: break-word;
   }
 
   a {
-    color: #000;
+    color: #333;
     text-decoration: none;
   }
 
-  /* Header for print */
-  .page-header {
-    text-align: center;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #333;
-    padding-bottom: 10px;
-  }
-
   /* Page break handling */
-  .order-information-wrapper {
+  .order-information-wrapper,
+  .address-information-wrapper,
+  .items-ordered-wrapper,
+  .order-totals-wrapper {
     page-break-inside: avoid;
   }
 
@@ -1453,12 +1769,6 @@ label {
     page-break-inside: avoid;
   }
 
-  /* Print footer */
-  @page {
-    margin: 20mm;
-    size: A4;
-  }
-
   /* Hide scrollbars and overflows */
   .table-responsive {
     overflow: visible !important;
@@ -1467,6 +1777,12 @@ label {
   /* Ensure text is visible */
   body, .content, .order-wrapper {
     color: #000 !important;
+  }
+
+  /* Force hide all browser UI elements */
+  body::before,
+  body::after {
+    display: none !important;
   }
 }
 
@@ -1502,11 +1818,17 @@ label {
 
 /* Page Form Footer */
 .page-form-footer {
-  margin: 20px -20px 0 -20px;
+  position: fixed;
+  bottom: 0;
+  left: 250px; /* Width của sidebar */
+  right: 0;
+  margin: 0;
   padding: 20px;
   background: #f5f5f5;
   text-align: right;
   border-top: 1px solid #e8e8e8;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
 .page-form-footer .btn {
@@ -1516,5 +1838,19 @@ label {
 .page-form-footer .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Add padding to order-wrapper to prevent content from being hidden behind fixed footer */
+.order-wrapper {
+  padding-bottom: 80px;
+}
+/* Hide Order Status row in Order Information when printing */
+@media print {
+  .print-hide-order-status {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
 }
 </style>
