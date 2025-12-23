@@ -96,7 +96,7 @@
         </div><!-- Close section-wrapper -->
 
         <!-- Vertical Products - Right Sidebar (No Card Frame) -->
-        <div class="verticals-sidebar">
+        <div class="verticals-sidebar" style="background-color: white;border-radius: 8px;">
           <div
             v-for="(categoryData, index) in verticalCategories"
             :key="categoryData.category.id"

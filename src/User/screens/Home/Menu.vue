@@ -321,10 +321,12 @@ export default {
       scrollDots: 0,
       // Hero carousel
       heroSlides: [
-        'https://clickbuy.com.vn/uploads/media/838-Uhfbo.png',
-        'https://clickbuy.com.vn/uploads/media/807-DzQDE.png',
-        'https://clickbuy.com.vn/uploads/media/813-coqcT.png',
-        "https://clickbuy.com.vn/uploads/media/812-vhevy.png"
+        'https://rewardmobile.co.uk/wp-content/uploads/2023/09/Apple-iPhone-15-promo-banner-buy-now-scaled.jpg',
+        'https://www.apple.com/v/iphone-16-pro/c/images/overview/welcome/hero_endframe__b3cjfkquc2s2_xlarge.jpg',
+        'https://gizchina.it/wp-content/uploads/2023/09/apple-iphone-15-spot-tv-titanio.jpg',
+        "https://cdn.tomshw.it/storage/media/2025/02/49090/iphone-17-pro-leak.webp",
+        "https://mir-s3-cdn-cf.behance.net/project_modules/1400_opt_1/ca6cd7150863355.63021c4cc4737.jpg",
+        "https://www.pricekeeda.com/uploads/posts/2025/iPhone-17-3.webp"
       ],
       currentSlide: 0,
       autoPlayInterval: null,
