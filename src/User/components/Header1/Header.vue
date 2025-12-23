@@ -15,14 +15,12 @@
             <span class="dropdown-trigger">
               <i class="las la-language"></i>
               <span>English</span>
-              <i class="fa-solid fa-chevron-down"></i>
             </span>
           </div>
           <div class="dropdown">
             <span class="dropdown-trigger">
               <i class="las la-money-bill"></i>
-              <span>USD</span>
-              <i class="fa-solid fa-chevron-down"></i>
+              <span>VNĐ</span>
             </span>
           </div>
           <!-- Login/Logout Link -->
@@ -44,7 +42,7 @@
         <!-- Logo -->
         <div class="logo">
           <div class="logo-icon">
-            <img src="../../../assets/sidebar-logo-mini copy.svg" alt="FleetCart Logo" />
+            <img src="../../../assets/sidebar-logo-mini copy.svg" alt="ShopCMC Logo" />
           </div>
           <span class="logo-text">ShopCMC</span>
         </div>
@@ -62,10 +60,6 @@
           <!-- Search Bar -->
           <div class="search-bar">
             <input type="text" placeholder="Search for products" v-model="searchQuery" />
-            <div class="category-dropdown">
-              <span>All Categories</span>
-              <i class="fa-solid fa-chevron-down"></i>
-            </div>
             <button class="search-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -106,81 +100,83 @@
     <!-- Navigation Bar -->
     <nav class="navigation-bar" :class="{ 'mobile-menu-active': menuOpen }">
       <div class="container">
-        <!-- Mobile Menu Tabs -->
-        <div class="mobile-menu-tabs" v-if="menuOpen">
-          <button
-            class="menu-tab"
-            :class="{ active: activeTab === 'categories' }"
-            @click="activeTab = 'categories'"
-          >
-            Categories
-          </button>
-          <button
-            class="menu-tab"
-            :class="{ active: activeTab === 'menu' }"
-            @click="activeTab = 'menu'"
-          >
-            Menu
-          </button>
-          <button
-            class="menu-tab"
-            :class="{ active: activeTab === 'more' }"
-            @click="activeTab = 'more'"
-          >
-            More
-          </button>
-          <button class="close-menu-btn" @click="closeMenu">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-
-        <!-- Desktop ALL CATEGORIES Button -->
-        <button class="all-categories-btn desktop-only">
-          <span>ALL CATEGORIES</span>
-          <i class="las la-bars"></i>
-        </button>
-
-        <!-- Menu Content -->
-        <div class="nav-links" v-show="!menuOpen || activeTab === 'menu'">
-          <router-link to="/" class="nav-link" @click="closeMenu">Home</router-link>
-          <router-link to="/product" class="nav-link" @click="closeMenu">Shop</router-link>
-          <router-link to="/blog" class="nav-link" @click="closeMenu">Blog</router-link>
-
-        </div>
-
-        <!-- More Content (Mobile Only) -->
-        <div class="more-content" v-show="menuOpen && activeTab === 'more'">
-          <div class="more-cards">
-            <a href="#" class="more-card" @click="closeMenu">
-              <div class="more-card-icon">
-                <i class="fa-regular fa-envelope"></i>
-              </div>
-              <span class="more-card-title">Contact</span>
-            </a>
-            <router-link to="/blog" class="more-card" @click="closeMenu">
-              <div class="more-card-icon">
-                <i class="fa-regular fa-comment"></i>
-              </div>
-              <span class="more-card-title">Blog</span>
-            </router-link>
-          </div>
-        </div>
-
-        <!-- Categories Content (Mobile Only) -->
-        <div class="categories-content" v-show="menuOpen && activeTab === 'categories'">
-          <div class="category-list">
-            <router-link 
-              v-for="category in categories" 
-              :key="category.id"
-              :to="`/products?category=${category.id}`" 
-              class="category-item" 
-              @click="closeMenu"
+        <div class="nav-wrapper">
+          <!-- Mobile Menu Tabs -->
+          <div class="mobile-menu-tabs" v-if="menuOpen">
+            <button
+              class="menu-tab"
+              :class="{ active: activeTab === 'categories' }"
+              @click="activeTab = 'categories'"
             >
-              <i class="fa-solid fa-folder"></i>
-              <span>{{ category.name }}</span>
-            </router-link>
-            <div v-if="categories.length === 0" class="no-categories">
-              <p>No categories available</p>
+              Categories
+            </button>
+            <button
+              class="menu-tab"
+              :class="{ active: activeTab === 'menu' }"
+              @click="activeTab = 'menu'"
+            >
+              Menu
+            </button>
+            <button
+              class="menu-tab"
+              :class="{ active: activeTab === 'more' }"
+              @click="activeTab = 'more'"
+            >
+              More
+            </button>
+            <button class="close-menu-btn" @click="closeMenu">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Desktop ALL CATEGORIES Button -->
+          <button class="all-categories-btn desktop-only">
+            <span>ALL CATEGORIES</span>
+            <i class="las la-bars"></i>
+          </button>
+
+          <!-- Menu Content -->
+          <div class="nav-links" v-show="!menuOpen || activeTab === 'menu'">
+            <router-link to="/" class="nav-link" @click="closeMenu">Home</router-link>
+            <router-link to="/product" class="nav-link" @click="closeMenu">Shop</router-link>
+            <router-link to="/blog" class="nav-link" @click="closeMenu">Blog</router-link>
+
+          </div>
+
+          <!-- More Content (Mobile Only) -->
+          <div class="more-content" v-show="menuOpen && activeTab === 'more'">
+            <div class="more-cards">
+              <a href="#" class="more-card" @click="closeMenu">
+                <div class="more-card-icon">
+                  <i class="fa-regular fa-envelope"></i>
+                </div>
+                <span class="more-card-title">Contact</span>
+              </a>
+              <router-link to="/blog" class="more-card" @click="closeMenu">
+                <div class="more-card-icon">
+                  <i class="fa-regular fa-comment"></i>
+                </div>
+                <span class="more-card-title">Blog</span>
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Categories Content (Mobile Only) -->
+          <div class="categories-content" v-show="menuOpen && activeTab === 'categories'">
+            <div class="category-list">
+              <router-link 
+                v-for="category in categories" 
+                :key="category.id"
+                :to="`/products?category=${category.id}`" 
+                class="category-item" 
+                @click="closeMenu"
+              >
+                <i class="fa-solid fa-folder"></i>
+                <span>{{ category.name }}</span>
+              </router-link>
+              <div v-if="categories.length === 0" class="no-categories">
+                <p>No categories available</p>
+              </div>
             </div>
           </div>
         </div>

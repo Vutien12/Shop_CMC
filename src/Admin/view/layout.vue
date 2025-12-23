@@ -232,7 +232,7 @@ export default {
 }
 
 /* Mobile overlay */
-.sidebar-overlay {
+/* .sidebar-overlay {
   display: none;
   position: fixed;
   top: 0;
@@ -241,7 +241,7 @@ export default {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 9998;
-}
+} */
 
 /* Desktop Styles */
 @media (min-width: 768px) {
@@ -310,7 +310,7 @@ export default {
   }
 
   /* Overlay should start below navbar */
-  .sidebar-overlay {
+  /* .sidebar-overlay {
     position: fixed !important;
     top: 61px !important;
     left: 0 !important;
@@ -319,16 +319,16 @@ export default {
     height: calc(100vh - 61px) !important;
     z-index: 9998 !important;
     background: rgba(0, 0, 0, 0.5) !important;
-  }
+  } */
 
   /* Sidebar fixed and hidden by default - completely off screen */
   .admin-scope .main-sidebar {
     position: fixed !important;
     left: -260px !important;
-    top: 61px !important;
+    top: -10px !important;
     width: 250px !important;
     max-width: 250px !important;
-    height: calc(100vh - 61px) !important;
+    height: calc(100vh - 0) !important;
     z-index: 9999 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
@@ -338,13 +338,13 @@ export default {
   }
 
   /* Show sidebar when open */
-  .admin-scope.sidebar-open .sidebar-overlay {
+  /* .admin-scope.sidebar-open .sidebar-overlay {
     display: block !important;
     visibility: visible !important;
-  }
+  } */
 
   .admin-scope.sidebar-open .main-sidebar {
-    left: 0 !important;
+    left: 250px !important;
     transform: translateX(0) !important;
   }
 

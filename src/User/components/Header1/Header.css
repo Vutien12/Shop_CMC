@@ -85,6 +85,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 999;
+  background-color: #fff;
 }
 
 .header-main .container {
@@ -116,19 +117,20 @@ a {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #0875ff 0%, #0056d6 100%);
+  background: transparent;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 0;
+  overflow: visible;
 }
 
 .logo-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: brightness(0) invert(1);
+  display: block;
 }
 
 .logo-text {
@@ -318,7 +320,6 @@ a {
   transition: all 0.3s ease;
   padding: 0;
   box-sizing: border-box;
-  border: 1px solid #e5e5e5;
 }
 
 .navigation-bar .container {
@@ -328,14 +329,28 @@ a {
   max-width: 100%;
   align-items: center;
   height: 60px;
+  overflow: visible;
+}
+
+.nav-wrapper {
+  display: flex;
+  align-items: center;
+  width: calc(100% + 70px);
+  margin-right: -70px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+  padding: 4px;
 }
 
 .all-categories-btn {
   background-color: #0068e1;
   color: #fff;
   border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 25px;
-  height: 50px; /* Fixed height */
+  height: 56px;
   font-size: 15px;
   font-weight: 600;
   font-family: 'Poppins', sans-serif;
@@ -345,9 +360,10 @@ a {
   justify-content: space-between;
   min-width: 200px;
   gap: 80px;
-  border-radius: 8px;
+  border-radius: 6px 0 0 6px;
   transition: background-color 0.3s;
   flex-shrink: 0;
+  margin: 0;
 }
 
 .all-categories-btn:hover {
@@ -363,7 +379,7 @@ a {
   display: flex;
   align-items: center;
   gap: 25px;
-  margin-left: 20px;
+  margin-left: 60px;
   flex-wrap: nowrap;
   height: 100%; /* Chiều cao bằng container */
 }
@@ -614,10 +630,12 @@ a {
 
   /* Logo - Center */
   .logo {
-    position: static;
+    position: relative;
     order: 2;
     flex: 1;
     justify-content: center;
+    z-index: 1001;
+    min-width: auto;
   }
 
   .logo-text {
