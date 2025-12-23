@@ -16,7 +16,7 @@
             Storefront
           </a>
         </li>
-        
+
         <li class="fullscreen-mode">
           <a class="fullscreen-mode-open" href="#" @click.prevent="toggleFullscreen">
             <svg class="fullscreen-one exit-full-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/></svg>
@@ -74,8 +74,8 @@
 </template>
 
 <script>
-import { getCurrentUser } from '@/api/profileApi'
 import { logout as logoutApi } from '@/api/authApi'
+import { getUserInfoFromToken, isTokenExpired } from '@/Utils/jwtUtils'
 
 export default {
   name: 'Topnav',
@@ -85,7 +85,9 @@ export default {
       isDropdownOpen: false,
       isFullscreen: false,
       currentUser: null,
-      isLoading: false
+      isLoading: false,
+      tokenCheckInterval: null,
+      lastToken: null
     }
   },
   props: {
@@ -127,81 +129,106 @@ export default {
       }
       return this.adminLabel.charAt(0).toUpperCase();
     },
-    
+
     displayName() {
       if (this.currentUser) {
         return `${this.currentUser.firstName} ${this.currentUser.lastName}`.trim();
       }
       return this.adminLabel;
     },
-    
+
     displayRole() {
       return this.currentUser?.role || this.userRole;
     },
-    
+
     displayEmail() {
       return this.currentUser?.email || this.userEmail;
     }
+  },
+  watch: {
+    // Watch for token changes by monitoring localStorage
+    // This runs periodically to detect token updates or removal
   },
   methods: {
     async loadUserData() {
       this.isLoading = true;
       try {
-        const response = await getCurrentUser();
-        console.log('📦 Full API Response:', response);
-        
-        // API trả về result là Array, lấy phần tử đầu tiên
-        let userData = response.result || response.data || response;
-        
-        // Nếu là array, lấy phần tử đầu tiên
-        if (Array.isArray(userData) && userData.length > 0) {
-          userData = userData[0];
+        // Check if token is expired
+        if (isTokenExpired()) {
+          console.warn('Token expired, logging out...');
+          await this.logout();
+          return;
         }
-        
-        console.log('👤 User Data:', userData);
-        console.log('  - firstName:', userData.firstName);
-        console.log('  - lastName:', userData.lastName);
-        console.log('  - email:', userData.email);
-        console.log('  - role:', userData.role);
-        
-        this.currentUser = userData;
-        
-        // Log giá trị hiển thị
-        this.$nextTick(() => {
-          console.log('✅ Display Values:');
-          console.log('  - displayName:', this.displayName);
-          console.log('  - displayRole:', this.displayRole);
-          console.log('  - displayEmail:', this.displayEmail);
-        });
+
+        // Get user info directly from JWT payload
+        const userInfo = getUserInfoFromToken();
+        console.log('User Info from JWT:', userInfo);
+
+        if (userInfo.isValid) {
+          this.currentUser = {
+            firstName: userInfo.firstName,
+            lastName: userInfo.lastName,
+            email: userInfo.email,
+            role: userInfo.role,
+            userId: userInfo.userId
+          };
+
+          // Log display values
+          this.$nextTick(() => {
+            console.log('Display Values:');
+            console.log('  - displayName:', this.displayName);
+            console.log('  - displayRole:', this.displayRole);
+            console.log('  - displayEmail:', this.displayEmail);
+          });
+        } else {
+          console.warn('No valid token found');
+          this.currentUser = null;
+        }
       } catch (error) {
-        console.error('Failed to load user:', error);
+        console.error('Failed to load user data:', error);
         this.currentUser = null;
       } finally {
         this.isLoading = false;
       }
     },
-    
+
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
     },
-    
+
     handleClickOutside(event) {
       const dropdown = this.$el.querySelector('.top-nav-menu');
       if (dropdown && !dropdown.contains(event.target)) {
         this.isDropdownOpen = false;
       }
     },
-    
+
     async logout() {
       try {
         this.isDropdownOpen = false;
-        await logoutApi();
-      } catch (error) {
-        console.error('Logout error:', error);
+        // Clear user data immediately before logout call
+        this.currentUser = null;
+
+        // Ensure client-side token and related flags are cleared
         localStorage.removeItem('accessToken');
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
-        this.$router.push('/login');
+        this.lastToken = null;
+
+        // Call API to invalidate session (best-effort)
+        await logoutApi();
+
+        // Navigate to login after clearing
+        if (this.$router) this.$router.push('/login');
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Ensure user data is cleared even if API fails
+        this.currentUser = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userEmail');
+        this.lastToken = null;
+        if (this.$router) this.$router.push('/login');
       }
     },
 
@@ -220,19 +247,78 @@ export default {
         });
       }
     },
-    
+
     handleFullscreenChange() {
       this.isFullscreen = !!document.fullscreenElement;
+    },
+
+    handleStorageChange(event) {
+      // Listen for changes to accessToken in localStorage
+      if (event.key === 'accessToken') {
+        if (!event.newValue) {
+          // Token was removed (logout)
+          this.currentUser = null;
+        } else {
+          // Token was updated (login), reload user data
+          this.loadUserData();
+        }
+      }
+    },
+
+    checkTokenValidity() {
+      // Check if token exists and if it changed
+      const currentToken = localStorage.getItem('accessToken');
+
+      // If token was removed
+      if (!currentToken && this.lastToken) {
+        this.currentUser = null;
+        this.lastToken = null;
+        return;
+      }
+
+      // If token changed (new login)
+      if (currentToken && currentToken !== this.lastToken) {
+        this.lastToken = currentToken;
+        this.loadUserData();
+        return;
+      }
+
+      // If token exists, verify it's not expired
+      if (currentToken && isTokenExpired()) {
+        this.currentUser = null;
+        this.lastToken = null;
+      }
+    },
+
+    startTokenMonitoring() {
+      // Store initial token
+      this.lastToken = localStorage.getItem('accessToken');
+
+      // Check token validity every 5 seconds
+      this.tokenCheckInterval = setInterval(() => {
+        this.checkTokenValidity();
+      }, 5000);
+    },
+
+    stopTokenMonitoring() {
+      if (this.tokenCheckInterval) {
+        clearInterval(this.tokenCheckInterval);
+        this.tokenCheckInterval = null;
+      }
     }
   },
   mounted() {
     this.loadUserData();
+    this.startTokenMonitoring();
     document.addEventListener('click', this.handleClickOutside);
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+    window.addEventListener('storage', this.handleStorageChange);
   },
   beforeUnmount() {
+    this.stopTokenMonitoring();
     document.removeEventListener('click', this.handleClickOutside);
     document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
+    window.removeEventListener('storage', this.handleStorageChange);
   }
 };
 </script>

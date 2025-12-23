@@ -55,9 +55,7 @@ const loading = ref(false)
 const pagination = ref(null)
 
 function deleteRecords() {
-  // Gọi API xóa
 }
 function fetchData(page) {
-  // Gọi API phân trang
 }
 </script>

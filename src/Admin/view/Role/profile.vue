@@ -2,13 +2,13 @@
   <div class="profile-page">
     <!-- Page header -->
     <div class="page-header">
-      <h1 class="page-title">Hồ sơ người dùng</h1>
+      <h1 class="page-title">User profile</h1>
     </div>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="loading-container">
       <div class="spinner"></div>
-      <p>Đang tải thông tin...</p>
+      <p>Loading information...</p>
     </div>
 
     <!-- Profile content -->
@@ -37,7 +37,7 @@
           </div>
           <button class="btn-edit-profile" @click="openEditModal">
             <i class="fa fa-edit"></i>
-            <span>Chỉnh sửa hồ sơ</span>
+            <span>Edit profile</span>
           </button>
         </div>
       </div>
@@ -50,7 +50,7 @@
             <div class="info-card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
               <i class="fa fa-user"></i>
             </div>
-            <h3 class="info-card-title">Thông tin cá nhân</h3>
+            <h3 class="info-card-title">Personal information</h3>
           </div>
           <div class="info-card-body">
             <div class="info-row">
@@ -58,7 +58,7 @@
                 <i class="fa fa-id-card"></i>
               </div>
               <div class="info-content">
-                <label>Họ và tên</label>
+                <label>Full name</label>
                 <p>{{ userData.firstName }} {{ userData.lastName }}</p>
               </div>
             </div>
@@ -68,7 +68,7 @@
               </div>
               <div class="info-content">
                 <label>Email</label>
-                <p>{{ userData.email || 'Chưa có' }}</p>
+                <p>{{ userData.email || 'Not yet' }}</p>
               </div>
             </div>
             <div class="info-row">
@@ -76,8 +76,8 @@
                 <i class="fa fa-phone"></i>
               </div>
               <div class="info-content">
-                <label>Số điện thoại</label>
-                <p>{{ userData.phone || 'Chưa cập nhật' }}</p>
+                <label>Phone number</label>
+                <p>{{ userData.phone || 'Not updated yet' }}</p>
               </div>
             </div>
           </div>
@@ -89,7 +89,7 @@
             <div class="info-card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
               <i class="fa fa-briefcase"></i>
             </div>
-            <h3 class="info-card-title">Thông tin tài khoản</h3>
+            <h3 class="info-card-title">Account information</h3>
           </div>
           <div class="info-card-body">
             <div class="info-row">
@@ -110,7 +110,7 @@
                 <i class="fa fa-calendar-alt"></i>
               </div>
               <div class="info-content">
-                <label>Ngày tạo tài khoản</label>
+                <label>Account creation date</label>
                 <p>{{ formatDate(userData.createdAt) }}</p>
               </div>
             </div>
@@ -119,11 +119,11 @@
                 <i class="fa fa-clock"></i>
               </div>
               <div class="info-content">
-                <label>Trạng thái</label>
+                <label>Status</label>
                 <p>
                   <span class="status-badge status-active">
                     <span class="status-dot"></span>
-                    Đang hoạt động
+                    Active
                   </span>
                 </p>
               </div>
@@ -137,7 +137,7 @@
             <div class="info-card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
               <i class="fa fa-lock"></i>
             </div>
-            <h3 class="info-card-title">Bảo mật</h3>
+            <h3 class="info-card-title">Security</h3>
           </div>
           <div class="info-card-body">
             <div class="security-feature">
@@ -145,18 +145,18 @@
                 <i class="fa fa-key"></i>
               </div>
               <div class="security-content">
-                <h4>Mật khẩu</h4>
-                <p>Bảo vệ tài khoản của bạn với mật khẩu mạnh</p>
+                <h4>Password</h4>
+                <p>Protect your account with a strong password.</p>
               </div>
               <button class="btn-security-action" @click="openPasswordModal">
                 <i class="fa fa-edit"></i>
-                Đổi mật khẩu
+                Change password
               </button>
             </div>
             <div class="security-tips">
               <p class="security-tip">
                 <i class="fa fa-info-circle"></i>
-                Thay đổi mật khẩu định kỳ để đảm bảo an toàn
+                Change your password regularly to ensure security.
               </p>
             </div>
           </div>
@@ -169,7 +169,7 @@
       <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
         <div class="modal-container">
           <div class="modal-header">
-            <h2>Chỉnh sửa thông tin</h2>
+            <h2>Edit information</h2>
             <button class="btn-close" @click="closeEditModal">
               <i class="fa fa-times"></i>
             </button>
@@ -178,27 +178,27 @@
           <div class="modal-body">
             <form @submit.prevent="saveProfile">
               <div class="form-group">
-                <label for="firstName">Họ <span class="required">*</span></label>
+                <label for="firstName">First name<span class="required">*</span></label>
                 <input
                   type="text"
                   id="firstName"
                   v-model="editForm.firstName"
                   class="form-control"
                   :class="{ 'is-invalid': editErrors.firstName }"
-                  placeholder="Nhập họ"
+                  placeholder="Enter your first name"
                 />
                 <span v-if="editErrors.firstName" class="error-message">{{ editErrors.firstName }}</span>
               </div>
 
               <div class="form-group">
-                <label for="lastName">Tên <span class="required">*</span></label>
+                <label for="lastName">Last name<span class="required">*</span></label>
                 <input
                   type="text"
                   id="lastName"
                   v-model="editForm.lastName"
                   class="form-control"
                   :class="{ 'is-invalid': editErrors.lastName }"
-                  placeholder="Nhập tên"
+                  placeholder="Enter last name"
                 />
                 <span v-if="editErrors.lastName" class="error-message">{{ editErrors.lastName }}</span>
               </div>
@@ -211,20 +211,20 @@
                   v-model="editForm.email"
                   class="form-control"
                   :class="{ 'is-invalid': editErrors.email }"
-                  placeholder="Nhập email"
+                  placeholder="Enter email"
                 />
                 <span v-if="editErrors.email" class="error-message">{{ editErrors.email }}</span>
               </div>
 
               <div class="form-group">
-                <label for="phone">Số điện thoại</label>
+                <label for="phone">Phone number</label>
                 <input
                   type="tel"
                   id="phone"
                   v-model="editForm.phone"
                   class="form-control"
                   :class="{ 'is-invalid': editErrors.phone }"
-                  placeholder="Nhập số điện thoại"
+                  placeholder="Enter phone number"
                 />
                 <span v-if="editErrors.phone" class="error-message">{{ editErrors.phone }}</span>
               </div>
@@ -235,7 +235,7 @@
                 </button>
                 <button type="submit" class="btn btn-save" :disabled="isSaving">
                   <i class="fa fa-spinner fa-spin" v-if="isSaving"></i>
-                  {{ isSaving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+                  {{ isSaving ? 'Saving...' : 'Save changes' }}
                 </button>
               </div>
             </form>
@@ -249,7 +249,7 @@
       <div v-if="showPasswordModal" class="modal-overlay" @click.self="closePasswordModal">
         <div class="modal-container modal-password">
           <div class="modal-header">
-            <h2>Đổi mật khẩu</h2>
+            <h2>Change password</h2>
             <button class="btn-close" @click="closePasswordModal">
               <i class="fa fa-times"></i>
             </button>
@@ -258,7 +258,7 @@
           <div class="modal-body">
             <form @submit.prevent="changePassword">
               <div class="form-group">
-                <label for="currentPassword">Mật khẩu hiện tại <span class="required">*</span></label>
+                <label for="currentPassword">Current password <span class="required">*</span></label>
                 <div class="password-input-wrapper">
                   <input
                     :type="showCurrentPassword ? 'text' : 'password'"
@@ -266,7 +266,7 @@
                     v-model="passwordForm.currentPassword"
                     class="form-control"
                     :class="{ 'is-invalid': passwordErrors.currentPassword }"
-                    placeholder="Nhập mật khẩu hiện tại"
+                    placeholder="Enter your current password"
                   />
                   <button
                     type="button"
@@ -280,7 +280,7 @@
               </div>
 
               <div class="form-group">
-                <label for="newPassword">Mật khẩu mới <span class="required">*</span></label>
+                <label for="newPassword">New password <span class="required">*</span></label>
                 <div class="password-input-wrapper">
                   <input
                     :type="showNewPassword ? 'text' : 'password'"
@@ -288,7 +288,7 @@
                     v-model="passwordForm.newPassword"
                     class="form-control"
                     :class="{ 'is-invalid': passwordErrors.newPassword }"
-                    placeholder="Nhập mật khẩu mới"
+                    placeholder="Enter a new password"
                   />
                   <button
                     type="button"
@@ -299,11 +299,11 @@
                   </button>
                 </div>
                 <span v-if="passwordErrors.newPassword" class="error-message">{{ passwordErrors.newPassword }}</span>
-                <small class="form-hint">Mật khẩu phải có ít nhất 8 ký tự</small>
+                <small class="form-hint">The password must have at least 8 characters.</small>
               </div>
 
               <div class="form-group">
-                <label for="confirmPassword">Xác nhận mật khẩu mới <span class="required">*</span></label>
+                <label for="confirmPassword">Confirm new password<span class="required">*</span></label>
                 <div class="password-input-wrapper">
                   <input
                     :type="showConfirmPassword ? 'text' : 'password'"
@@ -311,7 +311,7 @@
                     v-model="passwordForm.confirmPassword"
                     class="form-control"
                     :class="{ 'is-invalid': passwordErrors.confirmPassword }"
-                    placeholder="Nhập lại mật khẩu mới"
+                    placeholder="Re-enter your new password."
                   />
                   <button
                     type="button"
@@ -330,7 +330,7 @@
                 </button>
                 <button type="submit" class="btn btn-save" :disabled="isSaving">
                   <i class="fa fa-spinner fa-spin" v-if="isSaving"></i>
-                  {{ isSaving ? 'Đang lưu...' : 'Đổi mật khẩu' }}
+                  {{ isSaving ? 'Saving...' : 'Change password' }}
                 </button>
               </div>
             </form>
@@ -432,7 +432,7 @@ export default {
         console.log('Loaded user data:', this.userData);
       } catch (error) {
         console.error('Failed to load user:', error);
-        this.showToast('Không thể tải thông tin người dùng', 'error');
+        this.showToast('Unable to load user information', 'error');
 
         // Nếu lỗi 401, redirect về login
         if (error.response?.status === 401) {
@@ -470,20 +470,20 @@ export default {
       let isValid = true;
 
       if (!this.editForm.firstName.trim()) {
-        this.editErrors.firstName = 'Họ không được để trống';
+        this.editErrors.firstName = 'First name cannot be left blank.';
         isValid = false;
       }
 
       if (!this.editForm.lastName.trim()) {
-        this.editErrors.lastName = 'Tên không được để trống';
+        this.editErrors.lastName = 'Last name cannot be left blank.';
         isValid = false;
       }
 
       if (!this.editForm.email.trim()) {
-        this.editErrors.email = 'Email không được để trống';
+        this.editErrors.email = 'Email cannot be left blank.';
         isValid = false;
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.editForm.email)) {
-        this.editErrors.email = 'Email không hợp lệ';
+        this.editErrors.email = 'Invalid email';
         isValid = false;
       }
 
@@ -514,7 +514,7 @@ export default {
         this.userData.email = updateData.email;
         this.userData.phone = updateData.phone;
 
-        this.showToast('Cập nhật thông tin thành công', 'success');
+        this.showToast('Information updated successfully.', 'success');
         this.closeEditModal();
       } catch (error) {
         console.error('Failed to update profile:', error);
@@ -522,9 +522,9 @@ export default {
         // Xử lý lỗi validation 400
         if (error.response?.status === 400 && error.response?.data?.result) {
           this.editErrors = { ...error.response.data.result };
-          this.showToast('Vui lòng kiểm tra lại thông tin', 'error');
+          this.showToast('Please double-check the information.', 'error');
         } else {
-          const message = error.response?.data?.message || 'Cập nhật thông tin thất bại';
+          const message = error.response?.data?.message || 'Update failure information';
           this.showToast(message, 'error');
         }
       } finally {
@@ -560,23 +560,23 @@ export default {
       let isValid = true;
 
       if (!this.passwordForm.currentPassword) {
-        this.passwordErrors.currentPassword = 'Mật khẩu hiện tại không được để trống';
+        this.passwordErrors.currentPassword = 'The current password cannot be left blank.';
         isValid = false;
       }
 
       if (!this.passwordForm.newPassword) {
-        this.passwordErrors.newPassword = 'Mật khẩu mới không được để trống';
+        this.passwordErrors.newPassword = 'The new password cannot be left blank.';
         isValid = false;
       } else if (this.passwordForm.newPassword.length < 8) {
-        this.passwordErrors.newPassword = 'Mật khẩu phải có ít nhất 8 ký tự';
+        this.passwordErrors.newPassword = 'The password must have at least 8 characters.';
         isValid = false;
       }
 
       if (!this.passwordForm.confirmPassword) {
-        this.passwordErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+        this.passwordErrors.confirmPassword = 'Please confirm your password.';
         isValid = false;
       } else if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-        this.passwordErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+        this.passwordErrors.confirmPassword = 'The verification password does not match.';
         isValid = false;
       }
 
@@ -597,7 +597,7 @@ export default {
           newPassword: this.passwordForm.newPassword
         });
 
-        this.showToast('Đổi mật khẩu thành công', 'success');
+        this.showToast('Password changed successfully.', 'success');
         this.closePasswordModal();
       } catch (error) {
         console.error('Failed to change password:', error);
@@ -614,9 +614,9 @@ export default {
             newPassword: backendErrors.newPassword
           };
 
-          this.showToast('Vui lòng kiểm tra lại thông tin', 'error');
+          this.showToast('Please double-check the information.', 'error');
         } else {
-          const message = error.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại';
+          const message = error.response?.data?.message || 'Password change failed. Please check your current password.';
           this.showToast(message, 'error');
         }
       } finally {
