@@ -35,7 +35,7 @@ export default {
   props: {
     version: {
       type: String,
-      default: '1.0.0' // Giá trị mặc định thay cho ecommerce_version()
+      default: '1.0.0'
     }
   },
   data() {
