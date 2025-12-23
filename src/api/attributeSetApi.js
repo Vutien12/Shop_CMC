@@ -1,11 +1,11 @@
-import axiosInstance from './axiosInstance';
+import api from './axiosInstance';
 
 /**
  * Get all attribute sets
  */
 export const getAttributeSets = async () => {
     try {
-        const response = await axiosInstance.get('/attribute-sets');
+        const response = await api.get('/attribute-sets');
         return response.data;
     } catch (error) {
         console.error('Error getting attribute sets:', error);
@@ -18,7 +18,7 @@ export const getAttributeSets = async () => {
  */
 export const searchAttributeSets = async (params = {}) => {
     try {
-        const response = await axiosInstance.get('/attribute-sets/search', { params });
+        const response = await api.get('/attribute-sets/search', { params });
         return response.data;
     } catch (error) {
         console.error('Error searching attribute sets:', error);
@@ -31,7 +31,7 @@ export const searchAttributeSets = async (params = {}) => {
  */
 export const getAttributeSet = async (id) => {
     try {
-        const response = await axiosInstance.get(`/attribute-sets/${id}`);
+        const response = await api.get(`/attribute-sets/${id}`);
         return response.data;
     } catch (error) {
         console.error(`Error getting attribute set ${id}:`, error);
@@ -44,7 +44,7 @@ export const getAttributeSet = async (id) => {
  */
 export const createAttributeSet = async (data) => {
     try {
-        const response = await axiosInstance.post('/attribute-sets', data);
+        const response = await api.post('/attribute-sets', data);
         return response.data;
     } catch (error) {
         console.error('Error creating attribute set:', error);
@@ -57,7 +57,7 @@ export const createAttributeSet = async (data) => {
  */
 export const updateAttributeSet = async (id, data) => {
     try {
-        const response = await axiosInstance.put(`/attribute-sets/${id}`, data);
+        const response = await api.put(`/attribute-sets/${id}`, data);
         return response.data;
     } catch (error) {
         console.error(`Error updating attribute set ${id}:`, error);
@@ -70,7 +70,7 @@ export const updateAttributeSet = async (id, data) => {
  */
 export const deleteAttributeSet = async (id) => {
     try {
-        const response = await axiosInstance.delete(`/attribute-sets/${id}`);
+        const response = await api.delete(`/attribute-sets/${id}`);
         return response.data;
     } catch (error) {
         console.error(`Error deleting attribute set ${id}:`, error);
@@ -83,7 +83,7 @@ export const deleteAttributeSet = async (id) => {
  */
 export const deleteManyAttributeSets = async (ids) => {
     try {
-        const response = await axiosInstance.post('/attribute-sets/delete-many', ids);
+        const response = await api.post('/attribute-sets/delete-many', ids);
         return response.data;
     } catch (error) {
         console.error('Error deleting multiple attribute sets:', error);

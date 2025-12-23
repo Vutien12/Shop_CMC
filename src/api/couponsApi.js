@@ -1,9 +1,9 @@
-import axiosInstance from '@/api/axiosInstance.js';
+import api from '@/api/axiosInstance.js';
 
 // Get all coupons
 export const getCoupons = async () => {
     try {
-        const response = await axiosInstance.get('/coupons');
+        const response = await api.get('/coupons');
         return response.data;
     } catch (error) {
         console.error('Error fetching coupons:', error);
@@ -14,7 +14,7 @@ export const getCoupons = async () => {
 // Get coupon by ID
 export const getCouponById = async (id) => {
     try {
-        const response = await axiosInstance.get(`/coupons/${id}`);
+        const response = await api.get(`/coupons/${id}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching coupon:', error);
@@ -25,7 +25,7 @@ export const getCouponById = async (id) => {
 // Create new coupon
 export const createCoupon = async (couponData) => {
     try {
-        const response = await axiosInstance.post('/coupons', couponData);
+        const response = await api.post('/coupons', couponData);
         return response.data;
     } catch (error) {
         console.error('Error creating coupon:', error);
@@ -36,7 +36,7 @@ export const createCoupon = async (couponData) => {
 // Update coupon
 export const updateCoupon = async (id, couponData) => {
     try {
-        const response = await axiosInstance.put(`/coupons/${id}`, couponData);
+        const response = await api.put(`/coupons/${id}`, couponData);
         return response.data;
     } catch (error) {
         console.error('Error updating coupon:', error);
@@ -47,7 +47,7 @@ export const updateCoupon = async (id, couponData) => {
 // Delete coupon
 export const deleteCoupon = async (id) => {
     try {
-        const response = await axiosInstance.delete(`/coupons/${id}`);
+        const response = await api.delete(`/coupons/${id}`);
         return response.data;
     } catch (error) {
         console.error('Error deleting coupon:', error);
@@ -58,7 +58,7 @@ export const deleteCoupon = async (id) => {
 // Delete multiple coupons
 export const deleteCoupons = async (ids) => {
     try {
-        const response = await axiosInstance.post('/coupons/bulk-delete', { ids });
+        const response = await api.post('/coupons/bulk-delete', { ids });
         return response.data;
     } catch (error) {
         console.error('Error deleting coupons:', error);
@@ -69,7 +69,7 @@ export const deleteCoupons = async (ids) => {
 // Get coupon by code
 export const getCouponByCode = async (code) => {
     try {
-        const response = await axiosInstance.get(`/coupons/code/${code}`);
+        const response = await api.get(`/coupons/code/${code}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching coupon by code:', error);

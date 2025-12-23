@@ -125,7 +125,7 @@ api.interceptors.response.use(
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url?.includes('/auth/refresh') &&
-      !isPublicEndpoint(originalRequest.url, originalRequest.method) && // Chỉ refresh cho non-public
+      !isPublicEndpoint(originalRequest.url, originalRequest.method) &&
       localStorage.getItem('accessToken')
     ) {
       originalRequest._retry = true

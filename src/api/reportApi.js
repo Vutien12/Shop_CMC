@@ -1,4 +1,4 @@
-import axiosInstance from './axiosInstance';
+import api from './axiosInstance';
 
 /**
  * Get reports based on filters
@@ -6,7 +6,7 @@ import axiosInstance from './axiosInstance';
  * @returns {Promise}
  */
 export const getReports = (params) => {
-  return axiosInstance.get('/reports', { params });
+  return api.get('/reports', { params });
 };
 
 /**
@@ -15,7 +15,7 @@ export const getReports = (params) => {
  * @returns {Promise}
  */
 export const exportReport = (params) => {
-  return axiosInstance.get('/reports/export', {
+  return api.get('/reports/export', {
     params,
     responseType: 'blob'
   });
