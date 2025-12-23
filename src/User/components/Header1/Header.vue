@@ -185,6 +185,7 @@
           </div>
         </div>
       </div>
+     </div>
     </nav>
 
     <!-- Cart Sidebar Component -->
