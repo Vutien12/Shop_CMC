@@ -8813,7 +8813,7 @@ select option {
     padding-bottom: 0;
   }
   .main-sidebar {
-    margin-left: -250px;
+    /* margin-left: -250px; */
   }
   .ltr.sidebar-mini.sidebar-collapse .main-header {
     width: 100%;

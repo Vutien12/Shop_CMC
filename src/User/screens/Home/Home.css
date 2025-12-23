@@ -513,20 +513,103 @@ html, body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.leather-bags::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 70%
+  );
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.leather-bags:hover {
+  box-shadow: 
+    0 0 30px rgba(25, 84, 123, 0.6),
+    0 0 60px rgba(25, 84, 123, 0.4),
+    inset 0 0 40px rgba(255, 255, 255, 0.1);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 30px rgba(25, 84, 123, 0.6),
+      0 0 60px rgba(25, 84, 123, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px rgba(25, 84, 123, 0.8),
+      0 0 80px rgba(25, 84, 123, 0.6);
+  }
 }
 
 .leather-bags .card-title {
   color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: text-glow 2s ease-in-out infinite;
+}
+
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .leather-bags .shop-now-btn {
   border-color: white;
   color: white;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.leather-bags .shop-now-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
 }
 
 .leather-bags .shop-now-btn:hover {
   background: white;
   color: #19547b;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.leather-bags .shop-now-btn:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .leather-bag-icon {
@@ -535,6 +618,26 @@ html, body {
   background: radial-gradient(circle, #8b4513 30%, #a0522d 70%);
   border-radius: 8px;
   position: relative;
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+  box-shadow: 0 5px 15px rgba(139, 69, 19, 0.4);
+}
+
+.leather-bags:hover .leather-bag-icon {
+  transform: rotateY(10deg) rotateX(5deg) scale(1.1);
+  box-shadow: 
+    0 10px 30px rgba(139, 69, 19, 0.6),
+    0 0 40px rgba(160, 82, 45, 0.4);
+  animation: bag-float 2s ease-in-out infinite;
+}
+
+@keyframes bag-float {
+  0%, 100% {
+    transform: rotateY(10deg) rotateX(5deg) scale(1.1) translateY(0);
+  }
+  50% {
+    transform: rotateY(10deg) rotateX(5deg) scale(1.1) translateY(-5px);
+  }
 }
 
 .leather-bag-icon::before {
@@ -546,28 +649,128 @@ html, body {
   height: 8px;
   background: #654321;
   border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.leather-bags:hover .leather-bag-icon::before {
+  background: #8b6914;
+  box-shadow: 0 0 10px rgba(139, 105, 20, 0.6);
 }
 
 .iphone-card {
-  background-image: url(https://asia.fleetcart.envaysoft.com/storage/media/yl6rNkswnKQzh7mouQ0HpagRLwBpnq3Mt9LZMRak.png);
+  background-image: url(https://i.pinimg.com/originals/a1/d7/2c/a1d72c225e500b10c186cb889a612155.jpg);
   color: white;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.iphone-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(118, 75, 162, 0.4),
+    transparent
+  );
+  animation: slide 2s infinite;
+}
+
+@keyframes slide {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.iphone-card:hover {
+  box-shadow: 
+    0 0 30px rgba(118, 75, 162, 0.8),
+    0 0 60px rgba(102, 126, 234, 0.6),
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    inset 0 0 60px rgba(255, 255, 255, 0.1);
+  animation: neon-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 30px rgba(118, 75, 162, 0.8),
+      0 0 60px rgba(102, 126, 234, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 50px rgba(118, 75, 162, 1),
+      0 0 100px rgba(102, 126, 234, 0.8);
+  }
 }
 
 .iphone-card .card-title {
   color: white;
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(118, 75, 162, 0.8),
+    0 0 30px rgba(102, 126, 234, 0.6);
+  animation: neon-text 1.5s ease-in-out infinite;
+}
+
+@keyframes neon-text {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(118, 75, 162, 0.8);
+  }
+  50% {
+    text-shadow: 
+      0 0 20px rgba(255, 255, 255, 1),
+      0 0 30px rgba(118, 75, 162, 1),
+      0 0 40px rgba(102, 126, 234, 0.8);
+  }
 }
 
 .iphone-card .shop-now-btn {
   border-color: white;
   color: white;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.iphone-card .shop-now-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s, height 0.5s;
+  border-radius: 50%;
 }
 
 .iphone-card .shop-now-btn:hover {
   background: white;
   color: #764ba2;
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 255, 1),
+    0 0 40px rgba(118, 75, 162, 0.6);
+}
+
+.iphone-card .shop-now-btn:hover::after {
+  width: 300px;
+  height: 300px;
 }
 
 .iphone-icon {
@@ -577,6 +780,34 @@ html, body {
   border-radius: 12px;
   position: relative;
   border: 2px solid #ccc;
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.iphone-card:hover .iphone-icon {
+  transform: rotateY(-15deg) rotateX(10deg) scale(1.15);
+  background: linear-gradient(
+    145deg,
+    #764ba2 0%,
+    #667eea 50%,
+    #f093fb 100%
+  );
+  border-color: #764ba2;
+  box-shadow: 
+    0 15px 40px rgba(118, 75, 162, 0.6),
+    0 0 60px rgba(102, 126, 234, 0.4),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+  animation: holographic 3s ease-in-out infinite;
+}
+
+@keyframes holographic {
+  0%, 100% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(30deg);
+  }
 }
 
 .iphone-icon::before {
@@ -589,6 +820,12 @@ html, body {
   height: 4px;
   background: #666;
   border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.iphone-card:hover .iphone-icon::before {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 .iphone-icon::after {
@@ -601,6 +838,22 @@ html, body {
   height: 20px;
   background: #666;
   border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.iphone-card:hover .iphone-icon::after {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 1);
+  animation: button-pulse 1s ease-in-out infinite;
+}
+
+@keyframes button-pulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+  }
 }
 
 /* Features */
@@ -949,17 +1202,38 @@ html, body {
   padding: 30px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 10px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.banner-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
 }
 
 .banner-item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-8px) scale(1.02) rotateX(2deg);
   z-index: 2;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.2),
+    0 0 40px rgba(0, 123, 255, 0.2),
+    inset 0 0 60px rgba(255, 255, 255, 0.1);
+}
+
+.banner-item:hover::after {
+  transform: translateX(100%);
 }
 
 .content-section {
@@ -1017,11 +1291,22 @@ html, body {
   max-height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.1));
-  transition: transform 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: float 3s ease-in-out infinite;
 }
 
 .banner-item:hover .image-container img {
-  transform: scale(1.05);
+  transform: scale(1.15) translateZ(20px) rotateY(-5deg);
+  filter: drop-shadow(0 10px 40px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .banner-item:first-child {
@@ -3884,15 +4169,16 @@ html, body {
 }
 
 .leather-bags {
-  background-image: url(https://clickbuy.com.vn/uploads/media/676-fsShC.png);
+  background-image: url(https://mir-s3-cdn-cf.behance.net/project_modules/1400_webp/bba096180145769.6505ae76221d2.jpg);
   color: white;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 .iphone-card {
-  background-image: url(	https://clickbuy.com.vn/uploads/media/776-uDxCX.png);
+  background-image: url(https://cdn.shopify.com/s/files/1/0780/2113/2322/files/iPhone_17_Pro_Pop-Up-Banner_Desktop__cs-CZ.png?v=1760092691);
   color: white;
   background-size: 100% 100%;
   background-position: center;

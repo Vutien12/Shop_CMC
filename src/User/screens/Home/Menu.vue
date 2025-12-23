@@ -321,10 +321,12 @@ export default {
       scrollDots: 0,
       // Hero carousel
       heroSlides: [
-        'https://clickbuy.com.vn/uploads/media/838-Uhfbo.png',
-        'https://clickbuy.com.vn/uploads/media/807-DzQDE.png',
-        'https://clickbuy.com.vn/uploads/media/813-coqcT.png',
-        "https://clickbuy.com.vn/uploads/media/812-vhevy.png"
+        'https://rewardmobile.co.uk/wp-content/uploads/2023/09/Apple-iPhone-15-promo-banner-buy-now-scaled.jpg',
+        'https://www.apple.com/v/iphone-16-pro/c/images/overview/welcome/hero_endframe__b3cjfkquc2s2_xlarge.jpg',
+        'https://gizchina.it/wp-content/uploads/2023/09/apple-iphone-15-spot-tv-titanio.jpg',
+        "https://cdn.tomshw.it/storage/media/2025/02/49090/iphone-17-pro-leak.webp",
+        "https://mir-s3-cdn-cf.behance.net/project_modules/1400_opt_1/ca6cd7150863355.63021c4cc4737.jpg",
+        "https://www.pricekeeda.com/uploads/posts/2025/iPhone-17-3.webp"
       ],
       currentSlide: 0,
       autoPlayInterval: null,
@@ -1598,6 +1600,25 @@ export default {
   width: 100%;
   height: 540px;
   overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.hero-carousel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
 .hero-slide {
@@ -1607,16 +1628,70 @@ export default {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  background-size: 100% 100%;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transform: scale(1);
+  animation: kenBurns 20s ease-in-out infinite;
+}
+
+/* Ken Burns Effect - Zoom and Pan */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate(-2%, -2%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
 }
 
 .hero-slide.active {
   opacity: 1;
   pointer-events: auto;
+  animation: slideIn 1s ease-out, kenBurns 20s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: scale(1.1) translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+/* Shimmer effect on slide */
+.hero-slide::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 70%
+  );
+  animation: shimmerSlide 8s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerSlide {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
 }
 
 /* Navigation Arrows */
@@ -1624,65 +1699,159 @@ export default {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: white;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #333;
   padding: 16px;
   cursor: pointer;
-  z-index: 10;
+  z-index: 20;
   opacity: 0;
-  transition: opacity 0.3s ease, background 0.3s ease;
-  border-radius: 4px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .hero-carousel:hover .hero-arrow {
   opacity: 1;
+  transform: translateY(-50%) scale(1);
 }
 
 .hero-arrow:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(255, 255, 255, 1);
+  border-color: #ff6b35;
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.25),
+    0 0 40px rgba(255, 107, 53, 0.4);
+  transform: translateY(-50%) scale(1.15);
+}
+
+.hero-arrow:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 .hero-arrow-left {
   left: 20px;
+  animation: slideInLeft 0.6s ease-out;
 }
 
 .hero-arrow-right {
   right: 20px;
+  animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    left: -60px;
+    opacity: 0;
+  }
+  to {
+    left: 20px;
+    opacity: 0;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    right: -60px;
+    opacity: 0;
+  }
+  to {
+    right: 20px;
+    opacity: 0;
+  }
 }
 
 .hero-arrow svg {
   display: block;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.hero-arrow:hover svg {
+  color: #ff6b35;
+  transform: scale(1.1);
 }
 
 /* Navigation Dots */
 .hero-dots {
   position: absolute;
-  bottom: 20px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
-  z-index: 10;
+  gap: 12px;
+  z-index: 20;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .hero-dots .dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 2px solid transparent;
+}
+
+.hero-dots .dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: all 0.4s ease;
 }
 
 .hero-dots .dot:hover {
-  background: rgba(255, 255, 255, 0.8);
-  transform: scale(1.2);
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(1.3);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.hero-dots .dot:hover::before {
+  width: 24px;
+  height: 24px;
 }
 
 .hero-dots .dot.active {
-  background: white;
-  transform: scale(1.2);
+  background: linear-gradient(135deg, #ff6b35 0%, #f093fb 100%);
+  width: 30px;
+  border-radius: 15px;
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 0 20px rgba(255, 107, 53, 0.6),
+    0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(255, 107, 53, 0.6),
+      0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(255, 107, 53, 0.9),
+      0 4px 20px rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* Responsive */
