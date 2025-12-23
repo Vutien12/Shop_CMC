@@ -54,7 +54,7 @@
                                     <div class="pagination-controls">
                                         <button
                                             class="btn btn-default btn-sm"
-                                            @click="pagination.currentPage--; handleFilter()"
+                                            @click="goToPreviousPage"
                                             :disabled="pagination.currentPage === 1"
                                         >
                                             <i class="fa fa-chevron-left"></i> Previous
@@ -62,7 +62,7 @@
                                         <span class="page-info">Page {{ pagination.currentPage }} of {{ pagination.totalPages }}</span>
                                         <button
                                             class="btn btn-default btn-sm"
-                                            @click="pagination.currentPage++; handleFilter()"
+                                            @click="goToNextPage"
                                             :disabled="pagination.currentPage >= pagination.totalPages"
                                         >
                                             Next <i class="fa fa-chevron-right"></i>
@@ -379,6 +379,20 @@ export default {
             fetchReportData();
         };
 
+        const goToNextPage = () => {
+            if (pagination.value.currentPage < pagination.value.totalPages) {
+                pagination.value.currentPage++;
+                fetchReportData();
+            }
+        };
+
+        const goToPreviousPage = () => {
+            if (pagination.value.currentPage > 1) {
+                pagination.value.currentPage--;
+                fetchReportData();
+            }
+        };
+
         const clearFilters = () => {
             filters.value = {
                 type: 'COUPON',
@@ -427,6 +441,8 @@ export default {
             showGroupBy,
             onReportTypeChange,
             handleFilter,
+            goToNextPage,
+            goToPreviousPage,
             clearFilters,
             formatValue
         };
