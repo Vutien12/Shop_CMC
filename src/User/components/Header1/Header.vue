@@ -61,12 +61,17 @@
         <div class="mobile-menu-container">
           <!-- Search Bar -->
           <div class="search-bar">
-            <input type="text" placeholder="Search for products" v-model="searchQuery" />
+            <input
+              type="text"
+              placeholder="Search for products"
+              v-model="searchQuery"
+              @keyup.enter="handleSearch"
+            />
             <div class="category-dropdown">
               <span>All Categories</span>
               <i class="fa-solid fa-chevron-down"></i>
             </div>
-            <button class="search-btn">
+            <button class="search-btn" @click="handleSearch">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                 <path d="M22 22L20 20" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -169,11 +174,11 @@
         <!-- Categories Content (Mobile Only) -->
         <div class="categories-content" v-show="menuOpen && activeTab === 'categories'">
           <div class="category-list">
-            <router-link 
-              v-for="category in categories" 
+            <router-link
+              v-for="category in categories"
               :key="category.id"
-              :to="`/products?category=${category.id}`" 
-              class="category-item" 
+              :to="`/products?category=${category.id}`"
+              class="category-item"
               @click="closeMenu"
             >
               <i class="fa-solid fa-folder"></i>
@@ -329,6 +334,16 @@ export default {
         window.dispatchEvent(new Event('loginStatusChanged'));
         this.$router.push('/login');
       }
+    },
+    handleSearch() {
+      if (this.searchQuery && this.searchQuery.trim()) {
+        this.$router.push({
+          path: '/product',
+          query: { keyword: this.searchQuery.trim() }
+        });
+        this.searchQuery = '';
+        this.closeMenu();
+      }
     }
   }
 };
@@ -352,6 +367,6 @@ export default {
 .navigation-bar {
   width: 96%; /* Existing width */
   z-index: 1000; /* Ensure it's below close-menu-btn */
-  border-radius: 8px; 
+  border-radius: 8px;
 }
 </style>

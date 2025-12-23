@@ -5,15 +5,6 @@ import { searchProducts } from '@/api/productApi';
 import { getCategories } from '@/api/categoryApi';
 import { calculateProductDiscount, getBestSellingPrice } from '@/Utils/discountUtils';
 
-const isInWishlist = (productId) => {
-  try {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    return wishlist.some(item => item.productId === productId);
-  } catch {
-    return false;
-  }
-};
-
 export const useProductStore = defineStore('productStore', () => {
   // === STATE ===
   const products = ref([]);
@@ -28,6 +19,7 @@ export const useProductStore = defineStore('productStore', () => {
   const sortBy = ref('updatedAt,desc');
   const priceRange = ref([0, 100000000]);
   const selectedCategories = ref([]);
+  const keyword = ref('');
   const lastFetched = ref(null);
   const CACHE_DURATION = 3 * 60 * 1000;
 
@@ -62,7 +54,7 @@ export const useProductStore = defineStore('productStore', () => {
   };
 
   const fetchProducts = async (page = 0, size = pageSize.value, force = false) => {
-    const cacheKey = `${page}-${size}-${sortBy.value}-${selectedCategories.value.join(',')}-${priceRange.value.join(',')}`;
+    const cacheKey = `${page}-${size}-${sortBy.value}-${selectedCategories.value.join(',')}-${priceRange.value.join(',')}-${keyword.value}`;
     const now = Date.now();
 
     if (!force && lastFetched.value?.key === cacheKey && now - lastFetched.value.ts < CACHE_DURATION) {
@@ -72,8 +64,11 @@ export const useProductStore = defineStore('productStore', () => {
 
     isLoading.value = true;
     try {
-      console.log('Fetching products:', { page, size, sortBy: sortBy.value });
+      console.log('Fetching products:', { page, size, sortBy: sortBy.value, keyword: keyword.value });
       const params = { page, size, sort: sortBy.value };
+      if (keyword.value) {
+        params.keyword = keyword.value;
+      }
       if (selectedCategories.value.length > 0) {
         params.categoryIds = selectedCategories.value;
       }
@@ -132,7 +127,7 @@ export const useProductStore = defineStore('productStore', () => {
   };
 
   // === TỰ ĐỘNG CẬP NHẬT KHI LỌC ===
-  watch([priceRange, selectedCategories, sortBy, currentPage], () => {
+  watch([priceRange, selectedCategories, sortBy, currentPage, keyword], () => {
     updateLatestProducts();
   }, { deep: true });
 
@@ -151,6 +146,12 @@ export const useProductStore = defineStore('productStore', () => {
 
   const setPriceRange = (min, max) => {
     priceRange.value = [min, max];
+    currentPage.value = 0;
+    fetchProducts(0, pageSize.value, true);
+  };
+
+  const setKeyword = (searchKeyword) => {
+    keyword.value = searchKeyword;
     currentPage.value = 0;
     fetchProducts(0, pageSize.value, true);
   };
@@ -255,7 +256,7 @@ export const useProductStore = defineStore('productStore', () => {
         }
 
         await addToWishlist(firstVariantId);
-        console.log('✅ Added to wishlist:', product.name);
+        console.log('Added to wishlist:', product.name);
         alert('Added to wishlist!');
         window.dispatchEvent(new Event('wishlistChanged'));
       } else {
@@ -305,7 +306,7 @@ export const useProductStore = defineStore('productStore', () => {
       }
     } catch (error) {
       product.isWishlisted = wasWishlisted;
-      console.error('❌ Failed to toggle wishlist:', error);
+      console.error('Failed to toggle wishlist:', error);
 
       if (error.response?.status === 401) {
         alert('Please login to add items to wishlist');
@@ -319,10 +320,10 @@ export const useProductStore = defineStore('productStore', () => {
     products, latestProducts, categories,
     isLoading, isLoadingCategories,
     totalPages, totalElements, currentPage,
-    pageSize, sortBy, priceRange, selectedCategories,
+    pageSize, sortBy, priceRange, selectedCategories, keyword,
     hasNextPage, hasPrevPage,
     fetchCategories, fetchProducts,
-    setSort, setPageSize, setPriceRange,
+    setSort, setPageSize, setPriceRange, setKeyword,
     toggleCategory, toggleCategoryOpen, changePage, toggleLike
   };
 });

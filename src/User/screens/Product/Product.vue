@@ -179,7 +179,15 @@
             </svg>
             <span>Categories</span>
           </button>
-          <h1 class="page-title">Shop</h1>
+          <div class="header-title-section">
+            <h1 class="page-title">Shop</h1>
+            <p v-if="keyword" class="search-info">
+              Search results for: <strong>"{{ keyword }}"</strong>
+              <button @click="clearSearch" class="clear-search-btn" title="Clear search">
+                ×
+              </button>
+            </p>
+          </div>
           <div class="header-controls">
             <!-- View Toggle -->
             <div class="view-toggle">
@@ -326,6 +334,7 @@ const {
   sortBy,
   priceRange,
   selectedCategories,
+  keyword,
   hasPrevPage,
   hasNextPage
 } = storeToRefs(store);
@@ -336,6 +345,7 @@ const {
   setSort,
   setPageSize,
   setPriceRange,
+  setKeyword,
   toggleCategory,
   toggleCategoryOpen,
   changePage,
@@ -358,6 +368,11 @@ const updateMaxPrice = (val) => {
 
 const goToProductDetail = (id) => {
   router.push({ name: 'ProductDetail', params: { id } });
+};
+
+const clearSearch = () => {
+  setKeyword('');
+  router.push({ path: '/product' });
 };
 
 // Watch viewMode để thay đổi class grid/list nếu cần
@@ -384,9 +399,25 @@ watch(() => route.query.category, async (categoryId) => {
   }
 }, { immediate: false });
 
+// Watch for keyword query parameter changes
+watch(() => route.query.keyword, async (searchKeyword) => {
+  if (searchKeyword !== undefined) {
+    const keywordStr = searchKeyword || '';
+    if (keyword.value !== keywordStr) {
+      setKeyword(keywordStr);
+    }
+  }
+}, { immediate: false });
+
 onMounted(async () => {
   console.log('Store instance:', store);
   await fetchCategories();
+
+  // Check if there's a keyword query parameter
+  const searchKeyword = route.query.keyword;
+  if (searchKeyword) {
+    setKeyword(searchKeyword);
+  }
 
   // Check if there's a category query parameter
   const categoryId = route.query.category;
