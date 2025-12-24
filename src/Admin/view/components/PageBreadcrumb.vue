@@ -7,15 +7,15 @@
             <nav class="breadcrumb-nav" aria-label="breadcrumb">
                 <ol class="breadcrumb-list">
                     <li class="breadcrumb-item">
-                        <a 
-                            href="#" 
-                            class="breadcrumb-link home-link" 
+                        <a
+                            href="#"
+                            class="breadcrumb-link home-link"
                             @click.prevent="goHome"
                             :title="homeTitle"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 18V15" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="M10.07 2.81997L3.13999 8.36997C2.35999 8.98997 1.85999 10.3 2.02999 11.28L3.35999 19.24C3.59999 20.66 4.95999 21.81 6.39999 21.81H17.6C19.03 21.81 20.4 20.65 20.64 19.24L21.97 11.28C22.13 10.3 21.63 8.98997 20.86 8.36997L13.93 2.82997C12.86 1.96997 11.13 1.96997 10.07 2.81997Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                <path d="M12 18V15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M10.07 2.81997L3.13999 8.36997C2.35999 8.98997 1.85999 10.3 2.02999 11.28L3.35999 19.24C3.59999 20.66 4.95999 21.81 6.39999 21.81H17.6C19.03 21.81 20.4 20.65 20.64 19.24L21.97 11.28C22.13 10.3 21.63 8.98997 20.86 8.36997L13.93 2.82997C12.86 1.96997 11.13 1.96997 10.07 2.81997Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                         </a>
                     </li>
@@ -27,14 +27,14 @@
                         <li v-if="index > 0" class="breadcrumb-separator">
                             <i class="fa fa-angle-right"></i>
                         </li>
-                        
+
                         <!-- Breadcrumb Item -->
                         <li class="breadcrumb-item">
                             <!-- Clickable link for parent items (not the last one) -->
-                            <a 
+                            <a
                                 v-if="(item.route || item.to) && index < breadcrumbItems.length - 1"
-                                href="#" 
-                                class="breadcrumb-link" 
+                                href="#"
+                                class="breadcrumb-link"
                                 @click.prevent="goTo(item.route || item.to)"
                             >
                                 {{ item.label }}
@@ -103,6 +103,7 @@ export default {
 
 <style scoped>
 .page-breadcrumb-wrapper {
+    background: transparent;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -118,7 +119,7 @@ export default {
 .page-title {
     font-size: 22px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #000000;
     margin: 0;
     line-height: 1.4;
 }
@@ -147,7 +148,7 @@ export default {
 }
 
 .breadcrumb-separator {
-    color: #adb5bd;
+    color: #000000;
     font-size: 12px;
     display: flex;
     align-items: center;
@@ -155,7 +156,7 @@ export default {
 }
 
 .breadcrumb-link {
-    color: #6c757d;
+    color: #000000;
     text-decoration: none;
     font-size: 14px;
     transition: color 0.2s ease;
@@ -166,8 +167,8 @@ export default {
 }
 
 .breadcrumb-link:hover {
-    color: #495057;
-    background-color: #e9ecef;
+    color: #000000;
+    background-color: transparent;
 }
 
 .home-link {
@@ -179,7 +180,7 @@ export default {
 }
 
 .breadcrumb-current {
-    color: #495057;
+    color: #000000;
     font-size: 14px;
     font-weight: 500;
     padding: 4px 6px;
@@ -225,32 +226,42 @@ export default {
     }
 }
 
-/* Dark Mode Support (Optional) */
+/* Force light appearance even in dark mode: keep transparent background */
 @media (prefers-color-scheme: dark) {
     .page-breadcrumb-wrapper {
-        background: #1a1d23;
-        border-bottom-color: #2d3139;
+        background: transparent;
+        border-bottom-color: #e9ecef;
     }
 
     .page-title {
-        color: #e9ecef;
+        color: #000000;
     }
 
     .breadcrumb-link {
-        color: #adb5bd;
+        color: #000000;
     }
 
     .breadcrumb-link:hover {
-        color: #f8f9fa;
-        background-color: #2d3139;
+        color: #000000;
+        background-color: transparent;
     }
 
     .breadcrumb-current {
-        color: #dee2e6;
+        color: #000000;
     }
 
     .breadcrumb-separator {
-        color: #6c757d;
+        color: #000000;
     }
+}
+
+/* Ensure SVG icon is outline-only (no fill). This overrides any global svg/path fill rules */
+.breadcrumb-link svg,
+.breadcrumb-link svg path {
+    fill: none !important;
+}
+
+.breadcrumb-link svg {
+    color: inherit; /* let stroke=currentColor pick up text color */
 }
 </style>
