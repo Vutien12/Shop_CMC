@@ -2,10 +2,33 @@
   <div>
     <!-- Chatbot Button -->
     <button class="chatbot-button" @click="toggleChatbot">
-      <svg class="chatbot-icon" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3 .97 4.29L2 22l5.71-.97C9 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.38 0-2.68-.28-3.87-.78l-.28-.12-2.85.48.48-2.85-.12-.28C4.78 14.68 4.5 13.38 4.5 12c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5-3.36 7.5-7.5 7.5zm4-9.5h-8c-.28 0-.5.22-.5.5s.22.5.5.5h8c.28 0 .5-.22.5-.5s-.22-.5-.5-.5zm0 2.5h-8c-.28 0-.5.22-.5.5s.22.5.5.5h8c.28 0 .5-.22.5-.5s-.22-.5-.5-.5zm-3 2.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5z"/>
+      <svg class="chatbot-icon" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- Gradient đậm -->
+        <defs>
+          <linearGradient id="robotGradientStrong" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#D84315"/>
+            <stop offset="100%" stop-color="#8E0038"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Anten -->
+        <rect x="38" y="4" width="12" height="26" rx="6" fill="url(#robotGradientStrong)"/>
+        <rect x="78" y="4" width="12" height="26" rx="6" fill="url(#robotGradientStrong)"/>
+
+        <!-- Head -->
+        <rect x="16" y="24" width="96" height="80" rx="40" fill="url(#robotGradientStrong)"/>
+
+        <!-- Face -->
+        <rect x="32" y="40" width="64" height="48" rx="24" fill="#FFF1EB"/>
+
+        <!-- Eyes -->
+        <circle cx="52" cy="64" r="6" fill="#2B2B2B"/>
+        <circle cx="76" cy="64" r="6" fill="#2B2B2B"/>
+
+        <!-- Ears -->
+        <circle cx="16" cy="64" r="12" fill="url(#robotGradientStrong)"/>
+        <circle cx="112" cy="64" r="12" fill="url(#robotGradientStrong)"/>
       </svg>
-      <span class="chatbot-text">Chatbot</span>
     </button>
 
     <!-- Chatbot Window -->
