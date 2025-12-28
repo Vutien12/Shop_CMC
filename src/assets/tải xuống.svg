@@ -1,0 +1,29 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Gradient -->
+  <defs>
+    <linearGradient id="robotGradientWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8A65"></stop>
+      <stop offset="100%" stop-color="#FFB6C1"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Anten -->
+  <rect x="38" y="4" width="12" height="26" rx="6" fill="url(#robotGradientWarm)"></rect>
+  <rect x="78" y="4" width="12" height="26" rx="6" fill="url(#robotGradientWarm)"></rect>
+
+  <!-- Head -->
+  <rect x="16" y="24" width="96" height="80" rx="40" fill="url(#robotGradientWarm)"></rect>
+
+  <!-- Face -->
+  <rect x="32" y="40" width="64" height="48" rx="24" fill="#FFF7F3"></rect>
+
+  <!-- Eyes -->
+  <circle cx="52" cy="64" r="6" fill="#4A3F3F"></circle>
+  <circle cx="76" cy="64" r="6" fill="#4A3F3F"></circle>
+
+  <!-- Ears -->
+  <circle cx="16" cy="64" r="12" fill="url(#robotGradientWarm)"></circle>
+  <circle cx="112" cy="64" r="12" fill="url(#robotGradientWarm)"></circle>
+
+</svg>
