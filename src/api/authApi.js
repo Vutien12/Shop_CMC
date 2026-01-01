@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance.js';
+import api, { stopAutoRefresh } from '@/api/axiosInstance.js';
 import router from '@/Router/routes.js';
 
 // Login thường
@@ -18,13 +18,11 @@ export const logout = async () => {
   } catch {
     console.warn('Logout API failed, proceeding with client cleanup');
   } finally {
-    // XÓA TOÀN BỘ dữ liệu người dùng và session
-    localStorage.clear(); // Xóa tất cả localStorage
-    sessionStorage.clear(); // Xóa tất cả sessionStorage
-
-    // Chuyển hướng về login và reload để reset state
+    stopAutoRefresh();
+    localStorage.clear();
+    sessionStorage.clear();
     await router.push('/login');
-    window.location.reload(); // Force reload để clear tất cả state
+    window.location.reload();
   }
 };
 

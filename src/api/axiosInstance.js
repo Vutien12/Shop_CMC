@@ -64,9 +64,9 @@ function isTokenExpiringSoon(token) {
   return timeLeft < 60000
 }
 
-// Flag để tránh gọi refresh token nhiều lần đồng thời
 let isRefreshing = false
 let failedQueue = []
+let refreshTokenTimer = null
 
 function processQueue(error, token = null) {
   failedQueue.forEach((prom) => {
@@ -79,13 +79,82 @@ function processQueue(error, token = null) {
   failedQueue = []
 }
 
+// Hàm refresh token tự động
+async function autoRefreshToken() {
+  const token = localStorage.getItem('accessToken')
+  if (!token) {
+    stopAutoRefresh()
+    return
+  }
+
+  const decoded = decodeToken(token)
+  if (!decoded || !decoded.exp) {
+    stopAutoRefresh()
+    return
+  }
+
+  const expiryTime = decoded.exp * 1000
+  const currentTime = Date.now()
+  const timeLeft = expiryTime - currentTime
+
+  // Nếu token còn hơn 2 phút, refresh ngay
+  // Nếu không, chờ đến khi còn 2 phút
+  const refreshDelay = timeLeft > 120000 ? timeLeft - 120000 : 0
+
+  if (refreshTokenTimer) {
+    clearTimeout(refreshTokenTimer)
+  }
+
+  refreshTokenTimer = setTimeout(async () => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh`,
+        {},
+        { withCredentials: true }
+      )
+      const { accessToken } = res.data.result
+      localStorage.setItem('accessToken', accessToken)
+      console.log('✅ Auto-refreshed token')
+
+      // Schedule next refresh
+      autoRefreshToken()
+    } catch (err) {
+      console.error('❌ Auto-refresh failed:', err)
+      stopAutoRefresh()
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('isLoggedIn')
+      localStorage.removeItem('userEmail')
+      await router.push('/login')
+    }
+  }, refreshDelay)
+}
+
+// Dừng auto refresh
+function stopAutoRefresh() {
+  if (refreshTokenTimer) {
+    clearTimeout(refreshTokenTimer)
+    refreshTokenTimer = null
+  }
+}
+
+// Bắt đầu auto refresh khi có token
+function startAutoRefresh() {
+  const token = localStorage.getItem('accessToken')
+  if (token) {
+    autoRefreshToken()
+  }
+}
+
+export { startAutoRefresh, stopAutoRefresh }
+
 function normalizeUrlForMatch(url) {
   if (!url) return ''
   try {
     if (url.startsWith('http')) {
       return new URL(url).pathname
     }
-  } catch {
+  } catch (e) {
+    // Ignore invalid URLs
   }
   return url
 }
@@ -154,10 +223,8 @@ api.interceptors.request.use(async (config) => {
   const isProtectedUser = isProtectedUserEndpoint(url, method)
   const needsAuth = isOptional || isNonPublic || isProtectedUser
 
-  // Nếu endpoint cần auth và token sắp hết hạn, refresh trước
   if (token && needsAuth && isTokenExpiringSoon(token)) {
     if (isRefreshing) {
-      // Nếu đang refresh, đợi kết quả
       try {
         token = await new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -177,8 +244,11 @@ api.interceptors.request.use(async (config) => {
         localStorage.setItem('accessToken', accessToken)
         token = accessToken
         processQueue(null, accessToken)
+
+        await autoRefreshToken()
       } catch (err) {
         processQueue(err, null)
+        stopAutoRefresh()
         localStorage.removeItem('accessToken')
         localStorage.removeItem('isLoggedIn')
         localStorage.removeItem('userEmail')
@@ -190,7 +260,6 @@ api.interceptors.request.use(async (config) => {
     }
   }
 
-  // Attach token vào header nếu cần
   if (token && needsAuth) {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
@@ -214,6 +283,7 @@ api.interceptors.response.use(
 
       // Nếu không có token, redirect về login
       if (!token) {
+        stopAutoRefresh()
         localStorage.removeItem('isLoggedIn')
         localStorage.removeItem('userEmail')
         await router.push('/login')
@@ -248,10 +318,14 @@ api.interceptors.response.use(
         localStorage.setItem('accessToken', accessToken)
         processQueue(null, accessToken)
 
+        // Start auto-refresh after successful refresh
+        autoRefreshToken()
+
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
+        stopAutoRefresh()
         localStorage.removeItem('accessToken')
         localStorage.removeItem('isLoggedIn')
         localStorage.removeItem('userEmail')

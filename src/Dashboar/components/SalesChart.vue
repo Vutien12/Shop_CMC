@@ -86,7 +86,7 @@
         const width = Math.max(300, container.offsetWidth);
         const height = props.height;
         // add a bit more top padding so tall bars and rounded corners are not clipped
-        const padding = { top: 30, right: 20, bottom: 40, left: 60 };
+        const padding = { top: 30, right: 20, bottom: 40, left: 85 };
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
         const labels = props.data.labels || [];
@@ -121,7 +121,7 @@
         ctx.scale(devicePixelRatio, devicePixelRatio);
 
     // mirror padding and topMax calculation from getChartMetrics to avoid mismatch
-    const padding = { top: 30, right: 20, bottom: 40, left: 60 };
+    const padding = { top: 30, right: 20, bottom: 40, left: 85 };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
 

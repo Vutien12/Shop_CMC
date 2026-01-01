@@ -126,6 +126,7 @@ import Loading from '@/User/components/Loading/Loading.vue';
 import jwt_decode from "jwt-decode";
 import { OAuthProviders } from '@/Config/oauth.js'
 import { login } from '@/api/authApi.js'
+import { startAutoRefresh } from '@/api/axiosInstance.js'
 import BottomNavBar from '@/User/components/BottomNavBar.vue'
 
 defineOptions({
@@ -184,6 +185,9 @@ const handleLogin = async () => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('userEmail', email.value);
       localStorage.setItem('isLoggedIn', 'true');
+
+      // Bắt đầu auto-refresh token
+      startAutoRefresh();
 
       // Giải mã token để lấy role
       const decoded = jwt_decode(accessToken);

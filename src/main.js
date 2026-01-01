@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia';
 import App from './App.vue'
 import router from '@/Router/routes.js'
+import { startAutoRefresh } from '@/api/axiosInstance.js'
 import ToastContainer from '@/User/components/Toast/ToastContainer.vue';
 import autoAnimate from '@formkit/auto-animate';
 
@@ -84,5 +85,9 @@ app.config.globalProperties.$notification = {
 };
 
 app.mount('#app')
+
+if (localStorage.getItem('accessToken')) {
+  startAutoRefresh()
+}
 
 export { notificationRef };

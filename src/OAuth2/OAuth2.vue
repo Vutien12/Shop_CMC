@@ -9,7 +9,7 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import api from '@/api/axiosInstance';
+import api, { startAutoRefresh } from '@/api/axiosInstance';
 import jwt_decode from 'jwt-decode';
 import Loading from '@/User/components/Loading/Loading.vue';
 
@@ -45,6 +45,9 @@ onMounted(async () => {
       // Lưu accessToken
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('isLoggedIn', 'true');
+
+      // Bắt đầu auto-refresh token
+      startAutoRefresh();
 
       const decoded = jwt_decode(accessToken);
       const role = decoded.scope || 'ROLE_USER';
