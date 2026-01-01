@@ -75,7 +75,7 @@
 
 <script>
 import { logout as logoutApi } from '@/api/authApi'
-import { getUserInfoFromToken, isTokenExpired } from '@/Utils/jwtUtils'
+import { getUserInfoFromToken } from '@/Utils/jwtUtils'
 
 export default {
   name: 'Topnav',
@@ -153,14 +153,6 @@ export default {
     async loadUserData() {
       this.isLoading = true;
       try {
-        // Check if token is expired
-        if (isTokenExpired()) {
-          console.warn('Token expired, logging out...');
-          await this.logout();
-          return;
-        }
-
-        // Get user info directly from JWT payload
         const userInfo = getUserInfoFromToken();
         console.log('User Info from JWT:', userInfo);
 
@@ -269,25 +261,22 @@ export default {
       // Check if token exists and if it changed
       const currentToken = localStorage.getItem('accessToken');
 
-      // If token was removed
+      // If token was removed (user logged out manually)
       if (!currentToken && this.lastToken) {
         this.currentUser = null;
         this.lastToken = null;
         return;
       }
 
-      // If token changed (new login)
+      // If token changed (new login or refresh)
       if (currentToken && currentToken !== this.lastToken) {
         this.lastToken = currentToken;
         this.loadUserData();
         return;
       }
 
-      // If token exists, verify it's not expired
-      if (currentToken && isTokenExpired()) {
-        this.currentUser = null;
-        this.lastToken = null;
-      }
+      // Don't check isTokenExpired() here - let axios interceptor handle refresh
+      // Access token expiration is normal and will be auto-refreshed
     },
 
     startTokenMonitoring() {
