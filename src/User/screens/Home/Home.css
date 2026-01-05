@@ -544,7 +544,7 @@ html, body {
 }
 
 .leather-bags:hover {
-  box-shadow: 
+  box-shadow:
     0 0 30px rgba(25, 84, 123, 0.6),
     0 0 60px rgba(25, 84, 123, 0.4),
     inset 0 0 40px rgba(255, 255, 255, 0.1);
@@ -553,12 +553,12 @@ html, body {
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 
+    box-shadow:
       0 0 30px rgba(25, 84, 123, 0.6),
       0 0 60px rgba(25, 84, 123, 0.4);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 40px rgba(25, 84, 123, 0.8),
       0 0 80px rgba(25, 84, 123, 0.6);
   }
@@ -625,7 +625,7 @@ html, body {
 
 .leather-bags:hover .leather-bag-icon {
   transform: rotateY(10deg) rotateX(5deg) scale(1.1);
-  box-shadow: 
+  box-shadow:
     0 10px 30px rgba(139, 69, 19, 0.6),
     0 0 40px rgba(160, 82, 45, 0.4);
   animation: bag-float 2s ease-in-out infinite;
@@ -693,7 +693,7 @@ html, body {
 }
 
 .iphone-card:hover {
-  box-shadow: 
+  box-shadow:
     0 0 30px rgba(118, 75, 162, 0.8),
     0 0 60px rgba(102, 126, 234, 0.6),
     0 20px 40px rgba(0, 0, 0, 0.3),
@@ -703,12 +703,12 @@ html, body {
 
 @keyframes neon-pulse {
   0%, 100% {
-    box-shadow: 
+    box-shadow:
       0 0 30px rgba(118, 75, 162, 0.8),
       0 0 60px rgba(102, 126, 234, 0.6);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 50px rgba(118, 75, 162, 1),
       0 0 100px rgba(102, 126, 234, 0.8);
   }
@@ -716,7 +716,7 @@ html, body {
 
 .iphone-card .card-title {
   color: white;
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(255, 255, 255, 0.8),
     0 0 20px rgba(118, 75, 162, 0.8),
     0 0 30px rgba(102, 126, 234, 0.6);
@@ -725,12 +725,12 @@ html, body {
 
 @keyframes neon-text {
   0%, 100% {
-    text-shadow: 
+    text-shadow:
       0 0 10px rgba(255, 255, 255, 0.8),
       0 0 20px rgba(118, 75, 162, 0.8);
   }
   50% {
-    text-shadow: 
+    text-shadow:
       0 0 20px rgba(255, 255, 255, 1),
       0 0 30px rgba(118, 75, 162, 1),
       0 0 40px rgba(102, 126, 234, 0.8);
@@ -763,7 +763,7 @@ html, body {
   background: white;
   color: #764ba2;
   transform: scale(1.1);
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(255, 255, 255, 1),
     0 0 40px rgba(118, 75, 162, 0.6);
 }
@@ -794,7 +794,7 @@ html, body {
     #f093fb 100%
   );
   border-color: #764ba2;
-  box-shadow: 
+  box-shadow:
     0 15px 40px rgba(118, 75, 162, 0.6),
     0 0 60px rgba(102, 126, 234, 0.4),
     inset 0 0 30px rgba(255, 255, 255, 0.2);
@@ -1226,7 +1226,7 @@ html, body {
 .banner-item:hover {
   transform: translateY(-8px) scale(1.02) rotateX(2deg);
   z-index: 2;
-  box-shadow: 
+  box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.2),
     0 0 40px rgba(0, 123, 255, 0.2),
     inset 0 0 60px rgba(255, 255, 255, 0.1);
@@ -3740,7 +3740,7 @@ html, body {
   width: 100%;
   aspect-ratio: 4/5;
   overflow: hidden;
-  background: #f8f9fa;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;

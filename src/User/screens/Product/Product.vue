@@ -22,7 +22,7 @@
         <div v-if="isLoadingCategories" class="loading-categories">Loading categories...</div>
         <ul v-else class="category-list">
           <li v-for="cat in categories" :key="cat.id" class="category-item">
-            <div class="category-header" @click="toggleCategoryOpen(cat.id)">
+            <div class="category-header">
               <svg
                 class="chevron-icon"
                 :class="{ 'chevron-open': cat.isOpen }"
@@ -30,10 +30,17 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
+                @click.stop="toggleCategoryOpen(cat.id)"
               >
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
-              {{ cat.name }}
+              <span
+                class="category-name"
+                :class="{ active: selectedCategories.includes(cat.id) }"
+                @click="toggleCategory(cat.id)"
+              >
+                {{ cat.name }}
+              </span>
             </div>
             <ul v-if="cat.subcategories?.length && cat.isOpen" class="subcategory-list">
               <li
@@ -54,7 +61,17 @@
 
         <!-- Filters Section -->
         <div class="filters-section">
-          <h3 class="section-title">Filters</h3>
+          <div class="filters-header">
+            <h3 class="section-title">Filters</h3>
+            <button
+              v-if="hasActiveFilters"
+              @click="resetAllFilters"
+              class="reset-filters-btn"
+              :title="`Clear all filters`"
+            >
+              Clear
+            </button>
+          </div>
           <div class="price-filter">
             <h4 class="filter-title">Price</h4>
             <div class="price-inputs">
@@ -189,6 +206,16 @@
             </p>
           </div>
           <div class="header-controls">
+            <!-- Reset Filters Button -->
+            <button
+              v-if="hasActiveFilters"
+              @click="resetAllFilters"
+              class="reset-filters-btn-header"
+              :title="`Clear all filters`"
+            >
+              ✕ Clear
+            </button>
+
             <!-- View Toggle -->
             <div class="view-toggle">
               <button
@@ -310,7 +337,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import Header from '@/User/components/Header1/Header.vue';
@@ -354,6 +381,14 @@ const {
 const sidebarOpen = ref(false);
 const viewMode = ref('grid');
 
+// Check if any filters are active - dùng computed để Vue reactivity hoạt động đúng
+const hasActiveFilters = computed(() => {
+  return selectedCategories.value.length > 0 ||
+         keyword.value.trim() !== '' ||
+         priceRange.value[0] > 0 ||
+         priceRange.value[1] < 100000000;
+});
+
 const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 const formatPriceInput = (price) => new Intl.NumberFormat('vi-VN').format(price);
 
@@ -372,6 +407,26 @@ const goToProductDetail = (id) => {
 
 const clearSearch = () => {
   setKeyword('');
+  router.push({ path: '/product' });
+};
+
+const resetAllFilters = () => {
+  // Reset categories - clear trực tiếp
+  selectedCategories.value = [];
+
+  // Reset price range
+  setPriceRange(0, 100000000);
+
+  // Reset search keyword
+  setKeyword('');
+
+  // Reset to default sort
+  setSort('updatedAt,desc');
+
+  // Go to first page and fetch products
+  changePage(0);
+
+  // Navigate to clean product page
   router.push({ path: '/product' });
 };
 

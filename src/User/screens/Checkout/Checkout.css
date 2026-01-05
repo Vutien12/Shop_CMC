@@ -1314,8 +1314,15 @@
 
 
 /* Use Default Text (for phone and address links) - Enhanced */
+.phone-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .use-default-text {
-  margin-top: 12px;
+  margin-top: 0;
   padding: 10px 14px;
   background-color: #eff6ff;
   border-left: 3px solid #0068e1;

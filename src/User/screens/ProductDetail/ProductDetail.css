@@ -33,6 +33,12 @@
 .breadcrumb-item.active {
   color: #1f2937;
   font-weight: 500;
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .breadcrumb-separator {
@@ -78,20 +84,33 @@
   width: 100%;
   height: 600px;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  position: relative;
+  background: transparent;
 }
 
-/* Main image: no hover effects for flat design */
+.product-images {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* Main image: subtle hover zoom effect */
 .main-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: transparent;
+  transition: transform 0.3s ease;
+  padding: 20px;
+}
+
+.main-image:hover img {
+  transform: scale(1.05);
 }
 
 .thumbnail-container {
@@ -176,13 +195,13 @@
   width: 70px;
   height: 70px;
   border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.2s ease;
-  background: #ffffff;
+  transition: all 0.2s ease;
   padding: 0;
   flex-shrink: 0;
+  background: transparent;
 }
 
 .thumbnail:hover {
@@ -197,13 +216,12 @@
 .thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  background: transparent;
+  object-fit: contain;
+  padding: 4px;
 }
 
 /* Flat design - no hover effects */
 
-/* CẬP NHẬT: Loại bỏ padding ngang không cần thiết và chỉnh width */
 .product-info {
   padding: 0;
   width: 100%;
@@ -1238,6 +1256,10 @@
     font-size: 12px;
   }
 
+  .breadcrumb-item.active {
+    max-width: 180px;
+  }
+
   .product-content {
     /* Bố cục 1 cột trên mobile */
     grid-template-columns: 1fr;
@@ -1350,224 +1372,4 @@
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 }
-
-/* --- Tighten spacing: bring product image/content closer to main card --- */
-.product-content {
-  /* reduce outer padding so image sits closer to card edges */
-  padding: 1rem !important;
-  gap: 1rem !important; /* reduce space between image and info column */
-}
-
-.product-images {
-  gap: 0.5rem !important; /* smaller gap between main image and thumbnails */
-}
-
-.main-image {
-  /* reduce perceived margin inside the image area */
-  box-shadow: 0 6px 14px rgba(2,6,23,0.05) !important;
-  border-radius: 10px !important;
-}
-
-.thumbnail {
-  width: 64px !important;
-  height: 64px !important;
-  border-radius: 8px !important;
-}
-
-/* Slightly reduce spacing on very narrow screens as well */
-@media (max-width: 480px) {
-  .product-content { padding: 0.6rem !important; gap: 0.6rem !important; }
-  .main-image { height: 260px !important; }
-  .thumbnail { width: 52px !important; height: 52px !important; }
-}
-
-/* --- Modern UI overrides: variables, image transparency, hover-zoom, subtle shadows --- */
-:root {
-  --bg: #f7fbff;
-  --card-bg: #ffffff;
-  --muted: #6b7280;
-  --accent: #0b63d6; /* primary accent */
-  --easing: cubic-bezier(0.2, 0.9, 0.3, 1);
-  --soft-shadow: 0 10px 30px rgba(2,6,23,0.06);
-}
-
-/* Page background and smooth text rendering */
-.product-detail-container {
-  background-color: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Make product card visually lift from the page */
-.product-content {
-  /* Removed all styling - flat design, no hover effects */
-}
-
-/* Global image resets to remove white boxes and borders */
-.product-content img,
-.product-description-html img,
-.related-item img,
-.thumbnail img,
-.main-image img {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  display: block;
-}
-
-/* Main image container: preserve aspect, center, subtle zoom on hover */
-.main-image {
-  overflow: hidden;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0));
-  transition: box-shadow 280ms var(--easing), transform 280ms var(--easing);
-}
-
-.main-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transform-origin: center center;
-  transition: transform 420ms var(--easing), filter 320ms ease, opacity 220ms ease;
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-/* Slight, natural zoom on hover */
-.main-image:hover img,
-.main-image:focus-within img {
-  transform: scale(1.08);
-  filter: saturate(1.04) contrast(1.03);
-}
-
-/* Thumbnails: modern card look, hover lift and active ring */
-.thumbnail {
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-  padding: 3px;
-  background: transparent;
-  box-shadow: 0 4px 14px rgba(2,6,23,0.04);
-  transition: transform 200ms var(--easing), box-shadow 200ms var(--easing), opacity 180ms ease;
-}
-
-.thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.thumbnail:hover {
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 0 10px 26px rgba(2,6,23,0.08);
-}
-
-.thumbnail:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(11,99,214,0.12), 0 8px 20px rgba(2,6,23,0.06);
-}
-
-.thumbnail.active {
-  box-shadow: 0 12px 28px rgba(11,99,214,0.10), 0 0 0 4px rgba(11,99,214,0.06);
-  transform: translateY(-2px) scale(1.02);
-}
-
-/* Related product cards: remove harsh borders, use soft cards */
-.related-item {
-  border: none;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  box-shadow: 0 8px 22px rgba(2,6,23,0.04);
-  transition: transform 220ms var(--easing), box-shadow 220ms var(--easing);
-}
-
-.related-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 48px rgba(2,6,23,0.06);
-}
-
-/* Price emphasis and responsive tweaks */
-.price {
-  color: var(--accent);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
-}
-
-/* Accessibility: keyboard focus states for actionable elements */
-.btn-wishlist:focus-visible,
-.btn-compare:focus-visible,
-.add-to-cart-btn:focus-visible,
-.thumbnail:focus-visible,
-.tab-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(11,99,214,0.12);
-}
-
-/* Small screens: slightly reduce zoom to avoid overflow */
-@media (max-width: 768px) {
-  .main-image:hover img {
-    transform: scale(1.04);
-  }
-
-  .main-image {
-    height: auto;
-  }
-}
-
-/* Ensure product description images blend with card design */
-.product-description-html img {
-  box-shadow: 0 8px 24px rgba(2,6,23,0.04);
-}
-
-/* --- Visual: remove shadows and make images appear smaller in white space --- */
-.main-image,
-.thumbnail,
-.product-description-html img,
-.related-item img {
-  box-shadow: none !important; /* remove any image/card shadows */
-}
-
-/* Give the main image container internal padding so product appears centered in white space */
-.main-image {
-  padding: 1.6rem !important; /* space between image and card */
-  background: transparent !important;
-  border-radius: 10px !important;
-}
-
-/* Reduce the visible size of the product inside the main image so it 'floats' */
-.main-image img {
-  max-width: 84% !important; /* make image smaller within container */
-  max-height: 84% !important;
-  width: auto !important;
-  height: auto !important;
-  object-fit: contain !important;
-  transform: none !important; /* avoid large zoom that breaks the floating feel */
-  transition: transform 260ms var(--easing), opacity 180ms ease !important;
-}
-
-/* Keep a tiny hover scale for subtle interaction but without shadow/frame */
-.main-image:hover img,
-.main-image:focus-within img {
-  transform: scale(1.02) !important;
-}
-
-/* Make thumbnails less prominent */
-.thumbnail {
-  box-shadow: none !important;
-  background: transparent !important;
-  width: 56px !important;
-  height: 56px !important;
-  padding: 2px !important;
-  border-radius: 8px !important;
-}
-
-.thumbnail img {
-  border-radius: 6px !important;
-}
-
-@media (max-width: 768px) {
-  .main-image { padding: 1rem !important; }
-  .main-image img { max-width: 92% !important; max-height: 92% !important; }
-  .thumbnail { width: 48px !important; height: 48px !important; }
-}
-
 

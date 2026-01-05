@@ -164,13 +164,18 @@ const handleImageError = (e) => {
   box-sizing: border-box;
   width: 100%;
   min-height: 340px; /* ensures uniform card height in a grid/row */
-  background: #fff;
+  background: transparent;
   border-radius: 8px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   padding: 8px;
   position: relative; /* required for absolute-positioned badges */
+  border: 1px solid #e5e7eb;
+}
+
+.product-card:hover {
+  border-color: #0068e1;
 }
 
 .product-badges {
@@ -189,14 +194,19 @@ const handleImageError = (e) => {
   justify-content: center;
   overflow: hidden;
   border-radius: 6px;
-  background: #f8f9fa;
+  background: transparent;
 }
 
 .product-card .product-image1 img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image1 img {
+  transform: scale(1.08);
 }
 
 .product-info {

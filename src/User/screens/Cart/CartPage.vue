@@ -2,8 +2,9 @@
   <div class="cart-page-wrapper">
     <Header />
     <Loading v-if="isLoading" />
+    <ConfirmDialog />
 
-    <div v-else class="cart-page">
+    <div v-if="!isLoading" class="cart-page">
       <div class="container">
         <!-- Checkout Steps -->
         <div class="checkout-steps">
@@ -12,7 +13,6 @@
           <div class="step"><span class="step-number">3</span><span class="step-title">Order Complete</span></div>
         </div>
 
-        <!-- Empty State -->
         <div v-if="cartItems.length === 0" class="empty-cart-state">
           <div class="empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
           <h2>Your cart is empty</h2>
@@ -20,7 +20,6 @@
           <router-link to="/product" class="btn-continue">Continue Shopping</router-link>
         </div>
 
-        <!-- Cart Content -->
         <div v-else class="cart-content">
           <!-- Cart Table -->
           <div class="cart-table-section">
@@ -169,15 +168,18 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@/User/stores/cartStore.js';
 import { useToast } from '@/User/components/Toast/useToast.js';
+import { useConfirm } from '@/User/components/ConfirmDialog/useConfirm.js';
 import Header from '@/User/components/Header1/Header.vue';
 import Footer from '@/User/components/Footer/Footer.vue';
 import Loading from '@/User/components/Loading/Loading.vue';
 import Chatbot from '@/User/components/Chatbot/Chatbot.vue'
 import BottomNavBar from '@/User/components/BottomNavBar.vue'
+import ConfirmDialog from '@/User/components/ConfirmDialog/ConfirmDialog.vue'
 
 const router = useRouter();
 const cartStore = useCartStore();
 const { add: toast } = useToast();
+const { confirm } = useConfirm();
 
 const isLoading = ref(true);
 const cartItems = ref([]);
@@ -227,7 +229,8 @@ const proceed = () => {
 };
 
 const handleClear = async () => {
-  if (!confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) return;
+  const confirmed = await confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?', { title: 'Xác nhận xóa giỏ hàng' });
+  if (!confirmed) return;
   try {
     await cartStore.clear();
     toast('Giỏ hàng đã được xóa!', 'success');
@@ -252,7 +255,8 @@ const changeQuantity = async (item, delta) => {
 
 const removeItem = async (item) => {
   if (isItemRemoving(item.id)) return;
-  if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+  const confirmed = await confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?', { title: 'Xác nhận xóa' });
+  if (!confirmed) return;
   removingItemId.value = item.id;
   try {
     await cartStore.removeItem(item.id);

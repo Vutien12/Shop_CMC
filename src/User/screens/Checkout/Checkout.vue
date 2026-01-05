@@ -40,12 +40,23 @@
                   required
                   class="form-input"
                   id="phoneNumber"
+                  pattern="[0-9]*"
+                  inputmode="numeric"
+                  @keypress="onlyNumbers"
                 />
               </div>
-              <div v-if="userProfile?.phone" class="use-default-text">
-                <a href="#" @click.prevent="useDefaultPhone" class="use-default-link">
-                  Use default phone number: {{ userProfile.phone }}
-                </a>
+              <!-- Show available phone options -->
+              <div class="phone-options">
+                <div v-if="isValidPhone(userProfile?.defaultAddress?.phone)" class="use-default-text">
+                  <a href="#" @click.prevent="useAddressPhone" class="use-default-link">
+                    📍 Use address phone: {{ userProfile.defaultAddress.phone }}
+                  </a>
+                </div>
+                <div v-if="isValidPhone(userProfile?.phone) && userProfile.phone !== userProfile?.defaultAddress?.phone" class="use-default-text">
+                  <a href="#" @click.prevent="useAccountPhone" class="use-default-link">
+                    👤 Use account phone: {{ userProfile.phone }}
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -133,8 +144,8 @@
                     />
                   </div>
                   <div class="form-group">
-                    <label for="billingZip">Postcode / ZIP <span class="required">*</span></label>
-                    <input type="text" v-model="manualBilling.zip" required class="form-input" placeholder="100000" id="billingZip" />
+                    <label for="billingZip">Postcode / ZIP</label>
+                    <input type="text" v-model="manualBilling.zip" class="form-input" placeholder="100000" id="billingZip" />
                   </div>
                 </div>
 
@@ -252,8 +263,8 @@
                       />
                     </div>
                     <div class="form-group">
-                      <label for="shippingZip">Postcode / ZIP <span class="required">*</span></label>
-                      <input type="text" v-model="manualShipping.zip" required class="form-input" placeholder="100000" id="shippingZip" />
+                      <label for="shippingZip">Postcode / ZIP</label>
+                      <input type="text" v-model="manualShipping.zip" class="form-input" placeholder="100000" id="shippingZip" />
                     </div>
                   </div>
 
@@ -301,16 +312,29 @@
                   </span>
                 </label>
 
-                <label class="payment-option" :class="{ selected: selectedPayment === 'bank_transfer' }">
+                <label class="payment-option" :class="{ selected: selectedPayment === 'vietqr' }">
                   <input
                     type="radio"
                     name="payment"
-                    value="bank_transfer"
+                    value="vietqr"
                     v-model="selectedPayment"
                   />
                   <span class="payment-info">
-                    <strong>🏦 Bank transfer</strong>
-                    <span class="payment-desc">Direct transfer to bank account.</span>
+                    <strong>🏦 VietQR - Bank Transfer</strong>
+                    <span class="payment-desc">Scan QR code to transfer (Manual confirmation, no webhook).</span>
+                  </span>
+                </label>
+
+                <label class="payment-option" :class="{ selected: selectedPayment === 'payos' }">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="payos"
+                    v-model="selectedPayment"
+                  />
+                  <span class="payment-info">
+                    <strong>📱 PayOS - Bank Transfer</strong>
+                    <span class="payment-desc">Scan QR code via PayOS (Auto confirmation with webhook).</span>
                   </span>
                 </label>
 
@@ -324,19 +348,6 @@
                   <span class="payment-info">
                     <strong>💳 CARD</strong>
                     <span class="payment-desc">Payment via card.</span>
-                  </span>
-                </label>
-
-                <label class="payment-option" :class="{ selected: selectedPayment === 'payos_qr' }">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="payos_qr"
-                    v-model="selectedPayment"
-                  />
-                  <span class="payment-info">
-                    <strong>📱 PayOS QR</strong>
-                    <span class="payment-desc">Scan QR code to pay via PayOS.</span>
                   </span>
                 </label>
               </div>
@@ -914,12 +925,12 @@ const calculateShippingFee = async () => {
       })
 
       if (totalFee > 0) {
-        toast(`Phí vận chuyển: ${formatPrice(totalFee)}`, 'success')
+        toast(`Shipping fee: ${formatPrice(totalFee)}`, 'success')
       }
     }
   } catch (error) {
     console.error('[Checkout] Failed to calculate shipping fee:', error)
-    toast('Không thể tính phí vận chuyển', 'error')
+    toast('Shipping fees cannot be calculated.', 'error')
     shippingCost.value = 0
   } finally {
     isCalculatingFee.value = false
@@ -928,11 +939,35 @@ const calculateShippingFee = async () => {
 
 
 // Methods
-const useDefaultPhone = () => {
-  if (userProfile.value?.phone) {
-    phoneNumber.value = userProfile.value.phone
+const isValidPhone = (phone) => {
+  return phone && phone !== 'Not updated' && phone.trim() !== ''
+}
+
+const onlyNumbers = (event) => {
+  const char = String.fromCharCode(event.keyCode || event.which)
+  if (!/^[0-9]+$/.test(char)) {
+    event.preventDefault()
   }
 }
+
+const useAddressPhone = () => {
+  const phone = userProfile.value?.defaultAddress?.phone
+  if (isValidPhone(phone)) {
+    phoneNumber.value = phone
+  } else {
+    toast('Address phone number is not available. Please enter manually.', 'warning')
+  }
+}
+
+const useAccountPhone = () => {
+  const phone = userProfile.value?.phone
+  if (isValidPhone(phone)) {
+    phoneNumber.value = phone
+  } else {
+    toast('Account phone number is not available. Please enter manually.', 'warning')
+  }
+}
+
 
 const useDefaultBillingAddress = async () => {
   if (userProfile.value?.defaultAddress) {
@@ -1309,7 +1344,6 @@ const loadData = async () => {
     }
     console.log('[Checkout] User profile loaded:', userProfile.value)
     console.log('[Checkout] Default address:', userProfile.value?.defaultAddress)
-
     // Load cart
     const cart = await cartStore.fetchCart(true)
     if (!cart || !cart.cartItems || cart.cartItems.length === 0) {

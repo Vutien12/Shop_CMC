@@ -1,5 +1,7 @@
 <template>
   <div class="cart-wrapper">
+    <ConfirmDialog />
+
     <!-- Overlay -->
     <div v-if="isOpen" class="cart-overlay" @click="closeCart"></div>
 
@@ -113,9 +115,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCartStore } from '@/User/stores/cartStore.js'
 import { useToast } from '@/User/components/Toast/useToast.js'
+import { useConfirm } from '@/User/components/ConfirmDialog/useConfirm.js'
+import ConfirmDialog from '@/User/components/ConfirmDialog/ConfirmDialog.vue'
 
 const cartStore = useCartStore()
 const { add: toast } = useToast()
+const { confirm } = useConfirm()
 
 const isOpen = ref(false)
 
@@ -133,7 +138,7 @@ const openCart = async () => {
     await cartStore.fetchCart(true)
   } catch (err) {
     console.error('[Cart] Failed to fetch cart:', err)
-    toast('Không thể tải giỏ hàng', 'error')
+    toast('Unable to load shopping cart', 'error')
   }
 }
 
@@ -175,9 +180,9 @@ const isVariantChanged = (item) => {
 const increase = async (cartItemId, qty) => {
   try {
     await cartStore.updateQuantity(cartItemId, qty + 1)
-    toast('Đã tăng số lượng', 'success')
+    toast('Quantity increased', 'success')
   } catch {
-    toast('Không thể cập nhật số lượng', 'error')
+    toast('Unable to update quantity', 'error')
   }
 }
 
@@ -185,35 +190,37 @@ const decrease = async (cartItemId, qty) => {
   if (qty <= 1) return
   try {
     await cartStore.updateQuantity(cartItemId, qty - 1)
-    toast('Đã giảm số lượng', 'success')
+    toast('Quantity has been reduced', 'success')
   } catch {
-    toast('Không thể cập nhật số lượng', 'error')
+    toast('Unable to update quantity', 'error')
   }
 }
 
 // Xóa item
 const remove = async (cartItemId) => {
-  if (!confirm('Xóa sản phẩm này?')) return
+  const confirmed = await confirm('Are you sure you want to remove this product from your shopping cart?', { title: 'Confirm deletion' })
+  if (!confirmed) return
   try {
     await cartStore.removeItem(cartItemId)
-    toast('Đã xóa sản phẩm', 'success')
+    toast('Product removed', 'success')
   } catch {
-    toast('Không thể xóa', 'error')
+    toast('Cannot be deleted', 'error')
   }
 }
 
 // Xóa toàn bộ
 const handleClear = async () => {
-  if (!confirm('Xóa toàn bộ giỏ hàng?')) return
+  const confirmed = await confirm('Are you sure you want to clear your entire shopping cart?', { title: 'Xác nhận xóa giỏ hàng' })
+  if (!confirmed) return
   try {
     await cartStore.clear()
-    toast('Giỏ hàng đã được xóa!', 'success')
+    toast('The shopping cart has been cleared.!', 'success')
   } catch {
-    toast('Không thể xóa giỏ hàng', 'error')
+    toast('Unable to delete shopping cart', 'error')
   }
 }
 
-// Chỉ cần lắng nghe openCart
+
 onMounted(() => {
   window.addEventListener('openCart', openCart)
 })

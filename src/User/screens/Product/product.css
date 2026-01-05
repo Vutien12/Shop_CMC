@@ -122,13 +122,25 @@
 .category-header {
   display: flex;
   align-items: center;
-  cursor: pointer;
   padding: 6px 0;
-  transition: color 0.2s;
 }
 
-.category-header:hover {
+.category-header:hover .category-name {
   color: #2563eb;
+}
+
+.category-name {
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.category-name.active {
+  color: #0875ff;
+  font-weight: 600;
+  background-color: #eff6ff;
 }
 
 .chevron-icon {
@@ -136,6 +148,12 @@
   height: 16px;
   margin-right: 6px;
   transition: transform 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chevron-icon:hover {
+  color: #2563eb;
 }
 
 .chevron-icon.chevron-open {
@@ -185,6 +203,19 @@
 
 .subcategory-item:hover .subcategory-icon {
   color: #2563eb;
+}
+
+.subcategory-item.active {
+  color: #0875ff;
+  font-weight: 600;
+  background-color: #eff6ff;
+  border-radius: 4px;
+  padding-left: 18px;
+  padding-right: 6px;
+}
+
+.subcategory-item.active .subcategory-icon {
+  color: #0875ff;
 }
 
 
@@ -289,13 +320,72 @@
   margin-top: 32px;
 }
 
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   color: #111827;
   padding-bottom: 10px;
   border-bottom: 2px solid #0875ff;
+  flex: 1;
+  margin-right: 12px;
+}
+
+/* Reset Filters Button (Sidebar) - Minimal Design */
+.reset-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  color: #6b7280;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  text-decoration: underline;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.reset-filters-btn:hover {
+  color: #0875ff;
+}
+
+/* Reset Filters Button (Header - Desktop) - Minimal Design */
+.reset-filters-btn-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.reset-filters-btn-header:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+/* Remove filter count badge - not needed anymore */
+.filter-count-badge {
+  display: none;
 }
 
 .price-filter {
@@ -463,6 +553,10 @@
 
 @media (max-width: 991px) {
   .header-controls {
+    display: none;
+  }
+
+  .reset-filters-btn-header {
     display: none;
   }
 }
@@ -739,7 +833,7 @@
 .product-image {
   width: 100%;
   height: 192px;
-  background-color: white;
+  background-color: transparent;
   border-radius: 4px;
   margin-bottom: 16px;
   overflow: hidden;
