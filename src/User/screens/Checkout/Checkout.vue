@@ -1181,9 +1181,9 @@ const processPayment = async () => {
     // Map payment method
     const paymentMethodMap = {
       'cod': 'COD',
-      'bank_transfer': 'VIETQR',
+      'vietqr': 'VIETQR',
       'card': 'DEBIT_CARD',
-      'payos_qr': 'PAYOS_QR'
+      'payos': 'PAYOS_QR'
     }
 
     // Map shipping method
@@ -1230,7 +1230,7 @@ const processPayment = async () => {
       shippingMethod: shippingMethodMap[selectedShipping.value] || 'Standard',
       shippingCost: shippingCost.value,
       couponId: couponId.value,
-      paymentMethod: paymentMethodMap[selectedPayment.value] || 'CASH',
+      paymentMethod: paymentMethodMap[selectedPayment.value] || 'COD',
       currency: 'VND',
       currencyRate: 1,
       locale: 'vi_VN',
