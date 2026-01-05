@@ -19,19 +19,30 @@ export const useWishlistStore = defineStore('wishlist', () => {
     const cacheKey = `${page}-${size}`;
     const now = Date.now();
 
-    // Cache kiểm tra
+    console.log('[fetchWishlist] Called - page:', page, 'size:', size, 'force:', force, 'isLoading:', isLoading.value);
+
+    // Guard: Don't fetch if currently loading (prevent duplicate calls)
+    if (isLoading.value && !force) {
+      console.log('[fetchWishlist] Skipped - already loading');
+      return { items: items.value, totalPages: totalPages.value };
+    }
+
+    // Cache check
     if (
       !force &&
       loadedPages.value.has(cacheKey) &&
       lastFetched.value?.key === cacheKey &&
       now - lastFetched.value.ts < CACHE_DURATION
     ) {
+      console.log('[fetchWishlist] Using cache');
       return { items: items.value, totalPages: totalPages.value };
     }
 
+    console.log('[fetchWishlist] Proceeding with API call...');
     isLoading.value = true;
     try {
       const res = await searchWishlist(page, size);
+      console.log('[fetchWishlist] API response received');
       // res is now {code: 200, message: 'Success', result: {...}}
       const data = res.result;
 

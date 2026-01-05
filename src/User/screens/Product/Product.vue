@@ -160,8 +160,16 @@
         <!-- Latest Products -->
         <div class="latest-products">
           <h3 class="section-title">Latest Products</h3>
-          <div v-if="latestProducts.length" class="latest-products-list">
-            <div v-for="p in latestProducts" :key="p.id" class="latest-product-item">
+
+          <!-- Loading State -->
+          <div v-if="isLoadingLatest" class="loading-latest">
+            <div class="loading-spinner-small"></div>
+            <p>Loading...</p>
+          </div>
+
+          <!-- Products List -->
+          <div v-else-if="displayedLatestProducts.length" class="latest-products-list">
+            <div v-for="p in displayedLatestProducts" :key="p.id" class="latest-product-item" @click="goToProductDetail(p.id)">
               <div class="latest-product-image">
                 <img :src="p.image" :alt="p.name" />
               </div>
@@ -177,7 +185,28 @@
                 </div>
               </div>
             </div>
+
+            <!-- Show More/Less Button -->
+            <button
+              v-if="hasMoreLatestProducts"
+              @click.stop="toggleLatestProductsExpanded"
+              class="show-more-btn"
+            >
+              {{ latestProductsExpanded ? 'Show Less' : `Show More (${latestProducts.length - 5})` }}
+              <svg
+                class="chevron-icon"
+                :class="{ 'chevron-open': latestProductsExpanded }"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
+
+          <!-- Empty State -->
           <div v-else class="no-latest-products">
             No new products at the moment.
           </div>
@@ -352,9 +381,13 @@ const store = useProductStore();
 const {
   products,
   latestProducts,
+  displayedLatestProducts,
+  latestProductsExpanded,
+  hasMoreLatestProducts,
   categories,
   isLoading,
   isLoadingCategories,
+  isLoadingLatest,
   totalPages,
   currentPage,
   pageSize,
@@ -369,6 +402,8 @@ const {
 const {
   fetchCategories,
   fetchProducts,
+  fetchLatestProducts,
+  toggleLatestProductsExpanded,
   setSort,
   setPageSize,
   setPriceRange,
@@ -381,7 +416,7 @@ const {
 const sidebarOpen = ref(false);
 const viewMode = ref('grid');
 
-// Check if any filters are active - dùng computed để Vue reactivity hoạt động đúng
+// Check if any filters are active
 const hasActiveFilters = computed(() => {
   return selectedCategories.value.length > 0 ||
          keyword.value.trim() !== '' ||
@@ -467,6 +502,7 @@ watch(() => route.query.keyword, async (searchKeyword) => {
 onMounted(async () => {
   console.log('Store instance:', store);
   await fetchCategories();
+  await fetchLatestProducts();
 
   // Check if there's a keyword query parameter
   const searchKeyword = route.query.keyword;

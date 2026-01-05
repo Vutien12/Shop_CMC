@@ -197,8 +197,8 @@
 import Cart from '../Cart/Cart.vue';
 import { useCartStore } from '@/User/stores/cartStore.js';
 import { useWishlistStore } from '@/User/stores/wishlistStore.js';
+import { useProductStore } from '@/User/stores/productStore.js';
 import { useAuth } from '@/User/components/useAuth.js';
-import { getCategories } from '@/api/categoryApi.js';
 
 export default {
   name: 'HeaderMain',
@@ -208,8 +208,9 @@ export default {
   setup() {
     const cartStore = useCartStore();
     const wishlistStore = useWishlistStore();
+    const productStore = useProductStore();
     const { handleLogout } = useAuth();
-    return { cartStore, wishlistStore, authLogout: handleLogout };
+    return { cartStore, wishlistStore, productStore, authLogout: handleLogout };
   },
   data() {
     return {
@@ -217,8 +218,7 @@ export default {
       isLoggedIn: false,
       wishlistCount: 0,
       searchQuery: '',
-      activeTab: 'menu',
-      categories: []
+      activeTab: 'menu'
     };
   },
   computed: {
@@ -227,6 +227,10 @@ export default {
     },
     wishlistCountComputed() {
       return this.wishlistStore?.items?.length || 0;
+    },
+    // Get categories from productStore instead of local state
+    categories() {
+      return this.productStore?.categories || [];
     }
   },
   watch: {
@@ -239,13 +243,8 @@ export default {
   },
   mounted() {
     this.checkLoginStatus();
-    if (this.isLoggedIn) {
-      this.refreshWishlistCount(true);
-    } else {
-      this.wishlistCount = 0;
-    }
     this.updateCartCount(true);
-    this.fetchCategories();
+    // Remove fetchCategories call - productStore will handle it
     window.addEventListener('storage', this.checkLoginStatus);
     window.addEventListener('loginStatusChanged', this.checkLoginStatus);
     window.addEventListener('wishlistChanged', this.refreshWishlistCount);
@@ -295,15 +294,7 @@ export default {
     closeMenu() {
       this.menuOpen = false;
     },
-    async fetchCategories() {
-      try {
-        const response = await getCategories();
-        this.categories = response.data || [];
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        this.categories = [];
-      }
-    },
+    // Method removed - use productStore.categories computed property instead
     async refreshWishlistCount(force = false) {
       if (!this.isLoggedIn) {
         this.wishlistCount = 0;

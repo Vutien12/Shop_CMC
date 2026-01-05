@@ -1,5 +1,5 @@
 // src/User/stores/productStore.js
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { searchProducts } from '@/api/productApi';
 import { getCategories } from '@/api/categoryApi';
@@ -9,9 +9,11 @@ export const useProductStore = defineStore('productStore', () => {
   // === STATE ===
   const products = ref([]);
   const latestProducts = ref([]);
+  const latestProductsExpanded = ref(false); // Track if showing all latest products
   const categories = ref([]);
   const isLoading = ref(false);
   const isLoadingCategories = ref(false);
+  const isLoadingLatest = ref(false);
   const totalPages = ref(0);
   const totalElements = ref(0);
   const currentPage = ref(0);
@@ -26,17 +28,74 @@ export const useProductStore = defineStore('productStore', () => {
   // === COMPUTED ===
   const hasNextPage = computed(() => currentPage.value < totalPages.value - 1);
   const hasPrevPage = computed(() => currentPage.value > 0);
+  const displayedLatestProducts = computed(() => {
+    return latestProductsExpanded.value ? latestProducts.value : latestProducts.value.slice(0, 5);
+  });
+  const hasMoreLatestProducts = computed(() => latestProducts.value.length > 5);
 
-  // === HÀM CẬP NHẬT LATEST ===
-  const updateLatestProducts = () => {
-    const newOnes = products.value.filter(p => p.badge === 'New').map(p => ({...p,
-        price: p.price, maxPrice: p.maxPrice })).slice(0, 4);
-    latestProducts.value.splice(0, latestProducts.value.length, ...newOnes);
+  // === FETCH LATEST PRODUCTS (INDEPENDENT) ===
+  const fetchLatestProducts = async () => {
+    isLoadingLatest.value = true;
+    try {
+      const now = new Date();
+      const formatLocalDateTime = (date) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      };
+
+      const params = {
+        page: 0,
+        size: 20,
+        sort: 'updatedAt,desc',
+        newFrom: '2000-01-01T00:00:00',
+        newTo: formatLocalDateTime(now) // Format without Z
+      };
+
+      const res = await searchProducts(params);
+      if (res.code !== 200) throw new Error(res.message);
+
+      const data = res.result;
+      const today = new Date().toISOString().split('T')[0];
+
+      // Map and filter products that are currently "new"
+      const mapped = data.content
+        .filter(p => {
+          // Double check: product must have newFrom/newTo and today must be within range
+          if (!p.newFrom || !p.newTo) return false;
+          return today >= p.newFrom && today <= p.newTo;
+        })
+        .map(p => {
+          const bestSellingPrice = getBestSellingPrice(p);
+          return {
+            id: p.id,
+            name: p.name,
+            price: bestSellingPrice || p.minPrice,
+            maxPrice: p.maxPrice,
+            image: p.thumbnail?.url || p.thumbnail || '/placeholder.png'
+          };
+        });
+
+      latestProducts.value = mapped;
+      console.log('Latest products loaded:', latestProducts.value.length);
+    } catch (error) {
+      console.error('Error loading latest products:', error);
+      latestProducts.value = [];
+    } finally {
+      isLoadingLatest.value = false;
+    }
+  };
+
+  const toggleLatestProductsExpanded = () => {
+    latestProductsExpanded.value = !latestProductsExpanded.value;
   };
 
   // === ACTIONS ===
   const fetchCategories = async () => {
-    if (categories.value.length > 0) return;
+    if (categories.value.length > 0 || isLoadingCategories.value) {
+      console.log('[fetchCategories] Skipped - already loaded or loading');
+      return;
+    }
+
     isLoadingCategories.value = true;
     try {
       const res = await getCategories();
@@ -112,8 +171,6 @@ export const useProductStore = defineStore('productStore', () => {
       products.value.splice(0, products.value.length, ...mapped);
       console.log('Products assigned:', products.value.length);
 
-      updateLatestProducts();
-
       totalPages.value = data.totalPages || 0;
       totalElements.value = data.totalElements;
       currentPage.value = page;
@@ -126,10 +183,6 @@ export const useProductStore = defineStore('productStore', () => {
     }
   };
 
-  // === TỰ ĐỘNG CẬP NHẬT KHI LỌC ===
-  watch([priceRange, selectedCategories, sortBy, currentPage, keyword], () => {
-    updateLatestProducts();
-  }, { deep: true });
 
   // === CÁC HÀM ===
   const setSort = (sort) => {
@@ -317,12 +370,15 @@ export const useProductStore = defineStore('productStore', () => {
   };
 
   return {
-    products, latestProducts, categories,
-    isLoading, isLoadingCategories,
+    products, latestProducts, displayedLatestProducts,
+    latestProductsExpanded, hasMoreLatestProducts,
+    categories,
+    isLoading, isLoadingCategories, isLoadingLatest,
     totalPages, totalElements, currentPage,
     pageSize, sortBy, priceRange, selectedCategories, keyword,
     hasNextPage, hasPrevPage,
-    fetchCategories, fetchProducts,
+    fetchCategories, fetchProducts, fetchLatestProducts,
+    toggleLatestProductsExpanded,
     setSort, setPageSize, setPriceRange, setKeyword,
     toggleCategory, toggleCategoryOpen, changePage, toggleLike
   };
