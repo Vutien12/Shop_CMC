@@ -216,7 +216,7 @@
                 <!-- Postal Code & Country -->
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Postal Code / ZIP <span class="required">*</span></label>
+                    <label>Postal Code / ZIP</label>
                     <div class="input-wrapper">
                       <input v-model="form.postalCode" class="form-input" :class="{ 'error': errors.postalCode }" placeholder="100000" />
                       <div v-if="errors.postalCode" class="error-tooltip">{{ errors.postalCode }}</div>
@@ -497,7 +497,7 @@ const loadAddress = async (id) => {
     }
   } catch (e) {
     console.error(e);
-    toast('Không tải được địa chỉ.', 'error');
+    toast('Address failed to load.', 'error');
     await router.push('/addresses');
   } finally {
     formLoading.value = false;
@@ -532,18 +532,18 @@ const saveAddress = async () => {
     if (isEditMode.value) {
       await updateAddress(route.params.id, payload);
       addressStore.updateAddressLocally(+route.params.id, { id: +route.params.id, ...payload });
-      toast('Cập nhật địa chỉ thành công!', 'success');
+      toast('Address updated successfully.!', 'success');
     } else {
       const res = await createAddress(payload);
       addressStore.addAddressLocally(res.data.result);
-      toast('Thêm địa chỉ thành công!', 'success');
+      toast('Address added successfully.!', 'success');
     }
 
     // Chuyển hướng ngay
     await router.push('/addresses');
   } catch (err) {
     if (!handleValidationError(err)) {
-      toast(err.response?.data?.message || 'Lưu địa chỉ thất bại.', 'error');
+      toast(err.response?.data?.message || 'Address saving failed.', 'error');
     }
   } finally {
     saving.value = false;

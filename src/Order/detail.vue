@@ -358,8 +358,8 @@ const validStatusTransitions = {
   'PROCESSING': ['SHIPPED', 'CANCELLED'],
   'SHIPPED': ['COMPLETED', 'CANCELLED'],
   'COMPLETED': ['REFUNDED'],
-  'CANCELLED': [], // Cannot transition from cancelled
-  'REFUNDED': [] // Cannot transition from refunded
+  'CANCELLED': [],
+  'REFUNDED': []
 };
 
 // All possible statuses
@@ -392,7 +392,7 @@ const order = reactive({
   status: '',
   shippingMethod: '',
   paymentMethod: '',
-  currency: 'USD',
+  currency: 'VND',
   currencyRate: '1.0000',
   trackingReference: '',
   customer: {
@@ -532,7 +532,7 @@ const loadOrderData = async () => {
 
   } catch (error) {
     console.error('Failed to load order:', error);
-    notification.error('Lỗi!', 'Không thể tải thông tin đơn hàng');
+    notification.error('Error!', 'Unable to load order information');
     await router.push({ name: 'admin.orders.index' });
   } finally {
     isLoading.value = false;
@@ -581,7 +581,7 @@ const save = async () => {
     isSaving.value = true;
     statusError.value = ''; // Clear previous error
     await updateOrderStatus(order.id, order.status);
-    notification.success('Thành công!', 'Đã cập nhật đơn hàng thành công');
+    notification.success('Success!', 'Order has been successfully updated.');
     await loadOrderData(); // Reload to get latest data
   } catch (error) {
     console.error('Failed to save order:', error);
@@ -620,26 +620,26 @@ const printOrder = () => {
   // Get the order content
   const orderContent = document.querySelector('.order-wrapper');
   if (!orderContent) return;
-  
+
   const clonedContent = orderContent.cloneNode(true);
-  
+
   // Remove unwanted elements
   clonedContent.querySelectorAll('.order-information-buttons, .page-form-footer, button, .status-error-message, .status-note, .print-hide-order-status').forEach(el => el.remove());
-  
+
   // Show invoice header
   const invoiceHeader = clonedContent.querySelector('.invoice-header');
   if (invoiceHeader) {
     invoiceHeader.style.display = 'flex';
   }
-  
+
   // Create print window
   const printWindow = window.open('', '_blank');
-  
+
   const styles = `
     @page { margin: 15mm; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 12px; color: #333; padding: 20px; background: white; line-height: 1.5; }
-    
+
     .invoice-header { display: flex !important; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #ddd; }
     .company-name { font-size: 28px; font-weight: bold; color: #333; margin: 0; }
     .company-tagline { display: none; }
@@ -647,22 +647,22 @@ const printOrder = () => {
     .invoice-info-item { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 5px; font-size: 13px; }
     .info-label { color: #666; }
     .info-value { font-weight: bold; color: #333; }
-    
+
     .order-information-wrapper,
     .address-information-wrapper,
     .items-ordered-wrapper,
     .order-totals-wrapper {
       margin-bottom: 25px;
     }
-    
+
     .section-title { display: none; }
     h5 { font-size: 14px; font-weight: bold; margin: 20px 0 12px 0; color: #333; }
     h5 i { display: none; }
-    
+
     .row { display: flex; flex-wrap: wrap; margin: 0 -12px; }
     .col-md-6 { flex: 0 0 50%; max-width: 50%; padding: 0 12px; }
     .col-md-12 { flex: 0 0 100%; max-width: 100%; padding: 0 12px; }
-    
+
     .table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; }
     .table td, .table th { padding: 10px 8px; text-align: left; vertical-align: top; color: #333; }
     .table td { border-bottom: none; }
@@ -670,18 +670,18 @@ const printOrder = () => {
     .table tbody tr:last-child td { border-bottom: none; }
     .table td:first-child { font-weight: 500; color: #666; width: 40%; }
     .table a { color: #333; text-decoration: none; font-weight: 500; }
-    
+
     .address-content { line-height: 1.7; color: #555; padding: 0; background: transparent; border-left: none; margin-top: 8px; border-radius: 0; }
-    
+
     .item-variations { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
     .variation-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #e3f2fd; color: #1976d2; border-radius: 4px; font-size: 11px; }
     .variation-label { font-weight: 600; }
     .variation-image { width: 22px; height: 22px; object-fit: cover; border-radius: 3px; border: 1px solid #ddd; }
     .variation-color { display: inline-block; width: 18px; height: 18px; border-radius: 3px; border: 1px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    
+
     .item-options { margin-top: 6px; }
     .item-options small { display: block; color: #999; margin-top: 3px; font-size: 11px; }
-    
+
     .order-totals-wrapper { margin-top: 25px; }
     .order-totals-container { display: flex; justify-content: flex-end; }
     .order-totals { width: 350px; }
@@ -691,11 +691,11 @@ const printOrder = () => {
     .order-totals .table td:last-child { text-align: right; font-weight: normal; color: #333; width: 40%; }
     .order-totals .table tr:last-child { border-top: 1px solid #d0d0d0; }
     .order-totals .table tr:last-child td { font-size: 15px; font-weight: bold; padding-top: 14px; color: #333; }
-    
+
     .text-right { text-align: right; }
     .text-muted { color: #999; font-size: 11px; }
     code { background: #f5f5f5; padding: 3px 6px; border-radius: 3px; font-size: 11px; font-family: 'Courier New', monospace; color: #333; }
-    
+
     @media print {
       body { padding: 0; }
       .order-information-wrapper,
@@ -721,7 +721,7 @@ const printOrder = () => {
   printWindow.document.write('</' + 'script>');
   printWindow.document.write('</body>');
   printWindow.document.write('</html>');
-  
+
   printWindow.document.close();
 };
 
@@ -730,10 +730,10 @@ const sendEmail = async () => {
   try {
     isSaving.value = true;
     await sendOrderEmail(order.id);
-    notification.success('Thành công!', 'Đã gửi email cho khách hàng');
+    notification.success('Success!', 'Email has been sent to the customer.');
   } catch (error) {
     console.error('Failed to send email:', error);
-    notification.error('Lỗi!', 'Không thể gửi email');
+    notification.error('Error!', 'Unable to send email');
   } finally {
     isSaving.value = false;
   }

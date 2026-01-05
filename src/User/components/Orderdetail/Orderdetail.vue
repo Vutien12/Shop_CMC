@@ -358,8 +358,7 @@ const submittingCase = ref(false)
 const canCancelOrder = computed(() => {
   if (!orderDetail.value) return false
   const status = orderDetail.value.status
-  // Can cancel if not COMPLETED, CANCELLED, or REFUNDED
-  return ['PENDING', 'PENDING_PAYMENT', 'PAID', 'PROCESSING', 'SHIPPED'].includes(status)
+  return ['PENDING', 'PENDING_PAYMENT'].includes(status)
 })
 
 const canRefundOrder = computed(() => {
@@ -379,7 +378,6 @@ const canExchangeOrder = computed(() => {
 const showCaseButtons = computed(() => {
   if (!orderDetail.value) return false
   const status = orderDetail.value.status
-  // Don't show any buttons if CANCELLED or REFUNDED
   return !['CANCELLED', 'REFUNDED'].includes(status)
 })
 
@@ -429,14 +427,10 @@ const getStatusClass = (status) => {
 
 // Check if product can be reviewed
 const canReviewProduct = (product) => {
-  // Cannot review if order is not completed
   if (!canReview.value) return false
 
-  // Cannot review if product no longer exists (productId is null)
   if (!product.productId) return false
 
-  // For variant products, check if variant still exists
-  // If there are variations but variantId is null, product was deleted
   if (product.variations && product.variations.length > 0 && !product.productVariantId) {
     return false
   }
@@ -484,8 +478,8 @@ const closeReviewModal = () => {
 const handleReviewSubmit = (reviewData) => {
   console.log('Review submitted:', reviewData)
   const message = reviewData.isUpdate
-    ? 'Đánh giá đã được cập nhật!'
-    : 'Cảm ơn bạn đã đánh giá sản phẩm!';
+    ? 'The rating has been updated!'
+    : 'Thank you for reviewing the product!';
   toast(message, 'success')
   // Review creation/update is handled by Review component and API
 }
@@ -580,11 +574,11 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error fetching order detail:', error)
     if (error.response?.status === 401) {
-      toast('Phiên đăng nhập hết hạn.', 'error')
+      toast('Login session has expired..', 'error')
       await handleLogout()
     } else {
       console.error('Full error:', error.response?.data)
-      toast('Không thể tải thông tin đơn hàng.', 'error')
+      toast('Unable to load order information.', 'error')
     }
   } finally {
     setTimeout(() => {
