@@ -93,21 +93,22 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #f9fafb;
+  background: #ffffff; /* White background for clean look */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); /* Subtle shadow for depth */
 }
 
 /* Main image: constrained size with contain fit */
 .main-image img {
-  max-width: 95%;
-  max-height: 95%;
+  max-width: 90%;
+  max-height: 90%;
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Smooth bounce effect */
 }
 
 .main-image:hover img {
-  transform: scale(1.02);
+  transform: scale(1.08); /* More noticeable zoom */
 }
 
 .thumbnail-container {
@@ -117,21 +118,38 @@
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  overflow: visible; /* Ensure buttons are visible */
 }
 
 .thumbnail-images {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
+  overflow-y: visible; /* Prevent vertical clipping */
   scroll-behavior: smooth;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin; /* Show thin scrollbar for visibility */
+  scrollbar-color: #0068e1 #f1f1f1; /* Blue scrollbar */
   flex: 1;
-  padding: 2px 0;
+  padding: 4px 0; /* Increased padding to prevent shadow clipping */
 }
 
+/* Webkit scrollbar styling */
 .thumbnail-images::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.thumbnail-images::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.thumbnail-images::-webkit-scrollbar-thumb {
+  background: #0068e1;
+  border-radius: 2px;
+}
+
+.thumbnail-images::-webkit-scrollbar-thumb:hover {
+  background: #0056c1;
 }
 
 .thumbnail-nav {
@@ -175,27 +193,51 @@
 
 .thumbnail-more {
   min-width: 70px;
+  width: 70px;
   height: 70px;
-  border: 1px solid #e5e7eb;
+  border: 2px dashed #0068e1; /* Dashed border to stand out */
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f9fafb;
-  color: #6b7280;
+  background: #ffffff; /* White background */
+  color: #0068e1;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700; /* Bolder text */
   flex-shrink: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   padding: 0;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0, 104, 225, 0.15); /* Subtle blue shadow */
+}
+
+.thumbnail-more::after {
+  content: '→'; /* Arrow hint */
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  font-size: 10px;
+  opacity: 0.6;
 }
 
 .thumbnail-more:hover {
   background: #0068e1;
   color: white;
   border-color: #0068e1;
-  transform: scale(1.05);
+  border-style: solid; /* Solid border on hover */
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 104, 225, 0.3); /* Stronger shadow */
+}
+
+.thumbnail-more:hover::after {
+  opacity: 1;
+  animation: slideRight 0.6s ease infinite;
+}
+
+@keyframes slideRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
 }
 
 .thumbnail {
@@ -208,7 +250,7 @@
   transition: all 0.2s ease;
   padding: 4px;
   flex-shrink: 0;
-  background: #f9fafb;
+  background: #ffffff; /* White background */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,12 +258,14 @@
 
 .thumbnail:hover {
   border-color: #0068e1;
+  box-shadow: 0 2px 8px rgba(0, 104, 225, 0.15); /* Blue glow on hover */
 }
 
 .thumbnail.active {
   border-color: #0068e1;
   border-width: 2px;
   padding: 3px;
+  box-shadow: 0 2px 8px rgba(0, 104, 225, 0.2);
 }
 
 .thumbnail img {
@@ -230,6 +274,11 @@
   width: auto;
   height: auto;
   object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.thumbnail:hover img {
+  transform: scale(1.1); /* Zoom effect on hover */
 }
 
 /* Flat design - no hover effects */
@@ -1382,9 +1431,16 @@
 
   .thumbnail-more {
     min-width: 60px;
+    width: 60px;
     height: 60px;
     border-radius: 6px;
     font-size: 12px;
+  }
+
+  .thumbnail-more::after {
+    font-size: 8px;
+    right: 3px;
+    bottom: 3px;
   }
 
   .related-grid {
