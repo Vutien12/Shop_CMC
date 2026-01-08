@@ -41,15 +41,6 @@
               >
                 <img :src="image" :alt="`Thumbnail ${i + 1}`" />
               </button>
-              <button
-                v-if="displayImages.length > 5"
-                class="thumbnail-more"
-                type="button"
-                @click="scrollThumbnails('right')"
-                :title="`View ${displayImages.length - 5} more images`"
-              >
-                +{{ displayImages.length - 5 }}
-              </button>
             </div>
             <button
               v-if="canScrollRight"
@@ -594,6 +585,15 @@ export default {
           this.fetchProductDetail();
         }
       }
+    },
+    // Watch displayImages to update scroll buttons when images are loaded/changed
+    displayImages: {
+      handler() {
+        this.$nextTick(() => {
+          this.updateScrollButtons()
+        })
+      },
+      deep: true
     }
   },
   methods: {
@@ -1120,9 +1120,24 @@ export default {
 
     updateScrollButtons() {
       const container = this.$refs.thumbnailScroll
-      if (!container) return
+      if (!container) {
+        this.canScrollLeft = false
+        this.canScrollRight = false
+        return
+      }
+
+      // Force reflow to get accurate measurements
+      container.offsetWidth
+
+      const hasOverflow = container.scrollWidth > container.clientWidth
+
       this.canScrollLeft = container.scrollLeft > 0
-      this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 5)
+      this.canScrollRight = hasOverflow && (container.scrollLeft < (container.scrollWidth - container.clientWidth - 5))
+
+      // If has overflow but scrollLeft is 0, show right arrow
+      if (hasOverflow && container.scrollLeft === 0) {
+        this.canScrollRight = true
+      }
     },
     setActiveTab(tab) { this.activeTab = tab },
     toggleDescription() { this.showFullDescription = !this.showFullDescription },
