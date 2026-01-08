@@ -41,9 +41,15 @@
               >
                 <img :src="image" :alt="`Thumbnail ${i + 1}`" />
               </button>
-              <div v-if="displayImages.length > 5" class="thumbnail-more">
+              <button
+                v-if="displayImages.length > 5"
+                class="thumbnail-more"
+                type="button"
+                @click="scrollThumbnails('right')"
+                :title="`View ${displayImages.length - 5} more images`"
+              >
                 +{{ displayImages.length - 5 }}
-              </div>
+              </button>
             </div>
             <button
               v-if="canScrollRight"

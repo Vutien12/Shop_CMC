@@ -90,7 +90,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background: transparent;
+  background: #f9fafb;
 }
 
 .product-images {
@@ -100,13 +100,12 @@
 }
 
 
-/* Main image: subtle hover zoom effect */
+/* Main image: consistent size with cover fit */
 .main-image img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.3s ease;
-  padding: 20px;
 }
 
 .main-image:hover img {
@@ -180,15 +179,25 @@
   min-width: 70px;
   height: 70px;
   border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f9fafb;
   color: #6b7280;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.thumbnail-more:hover {
+  background: #0068e1;
+  color: white;
+  border-color: #0068e1;
+  transform: scale(1.05);
 }
 
 .thumbnail {
@@ -201,7 +210,7 @@
   transition: all 0.2s ease;
   padding: 0;
   flex-shrink: 0;
-  background: transparent;
+  background: #f9fafb;
 }
 
 .thumbnail:hover {
@@ -216,8 +225,7 @@
 .thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 4px;
+  object-fit: cover;
 }
 
 /* Flat design - no hover effects */
