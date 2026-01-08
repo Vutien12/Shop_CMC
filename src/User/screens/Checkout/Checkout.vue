@@ -1297,7 +1297,7 @@ const processPayment = async () => {
 
   } catch (error) {
     console.error('[Checkout] Order failed:', error)
-    toast(error.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại!', 'error')
+    toast(error.response?.data?.message || 'Unable to place an order. Please try again!', 'error')
   } finally {
     isProcessing.value = false
   }

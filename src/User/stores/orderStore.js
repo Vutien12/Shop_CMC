@@ -18,7 +18,7 @@ export const useOrderStore = defineStore('order', () => {
   const fetchOrders = async (page = pageDefault.value, size = pageSize.value, force = false) => {
     const cacheKey = `${page}-${size}`;
     const now = Date.now();
-    // Đã load, còn trong cache trả về ngay
+    // Already loaded, still in cache, return immediately
     if (
       !force &&
       loadedPages.value.has(cacheKey) &&
@@ -49,7 +49,7 @@ export const useOrderStore = defineStore('order', () => {
           : '-'
       }));
 
-      // Cập nhật state
+      // Update state
       orders.value = formatted;
       totalPages.value = data.totalPages;
       currentPage.value = page;

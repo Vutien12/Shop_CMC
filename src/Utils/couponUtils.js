@@ -16,7 +16,7 @@ export const validateCoupon = (coupon, subtotal) => {
   if (!coupon.isActive) {
     return {
       isValid: false,
-      error: 'Mã giảm giá không còn hoạt động'
+      error: 'Coupon is no longer active'
     };
   }
 
@@ -26,7 +26,7 @@ export const validateCoupon = (coupon, subtotal) => {
     if (now < startDate) {
       return {
         isValid: false,
-        error: 'Mã giảm giá chưa có hiệu lực'
+        error: 'Coupon is not yet effective'
       };
     }
   }
@@ -37,7 +37,7 @@ export const validateCoupon = (coupon, subtotal) => {
     if (now > endDate) {
       return {
         isValid: false,
-        error: 'Mã giảm giá đã hết hạn'
+        error: 'Coupon has expired'
       };
     }
   }
@@ -47,7 +47,7 @@ export const validateCoupon = (coupon, subtotal) => {
     if (coupon.usedCount >= coupon.usageLimit) {
       return {
         isValid: false,
-        error: 'Mã giảm giá đã hết lượt sử dụng'
+        error: 'Coupon usage limit reached'
       };
     }
   }
@@ -56,7 +56,7 @@ export const validateCoupon = (coupon, subtotal) => {
   if (coupon.minOrderAmount !== null && subtotal < coupon.minOrderAmount) {
     return {
       isValid: false,
-      error: `Đơn hàng tối thiểu ${formatPrice(coupon.minOrderAmount)} để áp dụng mã này`
+      error: `Minimum order of ${formatPrice(coupon.minOrderAmount)} required to apply this coupon`
     };
   }
 

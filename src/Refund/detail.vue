@@ -202,12 +202,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getOrderCaseById, updateOrderCase } from '@/api/orderCaseApi.js';
+import { useNotification } from '@/Admin/composables/useNotification';
 
 export default {
     name: 'AdminCaseDetail',
     setup() {
         const route = useRoute();
         const router = useRouter();
+        const { success, error, warning, confirm } = useNotification();
         const caseId = ref(route.params.id);
         const caseDetail = ref(null);
         const loading = ref(true);
@@ -310,9 +312,9 @@ export default {
                     needReturn.value = caseDetail.value.needReturn || false;
                     console.log('Loaded case detail:', caseDetail.value);
                 }
-            } catch (error) {
-                console.error('Error loading case detail:', error);
-                alert('Failed to load case detail');
+            } catch (err) {
+                console.error('Error loading case detail:', err);
+                error('Error', 'Failed to load case detail');
                 goBack();
             } finally {
                 loading.value = false;
@@ -332,14 +334,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Case approved successfully!');
+                    success('Success', 'Case approved successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to approve case');
+                    error('Error', response.message || 'Failed to approve case');
                 }
-            } catch (error) {
-                console.error('Error approving case:', error);
-                alert('Failed to approve case. Please try again.');
+            } catch (err) {
+                console.error('Error approving case:', err);
+                error('Error', 'Failed to approve case. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -348,7 +350,7 @@ export default {
         const handleReject = async () => {
             try {
                 if (!adminNote.value || adminNote.value.trim() === '') {
-                    alert('Please provide a reason for rejection in the admin note.');
+                    warning('Warning', 'Please provide a reason for rejection in the admin note.');
                     return;
                 }
 
@@ -361,14 +363,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Case rejected successfully!');
+                    success('Success', 'Case rejected successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to reject case');
+                    error('Error', response.message || 'Failed to reject case');
                 }
-            } catch (error) {
-                console.error('Error rejecting case:', error);
-                alert('Failed to reject case. Please try again.');
+            } catch (err) {
+                console.error('Error rejecting case:', err);
+                error('Error', 'Failed to reject case. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -377,7 +379,7 @@ export default {
         const handleRequestInfo = async () => {
             try {
                 if (!adminNote.value || adminNote.value.trim() === '') {
-                    alert('Please provide details about what information is needed.');
+                    warning('Warning', 'Please provide details about what information is needed.');
                     return;
                 }
 
@@ -390,14 +392,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Information request sent successfully!');
+                    success('Success', 'Information request sent successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to request information');
+                    error('Error', response.message || 'Failed to request information');
                 }
-            } catch (error) {
-                console.error('Error requesting information:', error);
-                alert('Failed to request information. Please try again.');
+            } catch (err) {
+                console.error('Error requesting information:', err);
+                error('Error', 'Failed to request information. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -414,14 +416,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Case completed successfully!');
+                    success('Success', 'Case completed successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to complete case');
+                    error('Error', response.message || 'Failed to complete case');
                 }
-            } catch (error) {
-                console.error('Error completing case:', error);
-                alert('Failed to complete case. Please try again.');
+            } catch (err) {
+                console.error('Error completing case:', err);
+                error('Error', 'Failed to complete case. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -438,14 +440,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Item marked as returned successfully!');
+                    success('Success', 'Item marked as returned successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to mark as returned');
+                    error('Error', response.message || 'Failed to mark as returned');
                 }
-            } catch (error) {
-                console.error('Error marking as returned:', error);
-                alert('Failed to mark as returned. Please try again.');
+            } catch (err) {
+                console.error('Error marking as returned:', err);
+                error('Error', 'Failed to mark as returned. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -463,14 +465,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Refund processed successfully!');
+                    success('Success', 'Refund processed successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to process refund');
+                    error('Error', response.message || 'Failed to process refund');
                 }
-            } catch (error) {
-                console.error('Error processing refund:', error);
-                alert('Failed to process refund. Please try again.');
+            } catch (err) {
+                console.error('Error processing refund:', err);
+                error('Error', 'Failed to process refund. Please try again.');
             } finally {
                 submitting.value = false;
             }
@@ -478,7 +480,8 @@ export default {
 
         const handleClosed = async () => {
             try {
-                if (!confirm('Are you sure you want to close this case? This action cannot be undone.')) {
+                const confirmed = await confirm('Confirm Close', 'Are you sure you want to close this case? This action cannot be undone.');
+                if (!confirmed) {
                     return;
                 }
 
@@ -491,14 +494,14 @@ export default {
                 const response = await updateOrderCase(caseId.value, updateData);
 
                 if (response.code === 1000 || response.code === 200) {
-                    alert('Case closed successfully!');
+                    success('Success', 'Case closed successfully!');
                     await loadCaseDetail();
                 } else {
-                    alert(response.message || 'Failed to close case');
+                    error('Error', response.message || 'Failed to close case');
                 }
-            } catch (error) {
-                console.error('Error closing case:', error);
-                alert('Failed to close case. Please try again.');
+            } catch (err) {
+                console.error('Error closing case:', err);
+                error('Error', 'Failed to close case. Please try again.');
             } finally {
                 submitting.value = false;
             }

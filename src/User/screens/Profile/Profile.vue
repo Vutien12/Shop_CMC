@@ -82,7 +82,7 @@
                 <div class="profile-form-card fade-in">
                   <h3 class="form-title">Personal Information</h3>
                   <form @submit.prevent="updateProfileHandler" class="profile-form">
-                    <!-- Form nội dung giữ nguyên -->
+                    <!-- Form content remains unchanged -->
                     <div class="form-row">
                       <div class="form-group">
                         <label>Email <span class="required">*</span></label>
@@ -138,7 +138,7 @@
                 <div class="profile-form-card mt-30 fade-in" :style="{ animationDelay: '0.1s' }">
                   <h3 class="form-title">Change Password</h3>
                   <form @submit.prevent="changePasswordHandler" class="profile-form">
-                    <!-- Giữ nguyên -->
+                    <!-- Keep as is -->
                     <div class="form-row">
                       <div class="form-group">
                         <label>Current Password <span class="required">*</span></label>
@@ -238,7 +238,7 @@ const { isVisible: profileVisible } = useLazyLoad(async () => {
   }
 }, profileTarget);
 
-// Focus lỗi
+// Focus error
 const focusFirstError = () => {
   nextTick(() => {
     const firstErrorKey = Object.keys(errors.value)[0];
@@ -249,7 +249,7 @@ const focusFirstError = () => {
   });
 };
 
-// Xử lý lỗi validate
+// Handle validation error
 const handleValidationError = (err) => {
   if (err.response?.data?.code === 400 && err.response?.data?.result) {
     errors.value = { ...err.response.data.result };
@@ -280,7 +280,7 @@ const updateProfileHandler = async () => {
 const changePasswordHandler = async () => {
   errors.value = {};
   if (passForm.value.newPassword !== passForm.value.confirmPassword) {
-    errors.value.confirmPassword = 'Mật khẩu không khớp!';
+    errors.value.confirmPassword = 'Passwords do not match!';
     focusFirstError();
     return;
   }
@@ -291,11 +291,11 @@ const changePasswordHandler = async () => {
       oldPassword: passForm.value.oldPassword,
       newPassword: passForm.value.newPassword
     });
-    toast('Đổi mật khẩu thành công!', 'success');
+    toast('Password changed successfully!', 'success');
     passForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' };
   } catch (err) {
     if (!handleValidationError(err, 'pass')) {
-      toast(err.response?.data?.message || 'Mật khẩu cũ sai.', 'error');
+      toast(err.response?.data?.message || 'Old password is incorrect.', 'error');
     }
   } finally {
     isSavingPass.value = false;
@@ -315,7 +315,7 @@ onMounted(async () => {
     infoForm.value = { ...cached };
     return;
   }
-  
+
   profileLoading.value = true;
   try {
     const data = await profileStore.fetchProfile();
@@ -333,7 +333,7 @@ onMounted(async () => {
 
 <style src="./Profile.css" scoped></style>
 <style scoped>
-/* Input wrapper để tooltip */
+/* Input wrapper for tooltip */
 .input-wrapper {
   position: relative;
 }
@@ -392,7 +392,7 @@ onMounted(async () => {
   border-bottom: 2px solid #0066FF;
 }
 
-/* Margin top cho form thứ 2 */
+/* Margin top for second form */
 .mt-30 {
   margin-top: 30px;
 }

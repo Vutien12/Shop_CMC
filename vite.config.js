@@ -19,11 +19,11 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/api/, '/elec/api'),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            // Thêm headers để backend tin tưởng request
+            // Add headers so backend trusts the request
             proxyReq.setHeader('Origin', 'http://localhost:8080');
             proxyReq.setHeader('Referer', 'http://localhost:8080/');
 
-            // Log để debug
+            // Log for debugging
             console.log('[Vite Proxy]', req.method, req.url, '→', proxyReq.path);
           });
         },

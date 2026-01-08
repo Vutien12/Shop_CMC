@@ -17,7 +17,7 @@ export const useCartStore = defineStore('cart', () => {
   const isLoaded = ref(false);
   const lastFetched = ref(null);
 
-  // 1. fetchCart: CẦN try/catch → fallback an toàn
+  // 1. fetchCart: NEEDS try/catch → safe fallback
   const fetchCart = async (force = false) => {
     const now = Date.now();
     if (!force && isLoaded.value && lastFetched.value && now - lastFetched.value < CACHE_DURATION) {
@@ -35,7 +35,7 @@ export const useCartStore = defineStore('cart', () => {
       }
       return cart.value;
     } catch (error) {
-      // Xử lý lỗi: reset cart, log
+      // Handle error: reset cart, log
       cart.value = null;
       isLoaded.value = false;
 
@@ -56,7 +56,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  // 2. addItem: CẦN try/catch → cập nhật state dù lỗi
+  // 2. addItem: NEEDS try/catch → update state even on error
   const addItem = async (payload) => {
     isLoading.value = true;
     try {
@@ -78,7 +78,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  // 3. updateQuantity: KHÔNG cần try/catch → component xử lý
+  // 3. updateQuantity: NO try/catch needed → component handles
   const updateQuantity = async (cartItemId, qty) => {
     if (qty < 1) return;
     const res = await updateCartItemQty(cartItemId, qty);

@@ -206,7 +206,7 @@ const loading = ref(false);
 const isFileManagerOpen = ref(false);
 const currentImageIndex = ref(null); // Track which value row is selecting image
 
-// Kiểm tra có phải edit mode không
+// Check if it's edit mode
 const isEditMode = computed(() => !!route.params.id);
 
 const nextUid = ref(1);
@@ -219,27 +219,27 @@ const form = reactive({
       id: null,
       isExisting: false,
       label: "",
-      color: "", // Ban đầu để rỗng để hiển thị checkerboard
+      color: "", // Initially empty to display checkerboard
       image: null,
       imagePreview: null, // URL for preview
       imageFileId: null, // File ID for API attachment
-      hasNewImage: false, // Flag để track ảnh mới được chọn
+      hasNewImage: false, // Flag to track newly selected image
     },
   ],
 });
 
 const colorInputs = ref([]);
 
-// Hàm tạo style cho button màu
+// Function to create style for color button
 const getColorButtonStyle = (color) => {
-  const isValidHex = color && /^#[0-9A-Fa-f]{6}$/.test(color); // Kiểm tra mã màu hex hợp lệ
+  const isValidHex = color && /^#[0-9A-Fa-f]{6}$/.test(color); // Check valid hex color code
   return {
     backgroundImage: isValidHex
       ? 'none'
       : 'repeating-linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%, #aaa), repeating-linear-gradient(45deg, #aaa 25%, #fff 25%, #fff 75%, #aaa 75%, #aaa)',
-    backgroundColor: isValidHex ? color : 'transparent', // Chỉ áp dụng màu nếu hex hợp lệ
-    backgroundSize: isValidHex ? 'auto' : '8px 8px, 8px 8px', // Chỉ cần khi có checkerboard
-    backgroundPosition: isValidHex ? 'auto' : '0 0, 4px 4px', // Chỉ cần khi có checkerboard
+    backgroundColor: isValidHex ? color : 'transparent', // Apply color only if valid hex
+    backgroundSize: isValidHex ? 'auto' : '8px 8px, 8px 8px', // Only needed for checkerboard
+    backgroundPosition: isValidHex ? 'auto' : '0 0, 4px 4px', // Only needed for checkerboard
     width: '28px',
     height: '28px',
     border: 'none',
@@ -251,21 +251,21 @@ const getColorButtonStyle = (color) => {
   };
 };
 
-// Mở color picker khi click button màu
+// Open color picker when clicking color button
 const openColorPicker = (index) => {
   if (colorInputs.value[index]) {
     colorInputs.value[index].click();
   }
 };
 
-// Thêm dòng mới
+// Add new row
 const addRow = () => {
   form.values.push({
     __uid: nextUid.value++,
     id: null,
     isExisting: false,
     label: "",
-    color: "", // Ban đầu để rỗng để hiển thị checkerboard
+    color: "", // Initially empty to display checkerboard
     image: null,
     imagePreview: null,
     imageFileId: null,
@@ -273,7 +273,7 @@ const addRow = () => {
   });
 };
 
-// Xóa dòng
+// Remove row
 const removeRow = (index) => {
   if (form.values.length > 1) {
     form.values.splice(index, 1);
@@ -336,7 +336,7 @@ const removeImage = async (index) => {
   }
 };
 
-// Load variation data nếu đang edit
+// Load variation data if in edit mode
 const loadVariation = async () => {
   if (!isEditMode.value) {
     loading.value = false;
@@ -381,19 +381,19 @@ const loadVariation = async () => {
         return value;
       });
     } else {
-      notification.error('Lỗi!', 'Không thể tải dữ liệu biến thể');
+      notification.error('Error!', 'Failed to load variation data');
       await router.push({ name: 'admin.variations.index' });
     }
   } catch (error) {
     console.error('Error loading variation:', error);
-    notification.error('Lỗi!', 'Không thể tải biến thể');
+    notification.error('Error!', 'Failed to load variation');
     await router.push({ name: 'admin.variations.index' });
   } finally {
     loading.value = false;
   }
 };
 
-// Lưu form - gọi API thực tế
+// Save form - call actual API
 const saveForm = async () => {
   // Validate form
   if (!form.name.trim()) {
@@ -414,41 +414,41 @@ const saveForm = async () => {
   formSubmitting.value = true;
 
   try {
-    // Chuẩn bị dữ liệu theo format API
+    // Prepare data according to API format
     const variationType = form.type.charAt(0).toUpperCase() + form.type.slice(1); // Text, Color, Image
 
-    // Xử lý variationValues dựa trên type
+    // Process variationValues based on type
     const variationValues = form.values
-      .filter(v => v.label.trim()) // Chỉ lấy values có label
+      .filter(v => v.label.trim()) // Only get values with label
       .map(v => {
         console.log('Processing value:', v); // Debug log
 
         const valueObj = {};
 
-        // Nếu đang edit và value có ID (là value cũ), gửi kèm ID
+        // If editing and value has ID (existing value), include ID
         if (isEditMode.value && Number.isInteger(v.id)) {
           valueObj.id = v.id;
         }
 
         valueObj.label = v.label;
 
-        // Xử lý field value dựa trên type và mode
+        // Process value field based on type and mode
         if (form.type === 'color') {
-          // Type Color: value là mã màu
+          // Type Color: value is color code
           valueObj.value = v.color || '#000000';
         } else if (form.type === 'image') {
-          // Giống Product: gửi lại URL ảnh nếu không đổi, null nếu xóa, placeholder nếu mới
+          // Like Product: send back image URL if unchanged, null if deleted, placeholder if new
           if (v.hasNewImage) {
-            // Có thay đổi
+            // Has changes
             if (v.imageFileId) {
-              // Có ảnh mới được chọn → gửi placeholder (sẽ được update bởi entity-files)
+              // New image selected → send placeholder (will be updated by entity-files)
               valueObj.value = v.label.toLowerCase().replace(/\s+/g, '_');
             } else {
-              // Ảnh bị xóa → gửi null hoặc empty string
+              // Image deleted → send null or empty string
               valueObj.value = null;
             }
           } else {
-            // Không có thay đổi → gửi lại URL ảnh hiện tại (giống Product)
+            // No changes → send back current image URL (like Product)
             valueObj.value = v.image || v.imagePreview || v.label.toLowerCase().replace(/\s+/g, '_');
           }
         } else {
@@ -467,22 +467,22 @@ const saveForm = async () => {
 
     console.log('Creating variation:', variationData);
 
-    // Gọi API create hoặc update tùy theo mode
+    // Call create or update API depending on mode
     const response = isEditMode.value
       ? await updateVariation(route.params.id, variationData)
       : await createVariation(variationData);
 
     if (response.code === 200) {
-      // Nếu type là Image, attach images cho variation values
+      // If type is Image, attach images for variation values
       if (form.type === 'image' && response.result?.variationValues) {
         const variationValues = response.result.variationValues;
 
-        // CHỈ attach images cho values có ảnh MỚI (hasNewImage = true VÀ có imageFileId)
+        // ONLY attach images for values with NEW images (hasNewImage = true AND has imageFileId)
         const attachPromises = form.values
           .filter(v => v.hasNewImage && v.imageFileId && v.label.trim())
           .map((v) => {
-            // Nếu đang edit và có ID cũ, dùng ID cũ
-            // Nếu không có ID cũ (value mới), tìm theo label
+            // If editing and has old ID, use old ID
+            // If no old ID (new value), find by label
             let targetId;
 
             if (isEditMode.value && v.id && typeof v.id === 'number') {
@@ -511,14 +511,14 @@ const saveForm = async () => {
         }
       }
 
-      notification.success('Thành công!', `Đã ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể thành công`);
+      notification.success('Success!', `Variation ${isEditMode.value ? 'updated' : 'created'} successfully`);
       await router.push({ name: 'admin.variations.index' });
     } else {
-      notification.error('Lỗi!', `Không thể ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể: ` + (response.message || 'Lỗi không xác định'));
+      notification.error('Error!', `Failed to ${isEditMode.value ? 'update' : 'create'} variation: ` + (response.message || 'Unknown error'));
     }
   } catch (error) {
     console.error(`Error ${isEditMode.value ? 'updating' : 'creating'} variation:`, error);
-    notification.error('Lỗi!', `Không thể ${isEditMode.value ? 'cập nhật' : 'tạo'} biến thể`);
+    notification.error('Error!', `Failed to ${isEditMode.value ? 'update' : 'create'} variation`);
   } finally {
     formSubmitting.value = false;
   }

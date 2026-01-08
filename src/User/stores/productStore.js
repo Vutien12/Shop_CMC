@@ -106,7 +106,7 @@ export const useProductStore = defineStore('productStore', () => {
       categories.value.splice(0, categories.value.length, ...tree);
       console.log('Categories loaded:', categories.value.length);
     } catch (error) {
-      console.error('Lỗi tải danh mục:', error);
+      console.error('Error loading categories:', error);
     } finally {
       isLoadingCategories.value = false;
     }
@@ -177,14 +177,14 @@ export const useProductStore = defineStore('productStore', () => {
       pageSize.value = size;
       lastFetched.value = { key: cacheKey, ts: now };
     } catch (error) {
-      console.error('Lỗi tải sản phẩm:', error);
+      console.error('Error loading products:', error);
     } finally {
       isLoading.value = false;
     }
   };
 
 
-  // === CÁC HÀM ===
+  // === FUNCTIONS ===
   const setSort = (sort) => {
     sortBy.value = sort;
     currentPage.value = 0;

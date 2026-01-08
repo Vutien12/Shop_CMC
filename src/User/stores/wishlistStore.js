@@ -47,7 +47,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
       const data = res.result;
 
       const formatted = data.content.map(item => {
-        // Tách tên sản phẩm và biến thể
+        // Split product name and variant
         let productName = item.productName;
         let variantDisplay = '';
 
@@ -63,8 +63,8 @@ export const useWishlistStore = defineStore('wishlist', () => {
           id: item.id,
           productId: item.productId,
           variantId: item.variantId,
-          productName,           // Tên chính
-          variantDisplay,        // Biến thể
+          productName,           // Main name
+          variantDisplay,        // Variant
           productSku: item.productSku,
           productPrice: item.productPrice,
           currency: item.currency || 'VND',

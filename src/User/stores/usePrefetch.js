@@ -29,7 +29,7 @@ export const usePrefetch = () => {
           store.fetchData?.();
         }
       }
-    }, 300); // chờ 300ms hover → mới tải
+    }, 300); // Wait 300ms hover → then load
   };
 
   const cancel = () => {

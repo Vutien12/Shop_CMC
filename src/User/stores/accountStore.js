@@ -8,7 +8,7 @@ export const useAccountStore = defineStore('account', () => {
   const userInfo = ref(null);
   const isLoading = ref(false);
   const lastFetched = ref(null);
-  const CACHE_DURATION = 2 * 60 * 1000; // 2 phút
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
   const loadedPages = ref(new Set());
 
   const fetchData = async (force = false, includeOrders = true) => {
@@ -69,7 +69,7 @@ export const useAccountStore = defineStore('account', () => {
         defaultAddress: user.defaultAddress || null
       };
 
-      // Cập nhật state + cache
+      // Update state + cache
       recentOrders.value = orders;
       userInfo.value = userData;
       lastFetched.value = { key: PAGE_KEY, ts: now };

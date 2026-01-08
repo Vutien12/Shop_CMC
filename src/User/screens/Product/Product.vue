@@ -18,7 +18,7 @@
           </button>
         </div>
 
-        <!-- Danh mục từ API -->
+        <!-- Categories from API -->
         <div v-if="isLoadingCategories" class="loading-categories">Loading categories...</div>
         <ul v-else class="category-list">
           <li v-for="cat in categories" :key="cat.id" class="category-item">
@@ -334,16 +334,16 @@
           </template>
         </div>
 
-        <!-- Phân trang -->
+        <!-- Pagination -->
         <div v-if="totalPages > 1" class="pagination">
-          <button @click="changePage(currentPage - 1)" :disabled="!hasPrevPage" class="page-btn">Trước</button>
+          <button @click="changePage(currentPage - 1)" :disabled="!hasPrevPage" class="page-btn">Previous</button>
           <button
             v-for="n in Math.min(5, totalPages)"
             :key="n"
             @click="changePage(n - 1)"
             :class="['page-btn', { active: currentPage === n - 1 }]"
           >{{ n }}</button>
-          <button @click="changePage(currentPage + 1)" :disabled="!hasNextPage" class="page-btn">Sau</button>
+          <button @click="changePage(currentPage + 1)" :disabled="!hasNextPage" class="page-btn">Next</button>
         </div>
       </div>
     </div>
@@ -446,7 +446,7 @@ const clearSearch = () => {
 };
 
 const resetAllFilters = () => {
-  // Reset categories - clear trực tiếp
+  // Reset categories - clear directly
   selectedCategories.value = [];
 
   // Reset price range
@@ -465,7 +465,7 @@ const resetAllFilters = () => {
   router.push({ path: '/product' });
 };
 
-// Watch viewMode để thay đổi class grid/list nếu cần
+// Watch viewMode to change grid/list class if needed
 watch(viewMode, (newMode) => {
   document.body.classList.toggle('list-view', newMode === 'list');
   document.body.classList.toggle('grid-view', newMode === 'grid');

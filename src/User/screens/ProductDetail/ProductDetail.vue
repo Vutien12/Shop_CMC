@@ -284,7 +284,7 @@
                   </template>
 
                   <!-- Error message -->
-                  <div v-if="optionErrors[option.id]" class="error-message">Vui lòng hoàn thành tuỳ chọn bắt buộc</div>
+                  <div v-if="optionErrors[option.id]" class="error-message">Please complete required option</div>
                 </div>
               </div>
             </div>
@@ -539,7 +539,7 @@ export default {
       descriptionMaxLength: 500,
       isSubmitting: false,
 
-      // Dữ liệu variation
+      // Variation data
       variations: [],
       options: [],
       selectedVariations: {},
@@ -576,11 +576,11 @@ export default {
     await this.fetchProductDetail()
   },
   watch: {
-    // Watch route params để reload product khi navigate từ related products
+    // Watch route params to reload product when navigating from related products
     '$route.params.id': {
       handler(newId, oldId) {
         if (newId && newId !== oldId) {
-          // Reset state và fetch lại
+          // Reset state and fetch again
           this.selectedImage = 0;
           this.quantity = 1;
           this.activeTab = 'description';
@@ -774,7 +774,7 @@ export default {
         const label = parts[index]
         const val = variation.variationValues.find(vv => vv.label === label) || variation.variationValues[0]
         if (val) {
-          // LƯU CẢ variation VÀ value
+          // SAVE BOTH variation AND value
           this.selectedVariations[variation.id] = {
             variation: variation,
             value: val
@@ -920,7 +920,7 @@ export default {
             this.product.isWishlisted = false
           }
 
-          this.toast('Đã xóa khỏi wishlist', 'success')
+          this.toast('Removed from wishlist', 'success')
         } else {
           // Add to wishlist by variant id
           await api.addToWishlist(variantId)

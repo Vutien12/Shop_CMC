@@ -277,7 +277,7 @@ const handleSignup = async () => {
   }
 };
 
-// === ĐĂNG KÝ BẰNG GOOGLE ===
+// === SIGN UP WITH GOOGLE ===
 const signupWithGoogle = () => {
   const { clientId, redirectUri } = google;
   const scope = 'email profile openid';
@@ -295,7 +295,7 @@ const signupWithGoogle = () => {
   window.location.href = url;
 };
 
-// === ĐĂNG KÝ BẰNG FACEBOOK ===
+// === SIGN UP WITH FACEBOOK ===
 const signupWithFacebook = () => {
   const { clientId, redirectUri } = facebook;
   const scope = 'email,public_profile';
@@ -312,7 +312,7 @@ const signupWithFacebook = () => {
   window.location.href = url;
 };
 
-// === ĐĂNG KÝ BẰNG GITHUB ===
+// === SIGN UP WITH GITHUB ===
 const signupWithGithub = () => {
   const { clientId, redirectUri } = github;
   const scope = 'read:user user:email';
@@ -336,7 +336,7 @@ onMounted(() => {
 
 <style src="./SignUp.css"></style>
 <style scoped>
-/* Thêm style cho lỗi */
+/* Add styles for errors */
 .field-error {
   color: #e74c3c;
   font-size: 0.875rem;

@@ -72,7 +72,7 @@ export default {
                     }
                 } catch (error) {
                     console.error('Failed to load variations:', error);
-                    notification.error('Lỗi!', 'Không thể tải danh sách biến thể');
+                    notification.error('Error!', 'Failed to load variations list');
                 }
             });
         };
@@ -83,10 +83,10 @@ export default {
 
         const handleDelete = async (selectedIds) => {
             const confirmed = await notification.confirm(
-                'Xác nhận xóa',
-                `Bạn có chắc chắn muốn xóa ${selectedIds.length} biến thể?`
+                'Confirm Delete',
+                `Are you sure you want to delete ${selectedIds.length} variation(s)?`
             );
-            
+
             if (confirmed) {
                 try {
                     if (selectedIds.length === 1) {
@@ -97,10 +97,10 @@ export default {
 
                     // Reload variations after deletion
                     await loadVariations();
-                    notification.success('Thành công!', 'Đã xóa biến thể thành công');
+                    notification.success('Success!', 'Variation(s) deleted successfully');
                 } catch (error) {
                     console.error('Failed to delete variations:', error);
-                    notification.error('Lỗi!', 'Không thể xóa biến thể');
+                    notification.error('Error!', 'Failed to delete variation(s)');
                 }
             }
         };
