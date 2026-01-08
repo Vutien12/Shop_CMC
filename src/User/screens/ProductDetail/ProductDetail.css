@@ -125,31 +125,17 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  overflow-y: visible; /* Prevent vertical clipping */
+  overflow-y: visible;
   scroll-behavior: smooth;
-  scrollbar-width: thin; /* Show thin scrollbar for visibility */
-  scrollbar-color: #0068e1 #f1f1f1; /* Blue scrollbar */
+  scrollbar-width: none; /* Hide scrollbar - use arrows instead */
+  -ms-overflow-style: none; /* IE/Edge */
   flex: 1;
-  padding: 4px 0; /* Increased padding to prevent shadow clipping */
+  padding: 4px 0;
 }
 
-/* Webkit scrollbar styling */
+/* Hide scrollbar for Chrome/Safari/Opera */
 .thumbnail-images::-webkit-scrollbar {
-  height: 4px;
-}
-
-.thumbnail-images::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-
-.thumbnail-images::-webkit-scrollbar-thumb {
-  background: #0068e1;
-  border-radius: 2px;
-}
-
-.thumbnail-images::-webkit-scrollbar-thumb:hover {
-  background: #0056c1;
+  display: none;
 }
 
 .thumbnail-nav {
@@ -191,54 +177,6 @@
   right: 0;
 }
 
-.thumbnail-more {
-  min-width: 70px;
-  width: 70px;
-  height: 70px;
-  border: 2px dashed #0068e1; /* Dashed border to stand out */
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff; /* White background */
-  color: #0068e1;
-  font-size: 14px;
-  font-weight: 700; /* Bolder text */
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0;
-  position: relative;
-  box-shadow: 0 2px 6px rgba(0, 104, 225, 0.15); /* Subtle blue shadow */
-}
-
-.thumbnail-more::after {
-  content: '→'; /* Arrow hint */
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  font-size: 10px;
-  opacity: 0.6;
-}
-
-.thumbnail-more:hover {
-  background: #0068e1;
-  color: white;
-  border-color: #0068e1;
-  border-style: solid; /* Solid border on hover */
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(0, 104, 225, 0.3); /* Stronger shadow */
-}
-
-.thumbnail-more:hover::after {
-  opacity: 1;
-  animation: slideRight 0.6s ease infinite;
-}
-
-@keyframes slideRight {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(3px); }
-}
 
 .thumbnail {
   width: 70px;
@@ -1429,19 +1367,6 @@
     border-radius: 6px;
   }
 
-  .thumbnail-more {
-    min-width: 60px;
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
-    font-size: 12px;
-  }
-
-  .thumbnail-more::after {
-    font-size: 8px;
-    right: 3px;
-    bottom: 3px;
-  }
 
   .related-grid {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
