@@ -745,6 +745,7 @@ const onBillingProvinceChange = async (provinceId) => {
     manualBilling.value.districtName = ''
     manualBilling.value.wardCode = ''
     manualBilling.value.wardName = ''
+    manualBilling.value.city = ''
     return
   }
 
@@ -752,6 +753,7 @@ const onBillingProvinceChange = async (provinceId) => {
   if (province) {
     manualBilling.value.stateOrProvince = province.ProvinceName
     manualBilling.value.state = province.ProvinceName
+    manualBilling.value.city = province.ProvinceName
   }
 
   manualBilling.value.districtId = null
@@ -801,6 +803,7 @@ const onShippingProvinceChange = async (provinceId) => {
     manualShipping.value.districtName = ''
     manualShipping.value.wardCode = ''
     manualShipping.value.wardName = ''
+    manualShipping.value.city = ''
     shippingCost.value = 0
     return
   }
@@ -809,6 +812,7 @@ const onShippingProvinceChange = async (provinceId) => {
   if (province) {
     manualShipping.value.stateOrProvince = province.ProvinceName
     manualShipping.value.state = province.ProvinceName
+    manualShipping.value.city = province.ProvinceName
   }
 
   manualShipping.value.districtId = null
@@ -977,7 +981,7 @@ const useDefaultBillingAddress = async () => {
       lastName: addr.lastName || '',
       address1: addr.addressLine || '',
       address2: addr.addressLine2 || '',
-      city: addr.city || '',
+      city: addr.city || addr.stateOrProvince || '',
       state: addr.stateOrProvince || '',
       stateOrProvince: addr.stateOrProvince || '',
       zip: addr.postalCode || '',
@@ -1009,7 +1013,7 @@ const useDefaultShippingAddress = async () => {
       lastName: addr.lastName || '',
       address1: addr.addressLine || '',
       address2: addr.addressLine2 || '',
-      city: addr.city || '',
+      city: addr.city || addr.stateOrProvince || '',
       state: addr.stateOrProvince || '',
       stateOrProvince: addr.stateOrProvince || '',
       zip: addr.postalCode || '',
@@ -1377,6 +1381,14 @@ onMounted(async () => {
       await loadBillingDistricts(addr.provinceId)
       if (addr.districtId) {
         await loadBillingWards(addr.districtId)
+      }
+
+      // Also set the city field if province exists but city is not set
+      if (manualBilling.value.provinceId && !manualBilling.value.city) {
+        const province = provinces.value.find(p => p.ProvinceID === manualBilling.value.provinceId)
+        if (province) {
+          manualBilling.value.city = province.ProvinceName
+        }
       }
     }
     // Note: Shipping address phải để user tự chọn hoặc dùng "Use default address"
