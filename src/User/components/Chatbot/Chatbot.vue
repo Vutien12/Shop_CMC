@@ -110,8 +110,11 @@ const formatMessage = (text) => {
   // Chuyển **text** thành <strong>
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 
-  // Tự động chuyển URL thành thẻ <a>
-  html = html.replace(/(https?:\/\/(?:[\w-]+\.)+[\w-]+(?:[\w\-\._~:/?#[\]@!$&'()*+,;=]+)?)/gi, '<a href="$1" target="_blank" rel="noopener" class="chatbot-link">$1</a>')
+  // Xử lý markdown links [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="chatbot-link">$1</a>')
+
+  // Tự động chuyển plain URL thành thẻ <a> (chỉ áp dụng cho URL chưa được wrap trong thẻ <a>)
+  html = html.replace(/(?<!href=")(https?:\/\/[^\s<>"]+)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer" class="chatbot-link">$1</a>')
 
   // Xóa dấu * ở đầu dòng (không tạo <li>)
   html = html.replace(/^\* /gm, '')
