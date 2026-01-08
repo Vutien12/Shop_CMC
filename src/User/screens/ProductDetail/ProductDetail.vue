@@ -27,8 +27,9 @@
               class="thumbnail-nav thumbnail-nav-left"
               @click="scrollThumbnails('left')"
               type="button"
+              aria-label="Previous images"
             >
-              <i class="fa-solid fa-chevron-left"></i>
+              ‹
             </button>
             <div class="thumbnail-images" ref="thumbnailScroll">
               <button
@@ -47,8 +48,9 @@
               class="thumbnail-nav thumbnail-nav-right"
               @click="scrollThumbnails('right')"
               type="button"
+              aria-label="Next images"
             >
-              <i class="fa-solid fa-chevron-right"></i>
+              ›
             </button>
           </div>
         </div>
@@ -571,6 +573,13 @@ export default {
   },
   async mounted() {
     await this.fetchProductDetail()
+
+    // Add keyboard navigation for arrow keys
+    window.addEventListener('keydown', this.handleKeyboardNavigation)
+  },
+  beforeUnmount() {
+    // Remove keyboard listener when component unmounts
+    window.removeEventListener('keydown', this.handleKeyboardNavigation)
   },
   watch: {
     // Watch route params to reload product when navigating from related products
@@ -1102,6 +1111,25 @@ export default {
       if (this.optionErrors && this.optionErrors[optionId]) this.optionErrors[optionId] = false
     },
 
+    // Keyboard Navigation
+    handleKeyboardNavigation(event) {
+      // Only handle arrow keys when not typing in input/textarea
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
+        return
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault() // Prevent page scroll
+        if (this.selectedImage > 0) {
+          this.selectImage(this.selectedImage - 1)
+        }
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault() // Prevent page scroll
+        if (this.selectedImage < this.displayImages.length - 1) {
+          this.selectImage(this.selectedImage + 1)
+        }
+      }
+    },
     // UI Helpers
     selectImage(i) { this.selectedImage = i },
     changeQuantity(delta) { this.quantity = Math.max(1, this.quantity + delta) },

@@ -154,10 +154,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 2;
-  font-size: 14px;
+  font-size: 24px; /* Larger for Unicode arrows */
+  line-height: 1;
   padding: 0;
   opacity: 1; /* Always visible */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Add shadow for visibility */
+  font-weight: 300; /* Thinner for cleaner look */
 }
 
 .thumbnail-nav:hover {
