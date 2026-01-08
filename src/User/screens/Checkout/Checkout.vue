@@ -719,7 +719,7 @@ const loadShippingDistricts = async (provinceId) => {
     shippingDistricts.value = response.data?.result || response.data || []
   } catch (error) {
     console.error('Failed to load districts:', error)
-    toast('Không thể tải danh sách quận/huyện', 'error')
+    toast('Unable to load the list of districts/counties', 'error')
   }
 }
 
@@ -733,7 +733,7 @@ const loadShippingWards = async (districtId) => {
     shippingWards.value = response.data?.result || response.data || []
   } catch (error) {
     console.error('Failed to load wards:', error)
-    toast('Không thể tải danh sách phường/xã', 'error')
+    toast('Unable to load the list of wards/communes', 'error')
   }
 }
 
@@ -1096,11 +1096,11 @@ const applyCoupon = async () => {
       couponDiscount.value = couponInfo.discount
       couponId.value = coupon.id
       couponError.value = ''
-      toast(`Áp dụng mã giảm giá thành công! Giảm ${formatPrice(couponInfo.discount)}`, 'success')
+      toast(`Discount code applied successfully! Discount ${formatPrice(couponInfo.discount)}`, 'success')
     }
   } catch (error) {
     console.error('[Checkout] Apply coupon failed:', error)
-    const errorMsg = error.response?.data?.message || 'Mã giảm giá không hợp lệ'
+    const errorMsg = error.response?.data?.message || 'Invalid discount code'
     couponError.value = errorMsg
     toast(errorMsg, 'error')
     appliedCoupon.value = null
@@ -1117,23 +1117,23 @@ const removeCoupon = () => {
   couponId.value = null
   couponCode.value = ''
   couponError.value = ''
-  toast('Đã xóa mã giảm giá', 'info')
+  toast('Discount code removed', 'info')
 }
 
 const processPayment = async () => {
   // Validation
   if (!agreeToTerms.value) {
-    toast('Vui lòng đồng ý với Điều khoản & Điều kiện', 'error')
+    toast('Please agree to the Terms & Conditions', 'error')
     return
   }
 
   if (cartItems.value.length === 0) {
-    toast('Giỏ hàng trống!', 'error')
+    toast('Cart is empty!', 'error')
     return
   }
 
   if (!userProfile.value) {
-    toast('Không tìm thấy thông tin người dùng', 'error')
+    toast('User information could not be seek', 'error')
     return
   }
 
