@@ -21,7 +21,7 @@
           <div class="main-image">
             <img :src="displayImages[selectedImage]" :alt="product.name" />
           </div>
-          <div v-if="displayImages.length >= 1" class="thumbnail-container">
+          <div v-if="displayImages.length > 1" class="thumbnail-container">
             <button
               v-if="canScrollLeft"
               class="thumbnail-nav thumbnail-nav-left"
@@ -29,9 +29,16 @@
               type="button"
               aria-label="Previous images"
             >
-              ‹
+              ◀
             </button>
-            <div class="thumbnail-images" ref="thumbnailScroll">
+            <div
+              class="thumbnail-images"
+              ref="thumbnailScroll"
+              @mousedown="startDragThumbnails"
+              @mousemove="onDragThumbnails"
+              @mouseup="stopDragThumbnails"
+              @mouseleave="stopDragThumbnails"
+            >
               <button
                 v-for="(image, i) in displayImages"
                 :key="i"
@@ -50,7 +57,7 @@
               type="button"
               aria-label="Next images"
             >
-              ›
+              ▶
             </button>
           </div>
         </div>
@@ -558,6 +565,9 @@ export default {
       // Thumbnail scroll navigation
       canScrollLeft: false,
       canScrollRight: false,
+      isDraggingThumbnails: false,
+      startXThumbnails: 0,
+      scrollLeftThumbnails: 0,
 
       // Lookup
       variantLookup: {},
@@ -1146,6 +1156,31 @@ export default {
       this.$nextTick(() => this.updateScrollButtons())
     },
 
+    // Thumbnail drag-to-scroll
+    startDragThumbnails(e) {
+      if (!this.$refs.thumbnailScroll) return
+      this.isDraggingThumbnails = true
+      this.startXThumbnails = e.pageX - this.$refs.thumbnailScroll.offsetLeft
+      this.scrollLeftThumbnails = this.$refs.thumbnailScroll.scrollLeft
+      this.$refs.thumbnailScroll.style.cursor = 'grabbing'
+      this.$refs.thumbnailScroll.style.userSelect = 'none'
+    },
+
+    onDragThumbnails(e) {
+      if (!this.isDraggingThumbnails || !this.$refs.thumbnailScroll) return
+      e.preventDefault()
+      const x = e.pageX - this.$refs.thumbnailScroll.offsetLeft
+      const walk = (x - this.startXThumbnails) * 2
+      this.$refs.thumbnailScroll.scrollLeft = this.scrollLeftThumbnails - walk
+    },
+
+    stopDragThumbnails() {
+      if (!this.$refs.thumbnailScroll) return
+      this.isDraggingThumbnails = false
+      this.$refs.thumbnailScroll.style.cursor = 'grab'
+      this.$refs.thumbnailScroll.style.userSelect = ''
+    },
+
     updateScrollButtons() {
       const container = this.$refs.thumbnailScroll
       if (!container) {
@@ -1159,6 +1194,14 @@ export default {
 
       const hasOverflow = container.scrollWidth > container.clientWidth
 
+      console.log('Scroll Debug:', {
+        scrollWidth: container.scrollWidth,
+        clientWidth: container.clientWidth,
+        hasOverflow,
+        scrollLeft: container.scrollLeft,
+        imagesCount: this.displayImages.length
+      })
+
       this.canScrollLeft = container.scrollLeft > 0
       this.canScrollRight = hasOverflow && (container.scrollLeft < (container.scrollWidth - container.clientWidth - 5))
 
@@ -1166,6 +1209,11 @@ export default {
       if (hasOverflow && container.scrollLeft === 0) {
         this.canScrollRight = true
       }
+
+      console.log('🎯 Arrows State:', {
+        canScrollLeft: this.canScrollLeft,
+        canScrollRight: this.canScrollRight
+      })
     },
     setActiveTab(tab) { this.activeTab = tab },
     toggleDescription() { this.showFullDescription = !this.showFullDescription },
